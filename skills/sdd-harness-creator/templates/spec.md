@@ -3,7 +3,7 @@
 **Feature ID:** {{FEATURE_ID}}
 **Phase:** draft
 **Owner:** <who>
-**Last updated:** YYYY-MM-DD
+**Last updated:** {{DATE}}
 
 > WHAT and WHY only — no implementation details (no tech, no file names, no APIs). Save those for `plan.md`.
 

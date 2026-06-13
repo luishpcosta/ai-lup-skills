@@ -33,6 +33,17 @@ test('create-sdd-harness scaffolds all expected files', async () => {
   });
 });
 
+test('scaffold fills date placeholders (no YYYY-MM-DD masks left)', async () => {
+  await withTempProject(async (dir) => {
+    await run('node', [path.join(SCRIPTS, 'create-sdd-harness.mjs'), '--target', dir]);
+    for (const rel of ['progress.md', 'specs/001-example/spec.md', 'specs/001-example/plan.md', 'specs/001-example/tasks.md']) {
+      const content = await readFile(path.join(dir, rel), 'utf8');
+      assert.doesNotMatch(content, /YYYY-MM-DD/, `${rel} still has a date mask`);
+      assert.match(content, /\*\*Last [Uu]pdated:\*\* \d{4}-\d{2}-\d{2}/, `${rel} should carry a real date`);
+    }
+  });
+});
+
 test('scaffolded harness passes the traceability gate', async () => {
   await withTempProject(async (dir) => {
     await run('node', [path.join(SCRIPTS, 'create-sdd-harness.mjs'), '--target', dir]);
@@ -90,6 +101,8 @@ test('reverse-engineer adds a documented feature and keeps traceability clean', 
 
     const spec = await readFile(path.join(dir, 'specs', '002-auth', 'spec.md'), 'utf8');
     assert.match(spec, /reverse-engineered/);
+    assert.doesNotMatch(spec, /YYYY-MM-DD/, 'retro-spec should not keep the date mask');
+    assert.match(spec, /\*\*Last updated:\*\* \d{4}-\d{2}-\d{2}/);
 
     const trace = await run('node', [path.join(SCRIPTS, 'check-traceability.mjs'), '--target', dir]);
     assert.match(trace.stdout, /OK/);

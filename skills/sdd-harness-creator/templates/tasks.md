@@ -3,7 +3,7 @@
 **Feature ID:** {{FEATURE_ID}}
 **Phase:** tasked
 **Plan:** ./plan.md
-**Last updated:** YYYY-MM-DD
+**Last updated:** {{DATE}}
 
 > Small, ordered, independently verifiable tasks derived from `plan.md`.
 > **Gate:** every acceptance criterion has ≥1 task, and every task references an AC.

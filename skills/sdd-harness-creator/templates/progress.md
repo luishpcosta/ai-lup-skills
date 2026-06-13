@@ -2,7 +2,7 @@
 
 ## Current State
 
-**Last Updated:** YYYY-MM-DD HH:MM
+**Last Updated:** {{DATETIME}}
 **Active Feature:** [NNN-slug - Feature Name]
 **Active SDD Phase:** [Specify | Clarify | Plan | Tasks | Implement | Verify]
 **Pending Gate:** [what must pass to leave the current phase]

@@ -4,6 +4,12 @@
 const TEST_HINTS = ['.test.', '.spec.', '__tests__/', '/tests/', '/test/'];
 const SOURCE_EXTS = new Set(['.js', '.mjs', '.cjs', '.jsx', '.ts', '.tsx', '.py', '.go', '.rs', '.java']);
 
+function todayISO() {
+  const d = new Date();
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
 export function slugify(name) {
   return String(name)
     .toLowerCase()
@@ -99,7 +105,7 @@ export function extractTestNames(content) {
  * Build a reverse-engineered feature: registry entry + reconstructed markdown.
  * AC derivation prefers existing tests; falls back to exported symbols.
  */
-export function buildReverseFeature({ module, index, exportsByFile = {}, testNames = [], maxCriteria = 15 }) {
+export function buildReverseFeature({ module, index, exportsByFile = {}, testNames = [], maxCriteria = 15, date = todayISO() }) {
   const slug = slugify(module.name);
   const id = `${String(index).padStart(3, '0')}-${slug}`;
   const allExports = Object.values(exportsByFile).flat();
@@ -153,9 +159,9 @@ export function buildReverseFeature({ module, index, exportsByFile = {}, testNam
     id,
     acSource,
     registryFeature,
-    specMarkdown: renderSpec(module, id, criteria, allExports, acSource),
-    planMarkdown: renderPlan(module, id),
-    tasksMarkdown: renderTasks(module, id, criteria, taskId)
+    specMarkdown: renderSpec(module, id, criteria, allExports, acSource, date),
+    planMarkdown: renderPlan(module, id, date),
+    tasksMarkdown: renderTasks(module, id, criteria, taskId, date)
   };
 }
 
@@ -164,14 +170,14 @@ function renderList(items, empty = '_(none detected)_') {
   return items.map((item) => `- ${item}`).join('\n');
 }
 
-function renderSpec(module, id, criteria, allExports, acSource) {
+function renderSpec(module, id, criteria, allExports, acSource, date) {
   const acLines = criteria.map((ac) => `- **${ac.id}** — ${ac.description}${ac.evidence ? ` _(${ac.evidence})_` : ''}`).join('\n');
   return `# Spec (reverse-engineered): ${module.name}
 
 **Feature ID:** ${id}
 **Phase:** documented
 **Origin:** reverse-engineered from existing code
-**Last updated:** YYYY-MM-DD
+**Last updated:** ${date}
 
 > Reconstructed from the current implementation. Acceptance criteria were derived from ${acSource}.
 > Review and correct these against intended behavior, then advance the feature toward \`verified\`/\`done\`.
@@ -203,13 +209,13 @@ ${acLines}
 `;
 }
 
-function renderPlan(module, id) {
+function renderPlan(module, id, date) {
   return `# Plan (as-built): ${module.name}
 
 **Feature ID:** ${id}
 **Phase:** documented
 **Spec:** ./spec.md
-**Last updated:** YYYY-MM-DD
+**Last updated:** ${date}
 
 > As-built notes reconstructed from existing code. Update before planning *new* work on this module.
 
@@ -226,14 +232,14 @@ ${renderList(module.sourceFiles)}
 `;
 }
 
-function renderTasks(module, id, criteria, taskId) {
+function renderTasks(module, id, criteria, taskId, date) {
   const rows = criteria.map((ac) => `| ${taskId} | Existing implementation (reverse-engineered) | ${ac.id} | done | code present |`).join('\n');
   return `# Tasks (reverse-engineered): ${module.name}
 
 **Feature ID:** ${id}
 **Phase:** documented
 **Plan:** ./plan.md
-**Last updated:** YYYY-MM-DD
+**Last updated:** ${date}
 
 > The implementation already exists, so ${taskId} is marked done. Add new tasks here
 > for forward work, each linked to an acceptance criterion in spec.md.

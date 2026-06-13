@@ -3,7 +3,7 @@
 **Feature ID:** {{FEATURE_ID}}
 **Phase:** planned
 **Spec:** ./spec.md
-**Last updated:** YYYY-MM-DD
+**Last updated:** {{DATE}}
 
 > HOW the spec will be implemented. Every functional requirement in `spec.md` must be addressed here. Cite `constitution.md` for any constraint you rely on.
 

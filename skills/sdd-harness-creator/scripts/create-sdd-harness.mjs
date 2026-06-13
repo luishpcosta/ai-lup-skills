@@ -7,6 +7,8 @@ import {
   detectProject,
   exists,
   initScriptFromCommands,
+  isoDate,
+  isoDateTime,
   parseArgs,
   verificationCommands,
   writeText
@@ -50,14 +52,15 @@ const agentReplacements = {
   PRIMARY_VERIFICATION_COMMAND: './init.sh'
 };
 
-const exampleReplacements = { FEATURE_NAME: 'Example Feature', FEATURE_ID: '001-example' };
+const dates = { DATE: isoDate(), DATETIME: isoDateTime() };
+const exampleReplacements = { FEATURE_NAME: 'Example Feature', FEATURE_ID: '001-example', ...dates };
 
 const results = [];
 results.push(await copyTemplate('agents.md', path.join(target, agentFile), agentReplacements, { force }));
 results.push(await copyTemplate('constitution.md', path.join(target, 'constitution.md'), {}, { force }));
 results.push(await copyTemplate('spec-registry.json', path.join(target, 'spec-registry.json'), {}, { force }));
 results.push(await copyTemplate('spec-registry.schema.json', path.join(target, 'spec-registry.schema.json'), {}, { force }));
-results.push(await copyTemplate('progress.md', path.join(target, 'progress.md'), {}, { force }));
+results.push(await copyTemplate('progress.md', path.join(target, 'progress.md'), dates, { force }));
 results.push(await copyTemplate('session-handoff.md', path.join(target, 'session-handoff.md'), {}, { force }));
 
 const exampleDir = path.join(target, 'specs', '001-example');

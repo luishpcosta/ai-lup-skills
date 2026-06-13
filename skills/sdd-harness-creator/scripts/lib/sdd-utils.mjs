@@ -141,6 +141,18 @@ export function dedupe(values) {
   return [...new Set(values)];
 }
 
+const pad2 = (n) => String(n).padStart(2, '0');
+
+/** Local-date stamp YYYY-MM-DD. */
+export function isoDate(date = new Date()) {
+  return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`;
+}
+
+/** Local datetime stamp YYYY-MM-DD HH:MM. */
+export function isoDateTime(date = new Date()) {
+  return `${isoDate(date)} ${pad2(date.getHours())}:${pad2(date.getMinutes())}`;
+}
+
 export function verificationCommands(project, explicitPackageManager) {
   const pm = explicitPackageManager || project.packageManager || 'npm';
   const scripts = project.packageJson?.scripts ?? {};
