@@ -1,0 +1,27 @@
+{
+  "name": "lup-skills",
+  "version": "1.0.0",
+  "description": "CLI para gerenciar skills de IA no projeto do usuário",
+  "type": "module",
+  "bin": {
+    "lup-skills": "./index.js"
+  },
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "test": "node --test",
+    "test:coverage": "c8 --check-coverage --lines 90 --functions 90 --branches 90 --statements 90 node --test"
+  },
+  "dependencies": {
+    "@inquirer/prompts": "^8.0.0",
+    "commander": "^12.0.0"
+  },
+  "devDependencies": {
+    "c8": "^11.0.0"
+  },
+  "c8": {
+    "include": [
+      "src/**"
+    ]
+  }
+}
