@@ -93,3 +93,17 @@ test('scoreSddHarness rewards a complete harness and finds bottleneck on a bare 
   assert.ok(bare.overall < 60, `expected low score, got ${bare.overall}`);
   assert.ok(typeof bare.bottleneck === 'string');
 });
+
+test('scoreSddHarness accepts Portuguese instruction/constitution text', () => {
+  const files = [
+    { path: 'CLAUDE.md', content: 'Usa a constituição. Fluxo com gates por fase: Specify, Plan. Rastreabilidade: toda task referencia um AC. Definition of Done.' },
+    { path: 'constitution.md', content: '## Princípios\nProjeto com regras inegociáveis e restrições técnicas que se deve cumprir.' }
+  ];
+  const result = scoreSddHarness(files);
+  const principles = result.subsystems.constitution.checks.find((c) => c.message.includes('principles/constraints'));
+  const gates = result.subsystems.constitution.checks.find((c) => c.message.includes('phase gates'));
+  const trace = result.subsystems.traceability.checks.find((c) => c.message.includes('Traceability rule'));
+  assert.equal(principles.pass, true, 'PT principles should be recognized');
+  assert.equal(gates.pass, true, 'PT gates/fase should be recognized');
+  assert.equal(trace.pass, true, 'PT rastreabilidade should be recognized');
+});

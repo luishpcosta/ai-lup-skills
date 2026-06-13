@@ -336,45 +336,45 @@ export function scoreSddHarness(files) {
   const checks = {
     constitution: [
       hasFile(byPath, ['constitution.md'], 'Constitution file exists'),
-      textHas(constitution, ['principle', 'non-negotiable', 'invariant', 'must', 'constraint'], 'Constitution states principles/constraints'),
-      textHas(agents, ['constitution'], 'Instructions route to the constitution'),
+      textHas(constitution, ['principle', 'non-negotiable', 'invariant', 'must', 'constraint', 'princípio', 'inegociá', 'invariante', 'restri', 'deve'], 'Constitution states principles/constraints'),
+      textHas(agents, ['constitution', 'constituição'], 'Instructions route to the constitution'),
       hasFile(byPath, ['AGENTS.md', 'CLAUDE.md'], 'Agent instruction file exists'),
-      textHas(agents, ['gate', 'phase'], 'Instructions describe phase gates')
+      textHas(agents, ['gate', 'phase', 'fase'], 'Instructions describe phase gates')
     ],
     specification: [
       arrayHas(specFiles, 'At least one spec.md exists'),
-      textHas(specText, ['acceptance criteria', 'AC-'], 'Spec defines acceptance criteria'),
-      textHas(specText, ['out of scope', 'non-goals', 'edge case'], 'Spec bounds scope / edge cases'),
-      textHas(agents, ['specify', 'specification'], 'Specify phase documented'),
+      textHas(specText, ['acceptance criteria', 'AC-', 'critério de aceite', 'critérios de aceite'], 'Spec defines acceptance criteria'),
+      textHas(specText, ['out of scope', 'non-goals', 'edge case', 'fora de escopo', 'não-objetivo', 'edge'], 'Spec bounds scope / edge cases'),
+      textHas(agents, ['specify', 'specification', 'especific'], 'Specify phase documented'),
       jsonRegistryValid(registryText, 'Spec registry is valid with feature fields')
     ],
     planning: [
       arrayHas(planFiles, 'At least one plan.md exists'),
-      textHas(agents, ['plan'], 'Plan phase documented'),
-      textHas(allText, ['architecture', 'data model', 'contract', 'approach', 'decision'], 'Plan captures technical approach'),
-      textHas(allText, ['constitution'], 'Plan references the constitution'),
+      textHas(agents, ['plan', 'plano'], 'Plan phase documented'),
+      textHas(allText, ['architecture', 'data model', 'contract', 'approach', 'decision', 'arquitetura', 'modelo de dados', 'contrato', 'abordagem', 'decis'], 'Plan captures technical approach'),
+      textHas(allText, ['constitution', 'constituição'], 'Plan references the constitution'),
       textHas(registryText, ['"phase"', 'planned'], 'Registry tracks the planned phase')
     ],
     traceability: [
       arrayHas(taskFiles, 'At least one tasks.md exists'),
       textHas(registryText, ['acceptance_criteria', '"tasks"'], 'Registry links ACs to tasks'),
       { pass: Boolean(registry) && trace.problems.length === 0, message: 'Bidirectional AC<->task coverage holds' },
-      textHas(agents, ['traceab', 'every task', 'every acceptance'], 'Traceability rule documented'),
+      textHas(agents, ['traceab', 'every task', 'every acceptance', 'rastreab', 'toda task', 'todo ac', 'todo critério'], 'Traceability rule documented'),
       textHas(init + agents, ['check-traceability'], 'Traceability check is wired into verification')
     ],
     verification: [
       hasFile(byPath, ['init.sh'], 'Verification entrypoint exists'),
       textHas(init, ['set -e'], 'Verification fails fast'),
       textHas(init + agents, ['test', 'pytest', 'vitest', 'cargo test', 'go test', 'dotnet test'], 'Test command documented'),
-      textHas(allText, ['evidence', 'verified'], 'Per-AC evidence is recorded'),
-      textHas(agents, ['definition of done', 'every ac', 'every acceptance', 'against the spec'], 'Done is measured against the spec')
+      textHas(allText, ['evidence', 'verified', 'evidência'], 'Per-AC evidence is recorded'),
+      textHas(agents, ['definition of done', 'every ac', 'every acceptance', 'against the spec', 'definição de pronto', 'contra a spec', 'todo critério'], 'Done is measured against the spec')
     ],
     lifecycle: [
       hasFile(byPath, ['progress.md'], 'Progress log exists'),
       hasFile(byPath, ['session-handoff.md'], 'Session handoff exists'),
-      textHas(progress + handoff, ['Next', 'Recommended Next Step', 'Current'], 'Session restart markers exist'),
+      textHas(progress + handoff, ['Next', 'Recommended Next Step', 'Current', 'próxim', 'atual'], 'Session restart markers exist'),
       textHas(registryText, ['"phase"'], 'Registry persists per-feature phase'),
-      textHas(agents + init, ['restartable', 'clean', 'Next steps', 'End of Session'], 'Clean restart path documented')
+      textHas(agents + init, ['restartable', 'clean', 'Next steps', 'End of Session', 'reinicializ', 'limpo', 'próximos', 'fim de sessão'], 'Clean restart path documented')
     ]
   };
 
