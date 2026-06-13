@@ -69,6 +69,17 @@ Based on the user interview, fill in these components:
 - **name**: Skill identifier
 - **description**: When to trigger, what it does. This is the primary triggering mechanism - include both what the skill does AND specific contexts for when to use it. All "when to use" info goes here, not in the body. Note: currently Claude has a tendency to "undertrigger" skills -- to not use them when they'd be useful. To combat this, please make the skill descriptions a little bit "pushy". So for instance, instead of "How to build a simple fast dashboard to display internal Anthropic data.", you might write "How to build a simple fast dashboard to display internal Anthropic data. Make sure to use this skill whenever the user mentions dashboards, data visualization, internal metrics, or wants to display any kind of company data, even if they don't explicitly ask for a 'dashboard.'"
 - **compatibility**: Required tools, dependencies (optional, rarely needed)
+- **metadata** (convenção deste repositório `ai-lup-skills`): inclua um bloco
+  `metadata` com a categorização usada pelo CLI `lup-skills`:
+  ```yaml
+  metadata:
+    language: agnostic        # agnostic (independente de linguagem) | python | javascript | ...
+    tags: [tag-1, tag-2]      # opcional, lista livre de tópicos minúsculos
+  ```
+  Pergunte ao usuário (ou infira do propósito da skill) qual a linguagem: use
+  `agnostic` quando a skill não for específica de uma linguagem; senão o slug da
+  linguagem. As `tags` são livres. Sem esse bloco, a skill aparece em "sem categoria"
+  no `lup-skills list`. Veja `CONTRIBUTING.md` na raiz do repositório.
 - **the rest of the skill :)**
 
 ### Skill Writing Guide
