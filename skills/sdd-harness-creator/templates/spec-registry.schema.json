@@ -1,0 +1,81 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Spec Registry",
+  "description": "Structured source of truth for spec-driven development: per-feature phase, acceptance criteria, and traceability links.",
+  "type": "object",
+  "properties": {
+    "constitution": {
+      "type": "string",
+      "description": "Path to the project constitution file"
+    },
+    "features": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique feature id, e.g. 001-example"
+          },
+          "name": { "type": "string" },
+          "phase": {
+            "type": "string",
+            "enum": ["draft", "specified", "clarified", "planned", "tasked", "implementing", "verified", "done"],
+            "description": "Current SDD phase"
+          },
+          "spec": { "type": "string", "description": "Path to spec.md" },
+          "plan": { "type": "string", "description": "Path to plan.md" },
+          "tasks": { "type": "string", "description": "Path to tasks.md" },
+          "dependencies": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Feature ids that must reach 'done' first"
+          },
+          "acceptance_criteria": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": { "type": "string", "description": "Stable AC id, e.g. AC-1" },
+                "description": { "type": "string" },
+                "tasks": {
+                  "type": "array",
+                  "items": { "type": "string" },
+                  "description": "Task ids that satisfy this criterion"
+                },
+                "status": {
+                  "type": "string",
+                  "enum": ["pending", "covered", "verified"],
+                  "description": "pending = no task; covered = has tasks; verified = proven by evidence"
+                },
+                "evidence": {
+                  "type": "string",
+                  "description": "Verification evidence required when status is 'verified'"
+                }
+              },
+              "required": ["id", "description", "status"]
+            }
+          },
+          "tasks_index": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": { "type": "string" },
+                "title": { "type": "string" },
+                "status": {
+                  "type": "string",
+                  "enum": ["todo", "doing", "done"]
+                }
+              },
+              "required": ["id"]
+            },
+            "description": "Flat list of tasks; used to detect tasks not linked to any AC"
+          }
+        },
+        "required": ["id", "name", "phase", "acceptance_criteria"]
+      }
+    }
+  },
+  "required": ["features"]
+}
