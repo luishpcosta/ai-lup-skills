@@ -26,6 +26,9 @@ function setupFixture() {
   fs.mkdirSync(path.join(skillsSourceDir, 'minha-skill', 'scripts'), { recursive: true });
   fs.writeFileSync(path.join(skillsSourceDir, 'minha-skill', 'SKILL.md'), '# Minha Skill');
   fs.writeFileSync(path.join(skillsSourceDir, 'minha-skill', 'scripts', 'run.js'), '// script');
+  // skill aninhada dentro de uma pasta de categoria
+  fs.mkdirSync(path.join(skillsSourceDir, 'python', 'nested-skill'), { recursive: true });
+  fs.writeFileSync(path.join(skillsSourceDir, 'python', 'nested-skill', 'SKILL.md'), '---\nname: nested-skill\nmetadata:\n  language: python\n---\n');
   fs.mkdirSync(cwd, { recursive: true });
   return { root, skillsSourceDir, cwd };
 }
@@ -98,4 +101,25 @@ test('addCommand copia a skill para os agentes selecionados', async () => {
   assert.equal(lines.length, 2);
   assert.match(lines[0], /Claude/);
   assert.match(lines[1], /Devin/);
+});
+
+test('addCommand encontra skill aninhada em categoria e instala de forma plana', async () => {
+  const { root, skillsSourceDir, cwd } = setupFixture();
+
+  await withCapturedLog(() =>
+    addCommand('nested-skill', {
+      skillsSourceDir,
+      cwd,
+      prompt: async () => ['claude'],
+    }),
+  );
+
+  // destino é plano (.claude/skills/nested-skill), sem a pasta de categoria "python"
+  const flatTarget = path.join(cwd, '.claude/skills/nested-skill', 'SKILL.md');
+  const noCategoryFolder = fs.existsSync(path.join(cwd, '.claude/skills/python'));
+  const installed = fs.existsSync(flatTarget);
+  fs.rmSync(root, { recursive: true, force: true });
+
+  assert.equal(installed, true);
+  assert.equal(noCategoryFolder, false);
 });

@@ -27,10 +27,6 @@ export const AGENT_TARGETS = {
   },
 };
 
-export function getSkillSourcePath(skillName, skillsSourceDir = SKILLS_SOURCE_DIR) {
-  return path.join(skillsSourceDir, skillName);
-}
-
 export function getSkillTargetPath(agent, skillName, cwd = process.cwd()) {
   const agentConfig = AGENT_TARGETS[agent];
   if (!agentConfig) {

@@ -50,10 +50,28 @@ cd /caminho/para/seu-projeto
 lup-skills list
 ```
 
+A saída é agrupada por linguagem (skills independentes de linguagem aparecem em
+`agnostic`), e cada skill mostra suas tags entre colchetes:
+
 ```
 Skills disponíveis:
-  - skill-creator
+
+agnostic:
+  - skill-creator        [meta, skill-creation]
+
+python:
+  - py-linter            [linting, ci]
 ```
+
+Você pode filtrar por linguagem ou por tag:
+
+```bash
+lup-skills list --language python
+lup-skills list --tag sdd
+```
+
+> O agrupamento vem dos metadados de cada skill (frontmatter do `SKILL.md`), **não**
+> da estrutura de pastas — veja [Categorias e contribuição](#categorias-e-contribuição).
 
 ### 4. Instalar uma skill com `lup-skills add`
 
@@ -96,21 +114,36 @@ serão apagadas.
 
 | Comando | Descrição |
 | --- | --- |
-| `lup-skills list` (ou `ls`) | Lista as skills disponíveis no repositório central para instalação. |
+| `lup-skills list` (ou `ls`) | Lista as skills disponíveis, agrupadas por linguagem. Aceita `--language <x>` e `--tag <y>` para filtrar. |
 | `lup-skills add <skill-name>` | Copia a skill `<skill-name>` do repositório central para o(s) agente(s) escolhido(s) no projeto atual. |
 | `lup-skills remove <skill-name>` | Remove a skill `<skill-name>` do(s) agente(s) escolhido(s) no projeto atual. |
 | `lup-skills --help` | Lista todos os comandos disponíveis. |
 
-## Criando novas skills
+## Categorias e contribuição
 
-A skill `skill-creator` (incluída neste repositório) auxilia na criação, edição e
-avaliação de novas skills. Instale-a com `lup-skills add skill-creator` e siga as
-instruções do seu `SKILL.md`.
+Cada skill é uma pasta contendo um `SKILL.md`. A **categorização** (linguagem e tags)
+vem dos metadados no frontmatter do `SKILL.md`, sob o campo `metadata`:
 
-Qualquer skill é apenas uma pasta `skills/<nome-da-skill>/` contendo um `SKILL.md`
-(com frontmatter `name` e `description`) e, opcionalmente, outros arquivos/pastas de
-apoio (scripts, referências, assets etc.) — todo o conteúdo da pasta é copiado de
-forma bruta pelo `lup-skills add`.
+```yaml
+---
+name: sdd-setup
+description: Prepara o repositório para Spec-Driven Development.
+metadata:
+  language: agnostic        # agnostic (independente de linguagem) | python | javascript | ...
+  tags: [sdd, repo-setup]   # opcional, lista livre de tópicos
+---
+```
+
+- `language: agnostic` cobre os dois eixos: separa por linguagem e marca as skills
+  independentes de linguagem. Skills sem `language` aparecem em `sem categoria`.
+- As **pastas dentro de `skills/`** são apenas organização para contribuidores
+  (ex.: `skills/python/py-linter/`). Elas **não** afetam a UX nem o agrupamento — o CLI
+  descobre as skills recursivamente (qualquer pasta com `SKILL.md`) e categoriza pelo
+  frontmatter. A instalação (`add`) é sempre plana: `.claude/skills/<nome>/`.
+
+Para adicionar uma skill nova, veja o [CONTRIBUTING.md](CONTRIBUTING.md). A skill
+`skill-creator` (incluída) também auxilia na criação e avaliação de skills — instale-a
+com `lup-skills add skill-creator`.
 
 ## Testes e cobertura
 

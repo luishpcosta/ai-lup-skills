@@ -15,8 +15,10 @@ program
 program
   .command('list')
   .alias('ls')
-  .description('Lista as skills disponíveis no repositório central')
-  .action(listCommand);
+  .description('Lista as skills disponíveis no repositório central, agrupadas por linguagem')
+  .option('--language <language>', 'Filtra skills por linguagem (ex.: agnostic, python)')
+  .option('--tag <tag>', 'Filtra skills por tag')
+  .action((options) => listCommand(options));
 
 program
   .command('add <skill-name>')

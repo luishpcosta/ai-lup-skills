@@ -1,16 +1,13 @@
 import fs from 'node:fs';
 import { checkbox } from '@inquirer/prompts';
-import {
-  AGENT_TARGETS,
-  getSkillSourcePath,
-  getSkillTargetPath,
-} from '../utils/paths.js';
+import { AGENT_TARGETS, getSkillTargetPath } from '../utils/paths.js';
+import { findSkill } from '../utils/skills.js';
 
 export async function addCommand(skillName, { prompt = checkbox, cwd = process.cwd(), skillsSourceDir } = {}) {
-  const sourcePath = getSkillSourcePath(skillName, skillsSourceDir);
+  const skill = findSkill(skillName, skillsSourceDir);
 
-  if (!fs.existsSync(sourcePath)) {
-    console.error(`Skill "${skillName}" não encontrada em ${sourcePath}`);
+  if (!skill) {
+    console.error(`Skill "${skillName}" não encontrada no repositório.`);
     process.exitCode = 1;
     return;
   }
@@ -31,7 +28,7 @@ export async function addCommand(skillName, { prompt = checkbox, cwd = process.c
   for (const agent of agents) {
     const targetPath = getSkillTargetPath(agent, skillName, cwd);
     fs.mkdirSync(targetPath, { recursive: true });
-    fs.cpSync(sourcePath, targetPath, { recursive: true });
+    fs.cpSync(skill.dir, targetPath, { recursive: true });
     console.log(`✔ Skill "${skillName}" instalada para ${AGENT_TARGETS[agent].label} em ${targetPath}`);
   }
 }

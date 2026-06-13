@@ -1,22 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import path from 'node:path';
-import {
-  AGENT_TARGETS,
-  getSkillSourcePath,
-  getSkillTargetPath,
-} from '../src/utils/paths.js';
-
-test('getSkillSourcePath usa o diretório de skills padrão', () => {
-  const result = getSkillSourcePath('minha-skill');
-  assert.equal(path.basename(path.dirname(result)), 'skills');
-  assert.equal(path.basename(result), 'minha-skill');
-});
-
-test('getSkillSourcePath aceita um diretório de skills customizado', () => {
-  const result = getSkillSourcePath('minha-skill', '/tmp/custom-skills');
-  assert.equal(result, path.join('/tmp/custom-skills', 'minha-skill'));
-});
+import { AGENT_TARGETS, getSkillTargetPath } from '../src/utils/paths.js';
 
 test('getSkillTargetPath resolve o caminho para o agente Claude', () => {
   const result = getSkillTargetPath('claude', 'minha-skill', '/tmp/projeto');
