@@ -10,9 +10,12 @@ It is the spec-driven sibling of `harness-creator`. The scripts use only Node.js
 
 ```bash
 node skills/sdd-harness-creator/scripts/create-sdd-harness.mjs   --target /path/to/project
+node skills/sdd-harness-creator/scripts/reverse-engineer.mjs     --target /path/to/project   # brownfield
 node skills/sdd-harness-creator/scripts/check-traceability.mjs   --target /path/to/project
 node skills/sdd-harness-creator/scripts/validate-sdd-harness.mjs --target /path/to/project
 ```
+
+For an existing codebase, `reverse-engineer.mjs` reconstructs specs from current behavior: it scans source modules, derives acceptance criteria from existing tests (or exported symbols), and seeds `specs/` + `spec-registry.json` with `phase: "documented"` features. Use `--dry-run` first.
 
 ## What It Creates
 

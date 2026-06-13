@@ -20,8 +20,13 @@
           "name": { "type": "string" },
           "phase": {
             "type": "string",
-            "enum": ["draft", "specified", "clarified", "planned", "tasked", "implementing", "verified", "done"],
-            "description": "Current SDD phase"
+            "enum": ["draft", "specified", "clarified", "planned", "tasked", "implementing", "verified", "done", "documented"],
+            "description": "Current SDD phase. 'documented' marks a feature reverse-engineered from existing code, pending re-verification."
+          },
+          "origin": {
+            "type": "string",
+            "enum": ["spec-first", "reverse-engineered"],
+            "description": "How the feature entered the registry (default spec-first)"
           },
           "spec": { "type": "string", "description": "Path to spec.md" },
           "plan": { "type": "string", "description": "Path to plan.md" },

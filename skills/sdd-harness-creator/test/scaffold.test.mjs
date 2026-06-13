@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { execFile } from 'node:child_process';
-import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -65,5 +65,47 @@ test('validate-sdd-harness scores a scaffolded harness at or above 60', async ()
     const { stdout } = await run('node', [path.join(SCRIPTS, 'validate-sdd-harness.mjs'), '--target', dir, '--json']);
     const result = JSON.parse(stdout);
     assert.ok(result.overall >= 60, `expected overall >= 60, got ${result.overall}`);
+  });
+});
+
+test('reverse-engineer adds a documented feature and keeps traceability clean', async () => {
+  await withTempProject(async (dir) => {
+    await run('node', [path.join(SCRIPTS, 'create-sdd-harness.mjs'), '--target', dir]);
+    // Seed an existing module with code + a test.
+    await mkdir(path.join(dir, 'src', 'auth'), { recursive: true });
+    await writeFile(path.join(dir, 'src', 'auth', 'login.ts'), 'export function login() { return true; }\n');
+    await writeFile(
+      path.join(dir, 'src', 'auth', 'login.test.ts'),
+      "import { it } from 'node:test';\nit('logs the user in', () => {});\n"
+    );
+
+    const { stdout } = await run('node', [path.join(SCRIPTS, 'reverse-engineer.mjs'), '--target', dir]);
+    assert.match(stdout, /002-auth/);
+
+    const registry = JSON.parse(await readFile(path.join(dir, 'spec-registry.json'), 'utf8'));
+    const auth = registry.features.find((f) => f.id === '002-auth');
+    assert.ok(auth, 'expected reverse-engineered feature 002-auth');
+    assert.equal(auth.phase, 'documented');
+    assert.equal(auth.origin, 'reverse-engineered');
+
+    const spec = await readFile(path.join(dir, 'specs', '002-auth', 'spec.md'), 'utf8');
+    assert.match(spec, /reverse-engineered/);
+
+    const trace = await run('node', [path.join(SCRIPTS, 'check-traceability.mjs'), '--target', dir]);
+    assert.match(trace.stdout, /OK/);
+  });
+});
+
+test('reverse-engineer --dry-run writes nothing', async () => {
+  await withTempProject(async (dir) => {
+    await run('node', [path.join(SCRIPTS, 'create-sdd-harness.mjs'), '--target', dir]);
+    await mkdir(path.join(dir, 'src', 'billing'), { recursive: true });
+    await writeFile(path.join(dir, 'src', 'billing', 'charge.ts'), 'export function charge() {}\n');
+
+    const { stdout } = await run('node', [path.join(SCRIPTS, 'reverse-engineer.mjs'), '--target', dir, '--dry-run']);
+    assert.match(stdout, /Dry run/);
+
+    const registry = JSON.parse(await readFile(path.join(dir, 'spec-registry.json'), 'utf8'));
+    assert.equal(registry.features.some((f) => f.name === 'billing'), false);
   });
 });

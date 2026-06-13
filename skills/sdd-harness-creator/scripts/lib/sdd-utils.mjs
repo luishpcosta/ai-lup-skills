@@ -207,7 +207,7 @@ echo "4. Re-run ./init.sh before claiming a feature done"
 // SDD-specific: registry, traceability, scoring
 // ---------------------------------------------------------------------------
 
-export const PHASES = ['draft', 'specified', 'clarified', 'planned', 'tasked', 'implementing', 'verified', 'done'];
+export const PHASES = ['draft', 'specified', 'clarified', 'planned', 'tasked', 'implementing', 'verified', 'done', 'documented'];
 // Match the opening token so markers carrying a question still count:
 // `[NEEDS CLARIFICATION: which currency?]`
 const CLARIFICATION_MARKER = '[NEEDS CLARIFICATION';

@@ -56,6 +56,14 @@ The sibling `harness-creator` uses a feature list and a single "definition of do
 - **Silent gate skipping** — starting code before the Tasks gate. Record any deliberate skip in `progress.md`.
 - **Done without evidence** — marking an AC verified with no command/output. The checker flags this.
 
+## Brownfield adoption (reverse-engineering)
+
+Most repos already have code. To adopt SDD without rewriting, run `reverse-engineer.mjs`: it scans source modules and reconstructs **retro-specs** plus registry entries so future work builds on documented behavior instead of guesses.
+
+- Acceptance criteria are derived from **existing test names** when present (tests are de-facto specs), else from **exported/public symbols**.
+- Features land in phase **`documented`** with `origin: "reverse-engineered"` — meaning "code exists, spec reconstructed, pending re-verification." Advance them toward `verified`/`done` by confirming the criteria reflect *intended* behavior and recording evidence.
+- Generated criteria describe *current* behavior. Always review them: current behavior is not necessarily correct behavior. Uncertainties go under "Assumptions / To Confirm" (not as gate-blocking `[NEEDS CLARIFICATION]` markers), so the traceability gate stays green while you triage.
+
 ## Authoring lives in the target repo
 
 This pattern is enforced by the files the harness drops into the target repo (templates with inline guidance + `AGENTS.md` gates + the checker), so any agent can author specs without installing a skill. A dedicated authoring skill is only worth extracting later if the heuristics outgrow the templates.

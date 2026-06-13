@@ -57,6 +57,17 @@ Options:
 - `--commands "cmd one,cmd two"` for custom verification.
 - `--force` only after confirming overwrites are acceptable.
 
+### Adopt SDD on an existing codebase (reverse-engineer)
+
+For brownfield projects, reconstruct specs from the current implementation so new work builds on documented behavior:
+
+```bash
+node skills/sdd-harness-creator/scripts/reverse-engineer.mjs --target /path/to/project --dry-run
+node skills/sdd-harness-creator/scripts/reverse-engineer.mjs --target /path/to/project
+```
+
+It scans source modules, derives acceptance criteria (preferring existing test names, else exported symbols), writes `specs/NNN-slug/{spec,plan,tasks}.md`, and merges features into `spec-registry.json` with `phase: "documented"` and `origin: "reverse-engineered"`. Existing registry features are preserved. Then review each retro-spec, confirm the criteria reflect *intended* (not just current) behavior, and run the traceability check.
+
 ### Check traceability (the core SDD gate)
 
 ```bash
@@ -94,5 +105,7 @@ Reports the six SDD subsystem scores, the lowest-scoring area, and the first 2-3
 - [ ] `specs/NNN-slug/{spec,plan,tasks}.md` example feature
 - [ ] `progress.md`, `session-handoff.md`
 - [ ] `init.sh` running verification + traceability check
+
+For an existing codebase, additionally run `reverse-engineer.mjs` to seed `specs/` and the registry from current behavior before planning new features.
 
 If you cannot create files, provide exact file contents and commands instead.
