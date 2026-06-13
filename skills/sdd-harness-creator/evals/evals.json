@@ -1,0 +1,47 @@
+{
+  "skill": "sdd-harness-creator",
+  "cases": [
+    {
+      "id": "trigger-create",
+      "kind": "trigger",
+      "prompt": "Set up spec-driven development in this repo so the agent writes a spec before coding.",
+      "should_trigger": true
+    },
+    {
+      "id": "trigger-constitution",
+      "kind": "trigger",
+      "prompt": "I want a constitution plus per-feature spec/plan/tasks with acceptance-criteria traceability.",
+      "should_trigger": true
+    },
+    {
+      "id": "trigger-audit",
+      "kind": "trigger",
+      "prompt": "Audit whether our SDD harness actually links acceptance criteria to tasks and evidence.",
+      "should_trigger": true
+    },
+    {
+      "id": "negative-model-choice",
+      "kind": "trigger",
+      "prompt": "Which Claude model should I use for summarization?",
+      "should_trigger": false
+    },
+    {
+      "id": "negative-classic-harness",
+      "kind": "trigger",
+      "prompt": "Just give me a simple feature list and an init script, no specs.",
+      "should_trigger": false
+    },
+    {
+      "id": "behavior-traceability-gap",
+      "kind": "behavior",
+      "prompt": "After scaffolding, an AC has no task. The traceability check must fail with a non-zero exit and name the orphan AC.",
+      "expect": "check-traceability reports orphan-ac and exits 1"
+    },
+    {
+      "id": "behavior-clean-scaffold",
+      "kind": "behavior",
+      "prompt": "A freshly scaffolded harness should pass the traceability check and score well on validation.",
+      "expect": "check-traceability ok; validate-sdd-harness overall >= 60"
+    }
+  ]
+}
