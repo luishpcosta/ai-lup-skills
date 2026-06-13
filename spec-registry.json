@@ -1,0 +1,340 @@
+{
+  "constitution": "constitution.md",
+  "features": [
+    {
+      "id": "001-example",
+      "name": "Example Feature",
+      "phase": "draft",
+      "spec": "specs/001-example/spec.md",
+      "plan": "specs/001-example/plan.md",
+      "tasks": "specs/001-example/tasks.md",
+      "dependencies": [],
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "description": "Replace with the first testable acceptance criterion from spec.md",
+          "tasks": [
+            "T-1"
+          ],
+          "status": "pending",
+          "evidence": ""
+        }
+      ],
+      "tasks_index": [
+        {
+          "id": "T-1",
+          "title": "Replace with the first task from tasks.md",
+          "status": "todo"
+        }
+      ]
+    },
+    {
+      "id": "002-cli",
+      "name": "cli",
+      "phase": "documented",
+      "spec": "specs/002-cli/spec.md",
+      "plan": "specs/002-cli/plan.md",
+      "tasks": "specs/002-cli/tasks.md",
+      "dependencies": [],
+      "origin": "reverse-engineered",
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "description": "addCommand exibe erro quando a skill não existe",
+          "tasks": [
+            "T-1"
+          ],
+          "status": "covered",
+          "evidence": "existing test: cli/test/add.test.js"
+        },
+        {
+          "id": "AC-2",
+          "description": "addCommand não copia nada quando nenhum agente é selecionado",
+          "tasks": [
+            "T-1"
+          ],
+          "status": "covered",
+          "evidence": "existing test: cli/test/add.test.js"
+        },
+        {
+          "id": "AC-3",
+          "description": "addCommand copia a skill para os agentes selecionados",
+          "tasks": [
+            "T-1"
+          ],
+          "status": "covered",
+          "evidence": "existing test: cli/test/add.test.js"
+        },
+        {
+          "id": "AC-4",
+          "description": "addCommand encontra skill aninhada em categoria e instala de forma plana",
+          "tasks": [
+            "T-1"
+          ],
+          "status": "covered",
+          "evidence": "existing test: cli/test/add.test.js"
+        },
+        {
+          "id": "AC-5",
+          "description": "lê language e tags inline aninhados sob metadata",
+          "tasks": [
+            "T-1"
+          ],
+          "status": "covered",
+          "evidence": "existing test: cli/test/add.test.js"
+        },
+        {
+          "id": "AC-6",
+          "description": "lê language com aspas e tags em bloco sob metadata",
+          "tasks": [
+            "T-1"
+          ],
+          "status": "covered",
+          "evidence": "existing test: cli/test/add.test.js"
+        },
+        {
+          "id": "AC-7",
+          "description": "também tolera language e tags no topo do frontmatter",
+          "tasks": [
+            "T-1"
+          ],
+          "status": "covered",
+          "evidence": "existing test: cli/test/add.test.js"
+        },
+        {
+          "id": "AC-8",
+          "description": "campos ausentes retornam valores neutros",
+          "tasks": [
+            "T-1"
+          ],
+          "status": "covered",
+          "evidence": "existing test: cli/test/add.test.js"
+        },
+        {
+          "id": "AC-9",
+          "description": "sem frontmatter retorna valores neutros",
+          "tasks": [
+            "T-1"
+          ],
+          "status": "covered",
+          "evidence": "existing test: cli/test/add.test.js"
+        },
+        {
+          "id": "AC-10",
+          "description": "sem arquivo SKILL.md retorna valores neutros",
+          "tasks": [
+            "T-1"
+          ],
+          "status": "covered",
+          "evidence": "existing test: cli/test/add.test.js"
+        },
+        {
+          "id": "AC-11",
+          "description": "tags em bloco param na primeira linha que não é item",
+          "tasks": [
+            "T-1"
+          ],
+          "status": "covered",
+          "evidence": "existing test: cli/test/add.test.js"
+        },
+        {
+          "id": "AC-12",
+          "description": "language vazio é tratado como ausente",
+          "tasks": [
+            "T-1"
+          ],
+          "status": "covered",
+          "evidence": "existing test: cli/test/add.test.js"
+        },
+        {
+          "id": "AC-13",
+          "description": "listCommand mostra \"Nenhuma skill disponível.\" quando o diretório não existe",
+          "tasks": [
+            "T-1"
+          ],
+          "status": "covered",
+          "evidence": "existing test: cli/test/add.test.js"
+        },
+        {
+          "id": "AC-14",
+          "description": "listCommand agrupa por language seguindo o frontmatter, não as pastas",
+          "tasks": [
+            "T-1"
+          ],
+          "status": "covered",
+          "evidence": "existing test: cli/test/add.test.js"
+        },
+        {
+          "id": "AC-15",
+          "description": "listCommand filtra por --language",
+          "tasks": [
+            "T-1"
+          ],
+          "status": "covered",
+          "evidence": "existing test: cli/test/add.test.js"
+        }
+      ],
+      "tasks_index": [
+        {
+          "id": "T-1",
+          "title": "Existing implementation (reverse-engineered)",
+          "status": "done"
+        }
+      ]
+    },
+    {
+      "id": "003-skills",
+      "name": "skills",
+      "phase": "documented",
+      "spec": "specs/003-skills/spec.md",
+      "plan": "specs/003-skills/plan.md",
+      "tasks": "specs/003-skills/tasks.md",
+      "dependencies": [],
+      "origin": "reverse-engineered",
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "description": "slugify normalizes names",
+          "tasks": [
+            "T-1"
+          ],
+          "status": "covered",
+          "evidence": "existing test: skills/sdd-harness-creator/test/reverse.test.mjs"
+        },
+        {
+          "id": "AC-2",
+          "description": "isTestFile recognizes common test conventions",
+          "tasks": [
+            "T-1"
+          ],
+          "status": "covered",
+          "evidence": "existing test: skills/sdd-harness-creator/test/reverse.test.mjs"
+        },
+        {
+          "id": "AC-3",
+          "description": "detectSourceRoot prefers src then lib then app",
+          "tasks": [
+            "T-1"
+          ],
+          "status": "covered",
+          "evidence": "existing test: skills/sdd-harness-creator/test/reverse.test.mjs"
+        },
+        {
+          "id": "AC-4",
+          "description": "groupIntoModules splits by first segment under source root",
+          "tasks": [
+            "T-1"
+          ],
+          "status": "covered",
+          "evidence": "existing test: skills/sdd-harness-creator/test/reverse.test.mjs"
+        },
+        {
+          "id": "AC-5",
+          "description": "extractExports handles JS/TS forms",
+          "tasks": [
+            "T-1"
+          ],
+          "status": "covered",
+          "evidence": "existing test: skills/sdd-harness-creator/test/reverse.test.mjs"
+        },
+        {
+          "id": "AC-6",
+          "description": "extractExports handles Python public defs/classes",
+          "tasks": [
+            "T-1"
+          ],
+          "status": "covered",
+          "evidence": "existing test: skills/sdd-harness-creator/test/reverse.test.mjs"
+        },
+        {
+          "id": "AC-7",
+          "description": "extractTestNames reads JS test titles and python test fns",
+          "tasks": [
+            "T-1"
+          ],
+          "status": "covered",
+          "evidence": "existing test: skills/sdd-harness-creator/test/reverse.test.mjs"
+        },
+        {
+          "id": "AC-8",
+          "description": "auth",
+          "tasks": [
+            "T-1"
+          ],
+          "status": "covered",
+          "evidence": "existing test: skills/sdd-harness-creator/test/reverse.test.mjs"
+        },
+        {
+          "id": "AC-9",
+          "description": "logs in",
+          "tasks": [
+            "T-1"
+          ],
+          "status": "covered",
+          "evidence": "existing test: skills/sdd-harness-creator/test/reverse.test.mjs"
+        },
+        {
+          "id": "AC-10",
+          "description": "rejects bad password",
+          "tasks": [
+            "T-1"
+          ],
+          "status": "covered",
+          "evidence": "existing test: skills/sdd-harness-creator/test/reverse.test.mjs"
+        },
+        {
+          "id": "AC-11",
+          "description": "buildReverseFeature derives ACs from tests and stays traceability-clean",
+          "tasks": [
+            "T-1"
+          ],
+          "status": "covered",
+          "evidence": "existing test: skills/sdd-harness-creator/test/reverse.test.mjs"
+        },
+        {
+          "id": "AC-12",
+          "description": "buildReverseFeature falls back to exports, then to module-level AC",
+          "tasks": [
+            "T-1"
+          ],
+          "status": "covered",
+          "evidence": "existing test: skills/sdd-harness-creator/test/reverse.test.mjs"
+        },
+        {
+          "id": "AC-13",
+          "description": "create-sdd-harness scaffolds all expected files",
+          "tasks": [
+            "T-1"
+          ],
+          "status": "covered",
+          "evidence": "existing test: skills/sdd-harness-creator/test/reverse.test.mjs"
+        },
+        {
+          "id": "AC-14",
+          "description": "scaffold fills date placeholders (no YYYY-MM-DD masks left)",
+          "tasks": [
+            "T-1"
+          ],
+          "status": "covered",
+          "evidence": "existing test: skills/sdd-harness-creator/test/reverse.test.mjs"
+        },
+        {
+          "id": "AC-15",
+          "description": "scaffolded harness passes the traceability gate",
+          "tasks": [
+            "T-1"
+          ],
+          "status": "covered",
+          "evidence": "existing test: skills/sdd-harness-creator/test/reverse.test.mjs"
+        }
+      ],
+      "tasks_index": [
+        {
+          "id": "T-1",
+          "title": "Existing implementation (reverse-engineered)",
+          "status": "done"
+        }
+      ]
+    }
+  ]
+}

@@ -41,3 +41,56 @@ Para entender um comando, leia apenas o arquivo correspondente em `cli/src/comma
   teste para cobrir cenários novos ou alterados.
 - Essas regras se aplicam a qualquer nova skill, comando do CLI ou utilitário
   adicionado a este repositório.
+
+## Desenvolvimento orientado a specs (SDD)
+
+Este repositório adotou **Spec-Driven Development**: a especificação é a fonte da
+verdade. Código novo deriva da spec e uma feature só é "done" quando todo critério
+de aceite tem evidência. As regras de qualidade acima continuam valendo e estão
+consolidadas em `constitution.md` (princípios inegociáveis).
+
+### Startup
+
+1. Confirme o diretório com `pwd`.
+2. Leia este arquivo e `constitution.md`.
+3. Rode `./init.sh` (verificação dos testes + gate de rastreabilidade).
+4. Leia `spec-registry.json` para ver a fase SDD de cada feature.
+
+### Fluxo (uma feature por vez, com gates)
+
+| Fase | Produz | Gate para sair |
+|---|---|---|
+| **Specify** | `specs/NNN-slug/spec.md` | Todo requisito tem critério de aceite testável (AC-ID); escopo e edge cases definidos |
+| **Clarify** | clarifications resolvidas | Zero marcadores `[NEEDS CLARIFICATION]` |
+| **Plan** | `specs/NNN-slug/plan.md` | Todo requisito coberto; decisões consistentes com `constitution.md` |
+| **Tasks** | `specs/NNN-slug/tasks.md` | Todo AC tem ≥1 task **e** toda task referencia um AC |
+| **Implement** | código + testes | Uma task por vez; não começar antes do gate de Tasks |
+| **Verify** | evidência em `spec-registry.json` | Todo AC `verified` com evidência registrada |
+
+Atualize a `phase` da feature em `spec-registry.json` ao avançar.
+
+### Artefatos
+
+- `constitution.md` — princípios/invariantes (inclui as regras de qualidade)
+- `spec-registry.json` (+ schema) — fonte da verdade estruturada (fases, AC↔task, evidência)
+- `specs/NNN-slug/{spec,plan,tasks}.md` — documentos por feature
+- `progress.md` / `session-handoff.md` — continuidade de sessão
+- `init.sh` — verificação + gate de rastreabilidade
+
+Features com `origin: "reverse-engineered"` e `phase: "documented"` foram reconstruídas
+do código existente (engenharia reversa) e precisam ser revisadas contra o comportamento
+*pretendido* antes de avançar para `verified`/`done`.
+
+### Definition of Done
+
+Uma feature só está done quando: spec/plan/tasks existem e passaram nos gates; todo AC
+está `verified` com evidência; `check-traceability` não acusa lacunas; a verificação
+real (testes do `cli` + testes das skills) rodou; e o repo continua reinicializável via
+`./init.sh`.
+
+### Fim de sessão
+
+Atualize `phase`/status dos ACs em `spec-registry.json`, o `progress.md`, registre
+clarifications/bloqueios e faça commit (Conventional Commits) com o repo em estado limpo.
+
+Detalhes da metodologia: `skills/sdd-harness-creator/references/spec-driven-pattern.md`.
