@@ -19,7 +19,9 @@ ai-lup-skills/
   README.md / CONTRIBUTING.md
 ```
 
-- Comandos do CLI: `lup-skills list [--language x] [--tag y] | add <skill> | remove <skill>`.
+- Comandos do CLI: `lup-skills list [--language x] [--tag y] | add <skill> | remove <skill> | update <skill>`.
+  `update` apaga a versão instalada e reinstala a atual do repositório central nos
+  agentes escolhidos; se a skill ainda não existir no agente, instala do zero.
 - `add`/`remove` perguntam (checkbox) para quais agentes agir: Claude →
   `.claude/skills/<skill>`, Devin → `.agents/skills/<skill>`. Instalação sempre plana.
 - Skills são descobertas **recursivamente** (qualquer pasta com `SKILL.md`). A

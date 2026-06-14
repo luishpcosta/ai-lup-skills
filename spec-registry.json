@@ -337,6 +337,73 @@
           "status": "done"
         }
       ]
+    },
+    {
+      "id": "003-cli-update",
+      "name": "CLI — Comando update",
+      "phase": "verified",
+      "spec": "specs/003-cli-update/spec.md",
+      "plan": "specs/003-cli-update/plan.md",
+      "tasks": "specs/003-cli-update/tasks.md",
+      "dependencies": [
+        "001-cli-commands",
+        "002-cli-utils"
+      ],
+      "origin": "spec-first",
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "description": "updateCommand exibe erro e encerra com exitCode 1 quando a skill não existe no repositório central",
+          "tasks": [
+            "T-1"
+          ],
+          "status": "verified",
+          "evidence": "cli/test/update.test.js (npm test)"
+        },
+        {
+          "id": "AC-2",
+          "description": "updateCommand oferece todos os agentes suportados, instalados ou não",
+          "tasks": [
+            "T-1"
+          ],
+          "status": "verified",
+          "evidence": "cli/test/update.test.js (npm test)"
+        },
+        {
+          "id": "AC-3",
+          "description": "updateCommand não altera nada quando nenhum agente é selecionado",
+          "tasks": [
+            "T-1"
+          ],
+          "status": "verified",
+          "evidence": "cli/test/update.test.js (npm test)"
+        },
+        {
+          "id": "AC-4",
+          "description": "updateCommand substitui a versão antiga pela nova nos agentes selecionados, removendo arquivos obsoletos",
+          "tasks": [
+            "T-1"
+          ],
+          "status": "verified",
+          "evidence": "cli/test/update.test.js (npm test)"
+        },
+        {
+          "id": "AC-5",
+          "description": "updateCommand instala a skill no agente selecionado que ainda não a possui",
+          "tasks": [
+            "T-1"
+          ],
+          "status": "verified",
+          "evidence": "cli/test/update.test.js (npm test)"
+        }
+      ],
+      "tasks_index": [
+        {
+          "id": "T-1",
+          "title": "Comando update (validação + detecção + troca por agente) e registro no CLI",
+          "status": "done"
+        }
+      ]
     }
   ]
 }

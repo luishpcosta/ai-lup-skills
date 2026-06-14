@@ -3,6 +3,7 @@
 import { Command } from 'commander';
 import { addCommand } from './src/commands/add.js';
 import { removeCommand } from './src/commands/remove.js';
+import { updateCommand } from './src/commands/update.js';
 import { listCommand } from './src/commands/list.js';
 
 const program = new Command();
@@ -29,5 +30,10 @@ program
   .command('remove <skill-name>')
   .description('Remove uma skill instalada no projeto atual')
   .action(removeCommand);
+
+program
+  .command('update <skill-name>')
+  .description('Atualiza uma skill instalada: remove a versão antiga e reinstala a nova do repositório central')
+  .action(updateCommand);
 
 program.parse();
