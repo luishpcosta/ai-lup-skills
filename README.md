@@ -110,6 +110,18 @@ quais deles ela deve ser removida (mesma navegação com espaço/enter descrita 
 As pastas correspondentes (`.claude/skills/<skill-name>` e/ou `.agents/skills/<skill-name>`)
 serão apagadas.
 
+### 6. Atualizar uma skill com `lup-skills update`
+
+```bash
+lup-skills update skill-creator
+```
+
+Use quando a skill evoluiu no repositório central e você quer propagar a nova versão.
+O CLI pergunta em quais agentes atualizar (todos os suportados) e, para cada um,
+**apaga a versão antiga e reinstala a atual** do repositório central, removendo arquivos
+que não existem mais na nova versão. Se o agente selecionado ainda não tiver a skill, ela
+é instalada do zero.
+
 ## Comandos disponíveis
 
 | Comando | Descrição |
@@ -117,6 +129,7 @@ serão apagadas.
 | `lup-skills list` (ou `ls`) | Lista as skills disponíveis, agrupadas por linguagem. Aceita `--language <x>` e `--tag <y>` para filtrar. |
 | `lup-skills add <skill-name>` | Copia a skill `<skill-name>` do repositório central para o(s) agente(s) escolhido(s) no projeto atual. |
 | `lup-skills remove <skill-name>` | Remove a skill `<skill-name>` do(s) agente(s) escolhido(s) no projeto atual. |
+| `lup-skills update <skill-name>` | Atualiza a skill `<skill-name>`: apaga a versão instalada e reinstala a atual do repositório central no(s) agente(s) escolhido(s); instala do zero onde ainda não existir. |
 | `lup-skills --help` | Lista todos os comandos disponíveis. |
 
 ## Categorias e contribuição
