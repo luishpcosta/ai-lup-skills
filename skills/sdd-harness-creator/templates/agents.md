@@ -54,7 +54,6 @@ Update the feature's `phase` in `spec-registry.json` as you advance.
 - `spec-registry.json` — structured source of truth (phases, AC↔task links, evidence)
 - `specs/NNN-slug/{spec,plan,tasks}.md` — per-feature documents
 - `progress.md` — session continuity log
-- `session-handoff.md` — optional, for larger sessions
 - `init.sh` — verification + traceability gate
 
 ## Definition of Done

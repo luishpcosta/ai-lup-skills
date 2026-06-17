@@ -87,6 +87,7 @@ Reports the six SDD subsystem scores, the lowest-scoring area, and the first 2-3
 ## When to Read References
 
 - Methodology, gates, and traceability rules: [Spec-Driven Pattern](references/spec-driven-pattern.md)
+- Registry structure (reference only — not scaffolded into target repos): [spec-registry.schema.json](references/spec-registry.schema.json)
 
 ## Design Rules
 
@@ -101,9 +102,9 @@ Reports the six SDD subsystem scores, the lowest-scoring area, and the first 2-3
 
 - [ ] `AGENTS.md` or `CLAUDE.md` with the SDD flow and gates
 - [ ] `constitution.md` (project principles/invariants)
-- [ ] `spec-registry.json` (+ schema)
+- [ ] `spec-registry.json`
 - [ ] `specs/NNN-slug/{spec,plan,tasks}.md` example feature
-- [ ] `progress.md`, `session-handoff.md`
+- [ ] `progress.md`
 - [ ] `init.sh` running verification + traceability check
 
 For an existing codebase, additionally run `reverse-engineer.mjs` to seed `specs/` and the registry from current behavior before planning new features.

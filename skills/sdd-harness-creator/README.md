@@ -21,9 +21,9 @@ For an existing codebase, `reverse-engineer.mjs` reconstructs specs from current
 
 - `AGENTS.md` or `CLAUDE.md` — SDD flow and phase gates
 - `constitution.md` — project principles/invariants
-- `spec-registry.json` (+ `spec-registry.schema.json`) — structured source of truth
+- `spec-registry.json` — structured source of truth
 - `specs/NNN-slug/{spec,plan,tasks}.md` — example feature
-- `progress.md`, `session-handoff.md`
+- `progress.md`
 - `init.sh` — verification + traceability check
 
 ## What It Checks

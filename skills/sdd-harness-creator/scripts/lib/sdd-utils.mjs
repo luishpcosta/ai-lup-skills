@@ -293,8 +293,8 @@ export function analyzeTraceability(registry, specTexts = {}) {
 export async function loadSddHarnessFiles(root) {
   const topLevel = [
     'AGENTS.md', 'CLAUDE.md', 'constitution.md',
-    'spec-registry.json', 'spec-registry.schema.json',
-    'progress.md', 'session-handoff.md', 'init.sh'
+    'spec-registry.json',
+    'progress.md', 'init.sh'
   ];
   const files = [];
   for (const candidate of topLevel) {
@@ -320,7 +320,6 @@ export function scoreSddHarness(files) {
   const constitution = byPath.get('constitution.md') || '';
   const registryText = byPath.get('spec-registry.json') || '';
   const progress = byPath.get('progress.md') || '';
-  const handoff = byPath.get('session-handoff.md') || '';
   const init = byPath.get('init.sh') || '';
 
   const specFiles = [...byPath.keys()].filter((p) => p.startsWith('specs/') && p.endsWith('/spec.md'));
@@ -371,8 +370,7 @@ export function scoreSddHarness(files) {
     ],
     lifecycle: [
       hasFile(byPath, ['progress.md'], 'Progress log exists'),
-      hasFile(byPath, ['session-handoff.md'], 'Session handoff exists'),
-      textHas(progress + handoff, ['Next', 'Recommended Next Step', 'Current', 'próxim', 'atual'], 'Session restart markers exist'),
+      textHas(progress, ['Next', 'Recommended Next Step', 'Current', 'próxim', 'atual'], 'Session restart markers exist'),
       textHas(registryText, ['"phase"'], 'Registry persists per-feature phase'),
       textHas(agents + init, ['restartable', 'clean', 'Next steps', 'End of Session', 'reinicializ', 'limpo', 'próximos', 'fim de sessão'], 'Clean restart path documented')
     ]
