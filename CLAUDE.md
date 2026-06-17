@@ -74,9 +74,9 @@ Atualize a `phase` da feature em `spec-registry.json` ao avançar.
 ### Artefatos
 
 - `constitution.md` — princípios/invariantes (inclui as regras de qualidade)
-- `spec-registry.json` (+ schema) — fonte da verdade estruturada (fases, AC↔task, evidência)
+- `spec-registry.json` — fonte da verdade estruturada (fases, AC↔task, evidência)
 - `specs/NNN-slug/{spec,plan,tasks}.md` — documentos por feature
-- `progress.md` / `session-handoff.md` — continuidade de sessão
+- `progress.md` — continuidade de sessão
 - `init.sh` — verificação + gate de rastreabilidade
 
 Features com `origin: "reverse-engineered"` e `phase: "documented"` foram reconstruídas

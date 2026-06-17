@@ -23,8 +23,8 @@ test('create-sdd-harness scaffolds all expected files', async () => {
   await withTempProject(async (dir) => {
     await run('node', [path.join(SCRIPTS, 'create-sdd-harness.mjs'), '--target', dir]);
     for (const rel of [
-      'AGENTS.md', 'constitution.md', 'spec-registry.json', 'spec-registry.schema.json',
-      'progress.md', 'session-handoff.md', 'init.sh',
+      'AGENTS.md', 'constitution.md', 'spec-registry.json',
+      'progress.md', 'init.sh',
       'specs/001-example/spec.md', 'specs/001-example/plan.md', 'specs/001-example/tasks.md'
     ]) {
       const content = await readFile(path.join(dir, rel), 'utf8');

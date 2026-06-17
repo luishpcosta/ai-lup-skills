@@ -22,10 +22,9 @@ if (args.help) {
 Creates a spec-driven (SDD) harness:
   AGENTS.md or CLAUDE.md      (SDD flow + gates)
   constitution.md
-  spec-registry.json (+ schema)
+  spec-registry.json
   specs/001-example/{spec,plan,tasks}.md
   progress.md
-  session-handoff.md
   init.sh                     (verification + traceability gate)
 
 Existing files are skipped unless --force is set.`);
@@ -59,9 +58,7 @@ const results = [];
 results.push(await copyTemplate('agents.md', path.join(target, agentFile), agentReplacements, { force }));
 results.push(await copyTemplate('constitution.md', path.join(target, 'constitution.md'), {}, { force }));
 results.push(await copyTemplate('spec-registry.json', path.join(target, 'spec-registry.json'), {}, { force }));
-results.push(await copyTemplate('spec-registry.schema.json', path.join(target, 'spec-registry.schema.json'), {}, { force }));
 results.push(await copyTemplate('progress.md', path.join(target, 'progress.md'), dates, { force }));
-results.push(await copyTemplate('session-handoff.md', path.join(target, 'session-handoff.md'), {}, { force }));
 
 const exampleDir = path.join(target, 'specs', '001-example');
 results.push(await copyTemplate('spec.md', path.join(exampleDir, 'spec.md'), exampleReplacements, { force }));
