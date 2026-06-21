@@ -2,8 +2,15 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import {
   analyzeTraceability,
+  applyRegistryUpdate,
+  findFeature,
+  formatFeatureDetail,
+  formatOpenCriteria,
+  formatRegistryStatus,
+  listOpenCriteria,
   parseArgs,
   scoreSddHarness,
+  summarizeRegistry,
   verificationCommands
 } from '../scripts/lib/sdd-utils.mjs';
 
@@ -106,4 +113,130 @@ test('scoreSddHarness accepts Portuguese instruction/constitution text', () => {
   assert.equal(principles.pass, true, 'PT principles should be recognized');
   assert.equal(gates.pass, true, 'PT gates/fase should be recognized');
   assert.equal(trace.pass, true, 'PT rastreabilidade should be recognized');
+});
+
+function sampleRegistry() {
+  return {
+    features: [
+      {
+        id: '001-a', name: 'Feature A', phase: 'tasked',
+        acceptance_criteria: [
+          { id: 'AC-1', description: 'first', tasks: ['T-1'], status: 'covered' },
+          { id: 'AC-2', description: 'second', tasks: ['T-2'], status: 'verified', evidence: 'tests pass' }
+        ],
+        tasks_index: [{ id: 'T-1' }, { id: 'T-2' }]
+      },
+      {
+        id: '002-b', name: 'Feature B', phase: 'draft',
+        acceptance_criteria: [
+          { id: 'AC-1', description: 'pending one', tasks: [], status: 'pending' }
+        ],
+        tasks_index: []
+      }
+    ]
+  };
+}
+
+test('summarizeRegistry counts AC verified/covered per feature', () => {
+  const summary = summarizeRegistry(sampleRegistry());
+  assert.deepEqual(summary.features[0], { id: '001-a', name: 'Feature A', phase: 'tasked', acTotal: 2, acVerified: 1, acCovered: 2 });
+  assert.deepEqual(summary.features[1], { id: '002-b', name: 'Feature B', phase: 'draft', acTotal: 1, acVerified: 0, acCovered: 0 });
+});
+
+test('summarizeRegistry returns empty array for registry with no features', () => {
+  assert.deepEqual(summarizeRegistry({}), { features: [] });
+});
+
+test('findFeature returns the matching feature with all ACs by default', () => {
+  const result = findFeature(sampleRegistry(), '001-a');
+  assert.equal(result.feature.id, '001-a');
+  assert.equal(result.feature.acceptance_criteria.length, 2);
+});
+
+test('findFeature with openOnly filters out verified ACs', () => {
+  const result = findFeature(sampleRegistry(), '001-a', { openOnly: true });
+  assert.equal(result.feature.acceptance_criteria.length, 1);
+  assert.equal(result.feature.acceptance_criteria[0].id, 'AC-1');
+});
+
+test('findFeature returns error not-found for unknown id', () => {
+  const result = findFeature(sampleRegistry(), '999-nope');
+  assert.deepEqual(result, { error: 'not-found' });
+});
+
+test('listOpenCriteria lists non-verified ACs across all features', () => {
+  const open = listOpenCriteria(sampleRegistry());
+  assert.equal(open.length, 2);
+  assert.deepEqual(open.map((o) => `${o.featureId}/${o.ac.id}`), ['001-a/AC-1', '002-b/AC-1']);
+});
+
+test('formatRegistryStatus and formatOpenCriteria produce one line per entry', () => {
+  const statusText = formatRegistryStatus(summarizeRegistry(sampleRegistry()), '/proj');
+  assert.match(statusText, /001-a \[tasked\] Feature A — AC 1\/2 verified \(2\/2 covered\)/);
+  const openText = formatOpenCriteria(listOpenCriteria(sampleRegistry()), '/proj');
+  assert.match(openText, /001-a\/AC-1 \[covered\] first/);
+});
+
+test('formatFeatureDetail lists each AC with tasks and evidence', () => {
+  const { feature } = findFeature(sampleRegistry(), '001-a');
+  const text = formatFeatureDetail(feature, '/proj');
+  assert.match(text, /AC-2 \[verified\].*evidence: tests pass/);
+});
+
+test('applyRegistryUpdate set-phase updates the feature and leaves the input untouched', () => {
+  const registry = sampleRegistry();
+  const result = applyRegistryUpdate(registry, { type: 'set-phase', featureId: '001-a', phase: 'verified' });
+  assert.equal(result.ok, true);
+  assert.equal(result.registry.features[0].phase, 'verified');
+  assert.equal(registry.features[0].phase, 'tasked', 'original registry must not be mutated');
+});
+
+test('applyRegistryUpdate rejects unknown feature id', () => {
+  const result = applyRegistryUpdate(sampleRegistry(), { type: 'set-phase', featureId: '999-nope', phase: 'verified' });
+  assert.deepEqual(result.ok, false);
+  assert.equal(result.error, 'unknown-feature');
+});
+
+test('applyRegistryUpdate rejects unknown phase', () => {
+  const result = applyRegistryUpdate(sampleRegistry(), { type: 'set-phase', featureId: '001-a', phase: 'shipped' });
+  assert.equal(result.ok, false);
+  assert.equal(result.error, 'unknown-phase');
+});
+
+test('applyRegistryUpdate set-ac-status rejects unknown AC id', () => {
+  const result = applyRegistryUpdate(sampleRegistry(), { type: 'set-ac-status', featureId: '001-a', acId: 'AC-99', status: 'verified', evidence: 'x' });
+  assert.equal(result.ok, false);
+  assert.equal(result.error, 'unknown-ac');
+});
+
+test('applyRegistryUpdate set-ac-status rejects unknown status value', () => {
+  const result = applyRegistryUpdate(sampleRegistry(), { type: 'set-ac-status', featureId: '001-a', acId: 'AC-1', status: 'bogus' });
+  assert.equal(result.ok, false);
+  assert.equal(result.error, 'unknown-status');
+});
+
+test('applyRegistryUpdate rejects verified status without evidence', () => {
+  const result = applyRegistryUpdate(sampleRegistry(), { type: 'set-ac-status', featureId: '001-a', acId: 'AC-1', status: 'verified' });
+  assert.equal(result.ok, false);
+  assert.equal(result.error, 'missing-evidence');
+});
+
+test('applyRegistryUpdate accepts verified status with evidence and stores it', () => {
+  const result = applyRegistryUpdate(sampleRegistry(), { type: 'set-ac-status', featureId: '001-a', acId: 'AC-1', status: 'verified', evidence: 'ran tests' });
+  assert.equal(result.ok, true);
+  const ac = result.registry.features[0].acceptance_criteria[0];
+  assert.equal(ac.status, 'verified');
+  assert.equal(ac.evidence, 'ran tests');
+});
+
+test('applyRegistryUpdate add-ac-task appends a task id', () => {
+  const result = applyRegistryUpdate(sampleRegistry(), { type: 'add-ac-task', featureId: '002-b', acId: 'AC-1', taskId: 'T-9' });
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.registry.features[1].acceptance_criteria[0].tasks, ['T-9']);
+});
+
+test('applyRegistryUpdate add-ac-task rejects a duplicate task id', () => {
+  const result = applyRegistryUpdate(sampleRegistry(), { type: 'add-ac-task', featureId: '001-a', acId: 'AC-1', taskId: 'T-1' });
+  assert.equal(result.ok, false);
+  assert.equal(result.error, 'duplicate-task');
 });

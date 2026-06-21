@@ -208,7 +208,7 @@ node skills/sdd-harness-creator/scripts/check-traceability.mjs --target . || {
 echo "=== Verification Complete ==="
 echo ""
 echo "Next steps:"
-echo "1. Read spec-registry.json to see each feature's SDD phase"
+echo "1. Run skills/sdd-harness-creator/scripts/registry-status.mjs to see each feature's SDD phase"
 echo "2. Advance ONE feature through the flow (Specify -> Clarify -> Plan -> Tasks -> Implement -> Verify)"
 echo "3. Do not start a phase before the previous gate passes"
 echo "4. Re-run ./init.sh before claiming a feature done"
@@ -445,4 +445,167 @@ export function formatTraceabilityReport(result, root = '.') {
     lines.push(`  [${problem.type}] ${problem.feature}: ${problem.message}`);
   }
   return lines.join('\n');
+}
+
+// ---------------------------------------------------------------------------
+// SDD-specific: bounded-size registry query/update (avoid full-file reads)
+// ---------------------------------------------------------------------------
+
+const AC_STATUSES = ['pending', 'covered', 'verified'];
+
+function acStats(criteria) {
+  const list = Array.isArray(criteria) ? criteria : [];
+  return {
+    acTotal: list.length,
+    acVerified: list.filter((ac) => ac.status === 'verified').length,
+    acCovered: list.filter((ac) => Array.isArray(ac.tasks) && ac.tasks.length > 0).length
+  };
+}
+
+/**
+ * Pure per-feature summary (phase + AC counts), no AC text — small and bounded
+ * regardless of registry size. No file I/O.
+ */
+export function summarizeRegistry(registry) {
+  const features = Array.isArray(registry?.features) ? registry.features : [];
+  return {
+    features: features.map((feature) => ({
+      id: feature.id ?? '(unknown)',
+      name: feature.name ?? '',
+      phase: feature.phase ?? '(unknown)',
+      ...acStats(feature.acceptance_criteria)
+    }))
+  };
+}
+
+/**
+ * Pure lookup of one feature by id, optionally filtered to non-verified ACs.
+ * Returns { feature } or { error: 'not-found' }. Never throws.
+ */
+export function findFeature(registry, featureId, { openOnly = false } = {}) {
+  const features = Array.isArray(registry?.features) ? registry.features : [];
+  const feature = features.find((f) => f.id === featureId);
+  if (!feature) return { error: 'not-found' };
+  const criteria = Array.isArray(feature.acceptance_criteria) ? feature.acceptance_criteria : [];
+  const acceptance_criteria = openOnly ? criteria.filter((ac) => ac.status !== 'verified') : criteria;
+  return { feature: { ...feature, acceptance_criteria } };
+}
+
+/**
+ * Pure list of {featureId, ac} pairs for every non-verified AC across all features.
+ * No file I/O.
+ */
+export function listOpenCriteria(registry) {
+  const features = Array.isArray(registry?.features) ? registry.features : [];
+  const open = [];
+  for (const feature of features) {
+    const criteria = Array.isArray(feature.acceptance_criteria) ? feature.acceptance_criteria : [];
+    for (const ac of criteria) {
+      if (ac.status !== 'verified') open.push({ featureId: feature.id, ac });
+    }
+  }
+  return open;
+}
+
+export function formatRegistryStatus(summary, root = '.') {
+  const lines = [`Registry status for ${root}`, `Features: ${summary.features.length}`, ''];
+  if (summary.features.length === 0) {
+    lines.push('(no features)');
+    return lines.join('\n');
+  }
+  for (const f of summary.features) {
+    lines.push(`${f.id} [${f.phase}] ${f.name} — AC ${f.acVerified}/${f.acTotal} verified (${f.acCovered}/${f.acTotal} covered)`);
+  }
+  return lines.join('\n');
+}
+
+export function formatOpenCriteria(open, root = '.') {
+  const lines = [`Open acceptance criteria for ${root}`, `Count: ${open.length}`, ''];
+  if (open.length === 0) {
+    lines.push('(none — everything verified)');
+    return lines.join('\n');
+  }
+  for (const { featureId, ac } of open) {
+    lines.push(`${featureId}/${ac.id} [${ac.status ?? 'pending'}] ${ac.description}`);
+  }
+  return lines.join('\n');
+}
+
+export function formatFeatureDetail(feature, root = '.') {
+  const lines = [`Feature ${feature.id} [${feature.phase}] — ${feature.name} (${root})`];
+  const criteria = Array.isArray(feature.acceptance_criteria) ? feature.acceptance_criteria : [];
+  if (criteria.length === 0) {
+    lines.push('(no acceptance criteria match this filter)');
+    return lines.join('\n');
+  }
+  for (const ac of criteria) {
+    const tasks = Array.isArray(ac.tasks) && ac.tasks.length ? ac.tasks.join(',') : '(none)';
+    const evidence = ac.evidence ? ` | evidence: ${ac.evidence}` : '';
+    lines.push(`  ${ac.id} [${ac.status ?? 'pending'}] ${ac.description} | tasks: ${tasks}${evidence}`);
+  }
+  return lines.join('\n');
+}
+
+/**
+ * Apply one mutation to a registry object. Pure and immutable (returns a new
+ * object; never mutates `registry`). Never throws.
+ *
+ * op: { type: 'set-phase', featureId, phase }
+ *   | { type: 'set-ac-status', featureId, acId, status, evidence? }
+ *   | { type: 'add-ac-task', featureId, acId, taskId }
+ *
+ * Returns { ok: true, registry, message } or { ok: false, error, message }
+ * where error is one of: 'unknown-feature' | 'unknown-ac' | 'unknown-phase'
+ *   | 'unknown-status' | 'missing-evidence' | 'duplicate-task' | 'unknown-op'
+ */
+export function applyRegistryUpdate(registry, op) {
+  const features = Array.isArray(registry?.features) ? registry.features : [];
+  const featureIndex = features.findIndex((f) => f.id === op.featureId);
+  if (featureIndex === -1) {
+    return { ok: false, error: 'unknown-feature', message: `Unknown feature id: ${op.featureId}` };
+  }
+
+  if (op.type === 'set-phase') {
+    if (!PHASES.includes(op.phase)) {
+      return { ok: false, error: 'unknown-phase', message: `Unknown phase: ${op.phase} (expected one of ${PHASES.join(', ')})` };
+    }
+    const next = structuredClone(registry);
+    next.features[featureIndex].phase = op.phase;
+    return { ok: true, registry: next, message: `${op.featureId}: phase -> ${op.phase}` };
+  }
+
+  if (op.type === 'set-ac-status' || op.type === 'add-ac-task') {
+    const criteria = Array.isArray(features[featureIndex].acceptance_criteria) ? features[featureIndex].acceptance_criteria : [];
+    const acIndex = criteria.findIndex((item) => item.id === op.acId);
+    if (acIndex === -1) {
+      return { ok: false, error: 'unknown-ac', message: `Unknown acceptance criterion id: ${op.acId} on feature ${op.featureId}` };
+    }
+
+    if (op.type === 'set-ac-status') {
+      if (!AC_STATUSES.includes(op.status)) {
+        return { ok: false, error: 'unknown-status', message: `Unknown AC status: ${op.status} (expected one of ${AC_STATUSES.join(', ')})` };
+      }
+      if (op.status === 'verified' && !op.evidence) {
+        return { ok: false, error: 'missing-evidence', message: `Cannot set ${op.acId} to verified without --evidence` };
+      }
+      const next = structuredClone(registry);
+      const ac = next.features[featureIndex].acceptance_criteria[acIndex];
+      ac.status = op.status;
+      if (op.evidence) ac.evidence = op.evidence;
+      return { ok: true, registry: next, message: `${op.featureId}/${op.acId}: status -> ${op.status}` };
+    }
+
+    // add-ac-task
+    const existingTasks = Array.isArray(criteria[acIndex].tasks) ? criteria[acIndex].tasks : [];
+    if (existingTasks.includes(op.taskId)) {
+      return { ok: false, error: 'duplicate-task', message: `Task ${op.taskId} is already linked to ${op.acId}` };
+    }
+    const next = structuredClone(registry);
+    const ac = next.features[featureIndex].acceptance_criteria[acIndex];
+    ac.tasks = Array.isArray(ac.tasks) ? ac.tasks : [];
+    ac.tasks.push(op.taskId);
+    return { ok: true, registry: next, message: `${op.featureId}/${op.acId}: +task ${op.taskId}` };
+  }
+
+  return { ok: false, error: 'unknown-op', message: `Unknown operation type: ${op.type}` };
 }

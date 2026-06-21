@@ -32,9 +32,9 @@ This skill runs **once per repository** (build-time): it scaffolds the structure
 | Plan | `specs/NNN-slug/plan.md` | Every functional requirement is covered; decisions consistent with `constitution.md` |
 | Tasks | `specs/NNN-slug/tasks.md` | Bidirectional coverage: every AC has ≥1 task and every task references an AC |
 | Implement | code | One task at a time; never start before the Tasks gate passes |
-| Verify | evidence in `spec-registry.json` | Every AC has recorded passing evidence; traceability complete |
+| Verify | evidence in `spec-registry.json` (via `registry-update.mjs`) | Every AC has recorded passing evidence; traceability complete |
 
-`spec-registry.json` is the structured source of truth (phases, AC↔task links, evidence). The markdown docs carry the same AC IDs for humans.
+`spec-registry.json` is the structured source of truth (phases, AC↔task links, evidence). The markdown docs carry the same AC IDs for humans. For agents, prefer `registry-status.mjs`/`registry-update.mjs` over reading/editing the file directly once it has more than a few features — see Common Tasks below.
 
 ## First Move
 
@@ -75,6 +75,25 @@ node skills/sdd-harness-creator/scripts/check-traceability.mjs --target /path/to
 ```
 
 Reports orphan acceptance criteria (no task), orphan tasks (no AC), open clarifications, and ACs without evidence. Non-zero exit on any gap, so it works inside `init.sh`.
+
+### Check feature/AC status without loading the whole registry
+
+```bash
+node skills/sdd-harness-creator/scripts/registry-status.mjs --target /path/to/project
+node skills/sdd-harness-creator/scripts/registry-status.mjs --target /path/to/project --feature 002-auth --open
+```
+
+Prints a compact summary (one line per feature, or one feature's open ACs) instead of the full `spec-registry.json`. Use this for routine phase/AC checks; read the JSON file directly only for a first-time scaffold or a very small registry.
+
+### Update registry state without a full read+edit round-trip
+
+```bash
+node skills/sdd-harness-creator/scripts/registry-update.mjs --target /path/to/project --feature 002-auth --set-phase tasked
+node skills/sdd-harness-creator/scripts/registry-update.mjs --target /path/to/project --feature 002-auth --ac AC-3 --status verified --evidence "test/auth.test.ts:12 passing"
+node skills/sdd-harness-creator/scripts/registry-update.mjs --target /path/to/project --feature 002-auth --ac AC-2 --add-task T-2
+```
+
+Sets one phase, one AC's status/evidence, or appends one task link, and writes the file directly — no full-file read is required first. Rejects unknown feature/AC ids, unknown phases/statuses, and `verified` without `--evidence`. Editing `spec-registry.json` by hand remains valid for small registries or initial scaffolding.
 
 ### Audit an existing SDD harness
 
