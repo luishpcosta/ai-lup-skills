@@ -55,8 +55,8 @@ consolidadas em `constitution.md` (princípios inegociáveis).
 
 1. Confirme o diretório com `pwd`.
 2. Leia este arquivo e `constitution.md`.
-3. Rode `./init.sh` (verificação dos testes + gate de rastreabilidade).
-4. Leia `spec-registry.json` para ver a fase SDD de cada feature.
+3. Rode `./init.sh` (verificação dos testes).
+4. Veja `specs/*/spec.md` (linha `**Phase:**` no topo de cada um) para a fase SDD de cada feature.
 
 ### Fluxo (uma feature por vez, com gates)
 
@@ -65,34 +65,35 @@ consolidadas em `constitution.md` (princípios inegociáveis).
 | **Specify** | `specs/NNN-slug/spec.md` | Todo requisito tem critério de aceite testável (AC-ID); escopo e edge cases definidos |
 | **Clarify** | clarifications resolvidas | Zero marcadores `[NEEDS CLARIFICATION]` |
 | **Plan** | `specs/NNN-slug/plan.md` | Todo requisito coberto; decisões consistentes com `constitution.md` |
-| **Tasks** | `specs/NNN-slug/tasks.md` | Todo AC tem ≥1 task **e** toda task referencia um AC |
+| **Tasks** | `specs/NNN-slug/tasks.md` | Todo AC tem ≥1 task **e** toda task referencia um AC (ver Coverage Check em `tasks.md`) |
 | **Implement** | código + testes | Uma task por vez; não começar antes do gate de Tasks |
-| **Verify** | evidência em `spec-registry.json` | Todo AC `verified` com evidência registrada |
+| **Verify** | evidência na tabela de `tasks.md` (coluna Evidence) e em `progress.md` | Todo AC tem task(s) `done` com evidência registrada |
 
-Atualize a `phase` da feature em `spec-registry.json` ao avançar.
+Atualize a linha `**Phase:**` no topo do `spec.md`/`plan.md`/`tasks.md` da feature ao avançar.
 
 ### Artefatos
 
 - `constitution.md` — princípios/invariantes (inclui as regras de qualidade)
-- `spec-registry.json` — fonte da verdade estruturada (fases, AC↔task, evidência)
-- `specs/NNN-slug/{spec,plan,tasks}.md` — documentos por feature
+- `specs/NNN-slug/{spec,plan,tasks}.md` — documentos por feature; cada um carrega sua
+  própria `**Phase:**`, e `tasks.md` carrega status/evidência por task
 - `progress.md` — continuidade de sessão
-- `init.sh` — verificação + gate de rastreabilidade
+- `init.sh` — verificação
 
-Features com `origin: "reverse-engineered"` e `phase: "documented"` foram reconstruídas
-do código existente (engenharia reversa) e precisam ser revisadas contra o comportamento
-*pretendido* antes de avançar para `verified`/`done`.
+Features com `**Origin:** reverse-engineered` e `**Phase:** documented` (no header do
+`spec.md`) foram reconstruídas do código existente (engenharia reversa) e precisam ser
+revisadas contra o comportamento *pretendido* antes de avançar para `verified`/`done`.
 
 ### Definition of Done
 
 Uma feature só está done quando: spec/plan/tasks existem e passaram nos gates; todo AC
-está `verified` com evidência; `check-traceability` não acusa lacunas; a verificação
-real (testes do `cli` + testes das skills) rodou; e o repo continua reinicializável via
-`./init.sh`.
+tem task(s) marcadas `done` com evidência na tabela de `tasks.md`; o Coverage Check de
+`tasks.md` confirma cobertura bidirecional AC↔task; a verificação real (testes do `cli`
++ testes das skills) rodou; e o repo continua reinicializável via `./init.sh`.
 
 ### Fim de sessão
 
-Atualize `phase`/status dos ACs em `spec-registry.json`, o `progress.md`, registre
-clarifications/bloqueios e faça commit (Conventional Commits) com o repo em estado limpo.
+Atualize a `**Phase:**` e a tabela de status/evidência da feature tocada, o
+`progress.md`, registre clarifications/bloqueios e faça commit (Conventional Commits)
+com o repo em estado limpo.
 
 Detalhes da metodologia: `skills/sdd-harness-creator/references/spec-driven-pattern.md`.

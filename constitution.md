@@ -29,8 +29,7 @@ conflitos são escalados a um humano, nunca sobrepostos em silêncio.
 
 - **Cobertura acima de 90%** ao alterar código no `cli/`: rodar `npm run test:coverage`
   (dentro de `cli/`) e garantir >90% em statements/branches/functions/lines (`src/**`).
-- Verificação do harness (`./init.sh`): testes do `cli` + testes das skills + gate de
-  rastreabilidade (`check-traceability`) sem lacunas.
+- Verificação do harness (`./init.sh`): testes do `cli` + testes das skills.
 
 ## Emendas
 
