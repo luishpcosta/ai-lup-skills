@@ -31,7 +31,7 @@ A escrita é idempotente via: <chave de idempotência ou semântica do método>
 **AC ADR-XXX-AC-03** (se houver contrato de mensageria/evento)
 ```
 Dado que <componente A> publica o evento <nome> no tópico/fila <id>
-Consumidores conhecidos na memória da plataforma: <lista, ou "nenhum ainda">
+Consumidores conhecidos (informados pelo usuário): <lista, ou "nenhum informado">
 O schema é versionado por: <campo de versão / convenção>
 Campos novos em relação à versão anterior são opcionais: <sim, quais>
 O consumidor trata duplicidade via: <chave de deduplicação>
