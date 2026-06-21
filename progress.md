@@ -36,6 +36,25 @@
 
 ## Decisions Made
 
+- **Remoção do mecanismo de `platform-memory.yaml` em `prd-to-adr`/`issue-to-adr`**
+  (2026-06-21): as duas skills passam a ser stateless — cada PRD/demanda é
+  tratado isoladamente, sem carregar/escrever nenhum arquivo de memória entre
+  execuções. Removidas as fases que dependiam dele (carregar memória,
+  classificação ✅/🔶/🆕, diagrama Mermaid de existente-vs-novo, atualização da
+  memória) e os arquivos `references/memoria-schema.md` e
+  `references/grafo-visual.md` em ambas as skills. A busca de consumidores de
+  um tópico/evento (Fase 3.5, mensageria) passa a ser perguntada diretamente
+  ao usuário em vez de cruzada com a memória.
+  - Numeração de ADR trocada de sequencial (lida de `ultimo_adr` na memória)
+    para `ADR-<data:YYYYMMDD>-<hora:HHMM>-<sufixo aleatório de 4 caracteres>`
+    (ex.: `ADR-20260620-1542-3f0a`), gerada via Bash (`date` + `$RANDOM`), com
+    checagem de colisão contra `adr/ADR-<id>-*.md` antes de usar — não depende
+    de nenhum arquivo nem de perguntar ao usuário.
+  - Context: pedido do usuário para simplificar as skills, removendo a
+    persistência entre execuções.
+  - Constitution impact: nenhum (mudança não tocou `cli/`, `constitution.md`
+    nem `spec-registry.json` — essas skills nunca foram código executável
+    nem features rastreadas no harness SDD deste repo).
 - **`update` oferece todos os agentes e instala onde faltar**: por agente selecionado,
   substitui a versão antiga ou instala do zero se ainda não existir. Mensagem distingue
   "atualizada" de "instalada".

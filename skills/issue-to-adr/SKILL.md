@@ -1,6 +1,6 @@
 ---
 name: issue-to-adr
-description: "Use quando o usuário descrever uma necessidade técnica de forma informal (mensagem de chat, ideia verbal, ticket curto, comentário em reunião) — não um PRD escrito — e quiser a arquitetura, ADR e atividades/AC correspondentes. Acione especialmente quando a informação dada for insuficiente para decidir a arquitetura (faltam requisitos não-funcionais, escopo, volume, criticidade): a skill deve perguntar o que falta antes de propor algo, em vez de assumir. Também mantém e consulta a memória incremental da plataforma (platform-memory.yaml), igual à skill de PRD, e gera o mesmo par ADR+ACs com checkpoint humano e diagrama Mermaid de validação. Use mesmo sem o usuário citar 'PRD', 'ADR' ou 'arquitetura' explicitamente — se a intenção é 'preciso resolver X tecnicamente e não tenho um documento formal', esta skill se aplica."
+description: "Use quando o usuário descrever uma necessidade técnica de forma informal (mensagem de chat, ideia verbal, ticket curto, comentário em reunião) — não um PRD escrito — e quiser a arquitetura, ADR e atividades/AC correspondentes. Acione especialmente quando a informação dada for insuficiente para decidir a arquitetura (faltam requisitos não-funcionais, escopo, volume, criticidade): a skill deve perguntar o que falta antes de propor algo, em vez de assumir. Gera o mesmo par ADR+ACs da skill de PRD, com checkpoint humano. Use mesmo sem o usuário citar 'PRD', 'ADR' ou 'arquitetura' explicitamente — se a intenção é 'preciso resolver X tecnicamente e não tenho um documento formal', esta skill se aplica."
 metadata:
   language: agnostic
   tags: [meta, sdd, spec-driven, adr]
@@ -8,12 +8,12 @@ metadata:
 
 # Demanda informal → Arquitetura → ADR + ACs (com elicitação ativa)
 
-Mesma espinha dorsal da skill `prd-to-arquitetura-adr` (memória incremental da
-plataforma, ADR, atividades/AC, checkpoint humano, diagrama de validação),
-mas para o caso em que **não existe um PRD escrito** — a demanda chega como
-uma frase, um ticket curto, ou uma ideia falada em reunião. A diferença está
-toda na Fase 1: em vez de extrair de um documento, a skill **elicita
-ativamente** o que falta antes de propor qualquer arquitetura.
+Mesma espinha dorsal da skill `prd-to-arquitetura-adr` (ADR, atividades/AC,
+checkpoint humano), mas para o caso em que **não existe um PRD escrito** —
+a demanda chega como uma frase, um ticket curto, ou uma ideia falada em
+reunião. A diferença está toda na Fase 1: em vez de extrair de um
+documento, a skill **elicita ativamente** o que falta antes de propor
+qualquer arquitetura.
 
 ## Quando usar
 
@@ -27,11 +27,6 @@ Se o usuário já tem um PRD escrito e completo, prefira a skill
 `prd-to-arquitetura-adr` — ela pula a elicitação e vai direto pra extração.
 
 ## Fluxo
-
-### Fase 0 — Carregar (ou iniciar) a memória da plataforma
-
-Idêntica à skill de PRD: procure `platform-memory.yaml`, carregue ou inicie.
-Ver `references/memoria-schema.md`.
 
 ### Fase 1 — Elicitação ativa (o coração desta skill)
 
@@ -67,12 +62,10 @@ Ver `references/memoria-schema.md`.
    já que não foi possível confirmar") e leve isso para o ADR na Fase 3,
    na seção de Contexto, deixando claro que é uma suposição a validar.
 
-### Fase 2 — Propor arquitetura e confrontar com a memória
+### Fase 2 — Propor arquitetura
 
-Idêntica à skill de PRD: classifique cada componente/conexão envolvido
-contra `platform-memory.yaml` em ✅ conhecido / 🔶 conexão nova / 🆕 componente
-novo, e **pergunte explicitamente** antes de tratar qualquer item 🔶/🆕 como
-confirmado.
+Idêntica à skill de PRD: apresente a arquitetura proposta (componentes e
+conexões) ao usuário antes de seguir para o ADR.
 
 ### Fase 3 — Escrever o ADR
 
@@ -84,19 +77,19 @@ validado.
 
 ### Fase 3.5 — Elicitar o contrato de payload (antes das ACs)
 
-Idêntica à skill de PRD: para toda conexão 🔶/🆕 (ou conexão ✅ com payload
-sendo alterado), elicite o contrato antes de escrever a AC na Fase 4 — não
-basta marcar que "precisa de AC de contrato" e inferir depois. O risco é
-diferente para REST e mensageria:
+Idêntica à skill de PRD: para toda conexão com payload estruturado
+envolvida na arquitetura proposta, elicite o contrato antes de escrever a
+AC na Fase 4 — não basta marcar que "precisa de AC de contrato" e inferir
+depois. O risco é diferente para REST e mensageria:
 
 - **REST**: campos do payload, tipo de cada campo, obrigatoriedade,
   contrato de erro (status codes + formato do corpo de erro) e idempotência
   em escrita.
 - **Mensageria**: versionamento do schema, compatibilidade (campo novo é
   **sempre opcional**), idempotência do consumidor e DLQ — e, antes de
-  propor mudança em evento/tópico já existente, **cruze com
-  `platform-memory.yaml`** para saber quem já consome aquele evento, mesmo
-  que não apareça na demanda atual.
+  propor mudança em evento/tópico já existente, **pergunte diretamente ao
+  usuário** quem já consome aquele evento hoje, mesmo que não apareça na
+  demanda atual.
 
 Ver `references/contrato-payload.md` para o roteiro completo de perguntas.
 
@@ -108,32 +101,17 @@ demais (nunca quebrar sem perguntar).
 
 ### Fase 5 — Checkpoint humano (obrigatório)
 
-Idêntico à skill de PRD: confirmar quebra de atividades em ADRs separados,
-reconfirmar itens 🆕/🔶 pendentes.
-
-### Fase 5.5 — Gerar diagrama do grafo atualizado
-
-Idêntico à skill de PRD: gerar `platform-memory-graph.md` com Mermaid
-destacando o que é novo, usando `references/grafo-visual.md`, e pedir
-confirmação visual antes de escrever na memória.
+Idêntico à skill de PRD: confirmar quebra de atividades em ADRs separados.
 
 ### Fase 6 — Entregáveis
 
 - `adr/ADR-XXX-titulo.md` (com a seção de assunções, se houver)
 - `adr/ADR-XXX-acs.md`
-- `platform-memory-graph.md` (se aplicável)
-
-### Fase 7 — Atualizar a memória da plataforma
-
-Idêntico à skill de PRD: escreve componentes/conexões confirmados, atualiza
-`historico_prds` (aqui pode registrar como `historico_demandas`, ou no mesmo
-campo, indicando `origem: demanda-informal` em vez de `origem: prd`).
 
 ## Arquivos de referência
 
 - `references/checklist-elicitacao.md` — o que sempre checar antes de
   propor arquitetura, e como priorizar/perguntar.
 - `references/adr-template.md`, `references/ac-template.md`,
-  `references/memoria-schema.md`, `references/grafo-visual.md`,
   `references/contrato-payload.md` — mesmos templates da skill
   `prd-to-arquitetura-adr`.

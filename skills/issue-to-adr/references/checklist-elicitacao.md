@@ -27,8 +27,8 @@ abaixo (não despeje tudo de uma vez).
 - O que está explicitamente fora dessa demanda?
 - Existe prazo? Existe stack obrigatória (ex.: "tem que ser na AWS",
   "tem que reusar o serviço X")?
-- Existe algo na `platform-memory.yaml` que já parece relacionado a essa
-  demanda? Se sim, pergunte se a intenção é estender algo existente.
+- Isso parece relacionado a algo que já existe no sistema? Se sim, pergunte
+  se a intenção é estender algo existente em vez de criar do zero.
 
 ## Como perguntar
 
