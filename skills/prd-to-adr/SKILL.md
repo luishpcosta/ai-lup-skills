@@ -100,6 +100,39 @@ Use `references/adr-template.md`. Pontos obrigatórios:
 - Numere sequencialmente (consulte o histórico em `platform-memory.yaml`
   para saber o próximo número de ADR, em vez de perguntar ao usuário sempre).
 
+### Fase 3.5 — Elicitar o contrato de payload (antes das ACs)
+
+"Descrever o contrato explicitamente" na AC (Fase 4) não acontece por conta
+própria — alguém precisa elicitar campos, tipos e regras de erro antes de
+escrever a AC. Essa elicitação é diferente para REST e para mensageria,
+porque o risco é diferente: em REST, quem sofre o erro é quem chama, na
+hora; em mensageria, quem sofre não é quem publica, são os consumidores
+desacoplados — que podem nem estar no radar da demanda atual.
+
+Aplique esta fase a toda conexão 🔶 nova, componente 🆕 novo, ou conexão ✅
+já conhecida cujo payload está sendo alterado (pule conexões sem payload
+estruturado, ex.: leitura direta de banco). Ver
+`references/contrato-payload.md` para o roteiro completo; resumo:
+
+**REST (síncrono)** — pergunte e registre: campos do payload (request e
+response), tipo de cada campo, obrigatoriedade, contrato de erro (status
+codes + formato do corpo de erro por cenário de negócio) e idempotência em
+escrita (como uma repetição/retry é tratada).
+
+**Mensageria (assíncrono)** — pergunte e registre: versionamento do schema
+do evento, compatibilidade (campo novo é **sempre opcional**; remover ou
+renomear campo é breaking change), idempotência do consumidor (chave de
+deduplicação para entrega at-least-once) e política de DLQ. Antes de propor
+qualquer mudança em payload de evento/tópico já existente, **cruze com
+`platform-memory.yaml`** para listar todos os consumidores já conhecidos
+(ver seção correspondente em `references/memoria-schema.md`) e pergunte
+explicitamente se a mudança é compatível com cada um — mesmo que nenhum
+apareça no PRD/demanda atual.
+
+Se alguma resposta ficar pendente após uma rodada de perguntas, registre
+como assunção explícita (mesmo critério das demais fases) e leve isso para
+o ADR.
+
 ### Fase 4 — Decompor em atividades por componente
 
 Cada **atividade** representa o recorte completo a ser implementado por um
@@ -109,7 +142,10 @@ contrato). Não force atividades artificialmente pequenas.
 
 Use IDs `ADR-XXX-AT-NN`, ACs com `ADR-XXX-AC-NN` (ver `references/ac-template.md`).
 Toda atividade que cria uma 🔶 conexão nova ou 🆕 componente novo precisa de
-AC descrevendo o contrato explicitamente (não só "deve funcionar").
+AC descrevendo o contrato explicitamente — usando o que foi elicitado na
+Fase 3.5 (campos/tipos/erros/idempotência para REST; versionamento/
+compatibilidade/idempotência do consumidor/DLQ para mensageria), não só
+"deve funcionar".
 
 **Oferecer quebra quando a atividade for extensa**: depois de listar uma
 atividade com várias ACs, se ela parecer grande (muitos cenários, mistura
@@ -182,3 +218,5 @@ a começar do zero.
   de diff entre PRD novo e memória existente.
 - `references/grafo-visual.md` — convenção de estilo Mermaid para destacar
   componentes/conexões novos no diagrama de validação (Fase 5.5).
+- `references/contrato-payload.md` — roteiro de elicitação do contrato de
+  payload (REST vs. mensageria), usado na Fase 3.5.
