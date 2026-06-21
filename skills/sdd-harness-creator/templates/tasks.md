@@ -7,7 +7,6 @@
 
 > Small, ordered, independently verifiable tasks derived from `plan.md`.
 > **Gate:** every acceptance criterion has ≥1 task, and every task references an AC.
-> Mirror the task↔AC links into `spec-registry.json` (`acceptance_criteria[].tasks` and `tasks_index`).
 
 ## Tasks
 
@@ -21,7 +20,7 @@ Status values: `todo` → `doing` → `done`.
 
 ## Coverage Check
 
+Confirm manually before implementing:
+
 - Every AC referenced by at least one task? <yes/no>
 - Every task linked to an AC? <yes/no>
-
-Run `node skills/sdd-harness-creator/scripts/check-traceability.mjs --target .` to confirm before implementing.

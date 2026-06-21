@@ -22,10 +22,9 @@ if (args.help) {
 Creates a spec-driven (SDD) harness:
   AGENTS.md or CLAUDE.md      (SDD flow + gates)
   constitution.md
-  spec-registry.json
   specs/001-example/{spec,plan,tasks}.md
   progress.md
-  init.sh                     (verification + traceability gate)
+  init.sh                     (verification)
 
 Existing files are skipped unless --force is set.`);
   process.exit(0);
@@ -57,7 +56,6 @@ const exampleReplacements = { FEATURE_NAME: 'Example Feature', FEATURE_ID: '001-
 const results = [];
 results.push(await copyTemplate('agents.md', path.join(target, agentFile), agentReplacements, { force }));
 results.push(await copyTemplate('constitution.md', path.join(target, 'constitution.md'), {}, { force }));
-results.push(await copyTemplate('spec-registry.json', path.join(target, 'spec-registry.json'), {}, { force }));
 results.push(await copyTemplate('progress.md', path.join(target, 'progress.md'), dates, { force }));
 
 const exampleDir = path.join(target, 'specs', '001-example');
@@ -83,4 +81,4 @@ for (const result of results) {
   console.log(`${result.status.toUpperCase()} ${path.relative(target, result.path)}${result.reason ? ` (${result.reason})` : ''}`);
 }
 console.log('');
-console.log('Next: replace specs/001-example with your first real feature and update spec-registry.json.');
+console.log('Next: replace specs/001-example with your first real feature.');

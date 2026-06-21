@@ -118,8 +118,6 @@ export function buildReverseFeature({ module, index, exportsByFile = {}, testNam
     criteria = testNames.slice(0, maxCriteria).map((name, i) => ({
       id: `AC-${i + 1}`,
       description: name,
-      tasks: [taskId],
-      status: 'covered',
       evidence: module.testFiles[0] ? `existing test: ${module.testFiles[0]}` : ''
     }));
   } else if (allExports.length > 0) {
@@ -127,8 +125,6 @@ export function buildReverseFeature({ module, index, exportsByFile = {}, testNam
     criteria = allExports.slice(0, maxCriteria).map((name, i) => ({
       id: `AC-${i + 1}`,
       description: `\`${name}\` behaves as currently implemented`,
-      tasks: [taskId],
-      status: 'covered',
       evidence: ''
     }));
   } else {
@@ -136,29 +132,14 @@ export function buildReverseFeature({ module, index, exportsByFile = {}, testNam
     criteria = [{
       id: 'AC-1',
       description: `Module \`${module.name}\` behaves as currently implemented`,
-      tasks: [taskId],
-      status: 'covered',
       evidence: ''
     }];
   }
 
-  const registryFeature = {
-    id,
-    name: module.name,
-    phase: 'documented',
-    spec: `specs/${id}/spec.md`,
-    plan: `specs/${id}/plan.md`,
-    tasks: `specs/${id}/tasks.md`,
-    dependencies: [],
-    origin: 'reverse-engineered',
-    acceptance_criteria: criteria,
-    tasks_index: [{ id: taskId, title: 'Existing implementation (reverse-engineered)', status: 'done' }]
-  };
-
   return {
     id,
     acSource,
-    registryFeature,
+    criteria,
     specMarkdown: renderSpec(module, id, criteria, allExports, acSource, date),
     planMarkdown: renderPlan(module, id, date),
     tasksMarkdown: renderTasks(module, id, criteria, taskId, date)

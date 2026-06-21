@@ -22,7 +22,7 @@
 
 ## Acceptance Criteria
 
-Each criterion is testable and gets a stable ID. Mirror these IDs into `spec-registry.json`.
+Each criterion is testable and gets a stable ID.
 
 - **AC-1** — Given <context>, when <action>, then <observable outcome>. _(satisfies FR-1)_
 - **AC-2** — Given <context>, when <action>, then <observable outcome>. _(satisfies FR-2)_

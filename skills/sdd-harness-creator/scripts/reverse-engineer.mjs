@@ -1,10 +1,10 @@
 #!/usr/bin/env node
+import { readdir } from 'node:fs/promises';
 import path from 'node:path';
 import {
   exists,
   listFiles,
   parseArgs,
-  readJson,
   readText,
   writeText
 } from './lib/sdd-utils.mjs';
@@ -23,18 +23,18 @@ if (args.help) {
   console.log(`Usage: node scripts/reverse-engineer.mjs [--target DIR] [--src DIR] [--max-features N] [--dry-run] [--force]
 
 Brownfield reverse-engineering: scans existing code and produces reconstructed
-(retro) specs plus spec-registry entries so new work can build on documented behavior.
+(retro) specs so new work can build on documented behavior.
 
 For each detected module it derives acceptance criteria (preferring existing test
-names, else exported symbols) and writes specs/NNN-slug/{spec,plan,tasks}.md, then
-merges a feature into spec-registry.json (phase: "documented").
+names, else exported symbols) and writes specs/NNN-slug/{spec,plan,tasks}.md with
+phase: documented in the spec.md header.
 
   --src DIR        source root override (default: auto-detect src/ lib/ app/)
   --max-features N cap the number of features created (default 20)
   --dry-run        print what would be created without writing
   --force          overwrite existing spec files for a feature
 
-Existing registry features are preserved; modules already present (by slug) are skipped.`);
+Modules already present (an existing specs/NNN-slug directory by slug) are skipped.`);
   process.exit(0);
 }
 
@@ -57,23 +57,18 @@ if (modules.length === 0) {
   process.exit(0);
 }
 
-// Load or initialize the registry, and figure out the next free index.
-const registryPath = path.join(target, 'spec-registry.json');
-let registry = { constitution: 'constitution.md', features: [] };
-if (await exists(registryPath)) {
-  try {
-    registry = await readJson(registryPath);
-    if (!Array.isArray(registry.features)) registry.features = [];
-  } catch (error) {
-    console.error(`spec-registry.json is not valid JSON: ${error.message}`);
-    process.exit(2);
-  }
+// Figure out which feature slugs/indices already exist under specs/.
+const specsDir = path.join(target, 'specs');
+let existingFeatureIds = [];
+if (await exists(specsDir)) {
+  const entries = await readdir(specsDir, { withFileTypes: true });
+  existingFeatureIds = entries.filter((entry) => entry.isDirectory()).map((entry) => entry.name);
 }
 
-const existingSlugs = new Set(registry.features.map((feature) => String(feature.id).replace(/^\d+-/, '')));
+const existingSlugs = new Set(existingFeatureIds.map((id) => id.replace(/^\d+-/, '')));
 const nextIndex = () => {
-  const max = registry.features.reduce((acc, feature) => {
-    const match = /^(\d+)-/.exec(String(feature.id));
+  const max = existingFeatureIds.reduce((acc, id) => {
+    const match = /^(\d+)-/.exec(id);
     return match ? Math.max(acc, Number(match[1])) : acc;
   }, 0);
   return max + 1;
@@ -98,13 +93,12 @@ for (const module of modules) {
 
   const feature = buildReverseFeature({ module, index, exportsByFile, testNames: [...new Set(testNames)] });
   created.push(feature);
-  registry.features.push(feature.registryFeature);
   existingSlugs.add(slug);
   index += 1;
 }
 
 if (created.length === 0) {
-  console.log('All detected modules already have registry features. Nothing new to add.');
+  console.log('All detected modules already have a specs/ entry. Nothing new to add.');
   process.exit(0);
 }
 
@@ -113,8 +107,7 @@ console.log(`Source root: ${sourceRoot || '(repo root)'} | modules detected: ${m
 console.log('');
 
 for (const feature of created) {
-  const acCount = feature.registryFeature.acceptance_criteria.length;
-  console.log(`${dryRun ? 'WOULD ADD' : 'ADD'} ${feature.id}  (${acCount} AC from ${feature.acSource})`);
+  console.log(`${dryRun ? 'WOULD ADD' : 'ADD'} ${feature.id}  (${feature.criteria.length} AC from ${feature.acSource})`);
   if (dryRun) continue;
   const dir = path.join(target, 'specs', feature.id);
   await copyMarkdown(path.join(dir, 'spec.md'), feature.specMarkdown, force);
@@ -123,10 +116,8 @@ for (const feature of created) {
 }
 
 if (!dryRun) {
-  await writeText(registryPath, `${JSON.stringify(registry, null, 2)}\n`);
   console.log('');
-  console.log(`Updated ${path.relative(target, registryPath)} (${registry.features.length} feature(s) total).`);
-  console.log('Next: run check-traceability.mjs, then review each retro-spec and confirm the acceptance criteria.');
+  console.log('Next: review each retro-spec\'s Acceptance Criteria and Assumptions/To Confirm checklist.');
 } else {
   console.log('');
   console.log('Dry run — no files written.');
