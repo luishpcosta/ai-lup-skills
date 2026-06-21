@@ -12,7 +12,7 @@ Before doing anything:
 2. **Read this file** completely
 3. **Read `constitution.md`** — these are non-negotiable project principles
 4. **Run `./init.sh`** to verify environment health and the traceability gate
-5. **Read `spec-registry.json`** to see each feature's current SDD phase
+5. **Check feature status**: `node skills/sdd-harness-creator/scripts/registry-status.mjs --target .` (one line per feature; add `--feature ID` for one feature's ACs). Read `spec-registry.json` directly only for a first-time scaffold or a very small registry.
 6. **Review recent commits** with `git log --oneline -5`
 
 If `init.sh` or the traceability gate fails, repair that before adding new scope.
@@ -30,14 +30,14 @@ Advance exactly **one feature at a time** through these phases. Each phase has a
 | **Implement** | code + tests | One task at a time; never start before the Tasks gate passes |
 | **Verify** | evidence in `spec-registry.json` | Every AC has recorded passing evidence |
 
-Update the feature's `phase` in `spec-registry.json` as you advance.
+Update the feature's phase with `node skills/sdd-harness-creator/scripts/registry-update.mjs --target . --feature ID --set-phase PHASE` (or edit `spec-registry.json` directly for a one-off/small registry).
 
 ## Authoring Guidance (per phase)
 
 - **Specify** — Describe *what* and *why*, never *how*. Write acceptance criteria as testable statements (`AC-1: Given… When… Then…`). Mark anything uncertain with `[NEEDS CLARIFICATION: question]`. List explicit non-goals.
 - **Clarify** — Resolve every marker. Record the answer inline; if it changes scope, update the acceptance criteria.
 - **Plan** — Describe *how*: architecture, data model, interfaces/contracts, key decisions and alternatives. Reference the constitution for any constraint you rely on. Cover every functional requirement.
-- **Tasks** — Break the plan into small, ordered, independently verifiable tasks. Tag each task with the AC it satisfies (e.g. `T-3 (AC-2)`). Mirror these links into `spec-registry.json`.
+- **Tasks** — Break the plan into small, ordered, independently verifiable tasks. Tag each task with the AC it satisfies (e.g. `T-3 (AC-2)`). Mirror these links with `registry-update.mjs --feature ID --ac AC-ID --add-task TASK-ID` (or edit `spec-registry.json` directly).
 - **Implement** — Take one task, implement it, write/extend the test that proves its AC, then mark the AC `verified` with evidence.
 
 ## Working Rules
@@ -68,7 +68,7 @@ A feature is done only when ALL are true:
 
 ## End of Session
 
-1. Update each touched feature's `phase` and AC status in `spec-registry.json`
+1. Update each touched feature's phase and AC status via `registry-update.mjs` (`--set-phase`, `--ac ... --status ... --evidence ...`), or edit `spec-registry.json` directly for small registries
 2. Update `progress.md` with current state and the active phase
 3. Record unresolved clarifications, blockers, or risks
 4. Commit with a descriptive message once work is in a safe state
