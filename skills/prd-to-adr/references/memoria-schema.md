@@ -70,6 +70,25 @@ Confronto com a memória da plataforma:
   🔶 order-service → coupon-service  (conexão nova — confirmar)
 ```
 
+## Como achar quem consome um tópico/evento (mensageria)
+
+Usado na Fase 3.5 (elicitação de contrato), antes de propor mudança de
+payload em um evento/tópico já existente. A convenção é a mesma seta de
+dados de sempre: uma conexão `origem -> destino` significa que `origem`
+envia algo que `destino` recebe/processa. Para um tópico/fila
+(`tipo: topico` ou `tipo: fila` em `componentes`):
+
+- **Produtores** são conexões em que o tópico/fila é o `destino`
+  (ex.: `order-service -> pedido-cancelado-topic`).
+- **Consumidores** são conexões em que o tópico/fila é a `origem`
+  (ex.: `pedido-cancelado-topic -> notification-service`).
+
+Antes de propor uma mudança de payload, filtre `conexoes` por
+`origem == <topico/fila>` e liste todos os `destino` encontrados — essa é a
+lista de consumidores que a Fase 3.5 usa para perguntar sobre
+compatibilidade, **mesmo que nenhum deles tenha sido citado no
+PRD/demanda atual**.
+
 ## Por que "status: proposto" existe
 
 Se o usuário pedir para gerar o ADR mas ainda não confirmar os itens 🆕/🔶

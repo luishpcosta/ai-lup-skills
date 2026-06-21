@@ -2,7 +2,8 @@
 
 > Referência: `ADR-XXX-titulo.md`. Cada atividade pertence a um componente e
 > tem 1+ AC vinculada. ACs de contrato (API/evento/schema) devem descrever o
-> contrato explicitamente, não apenas "deve funcionar".
+> contrato explicitamente — campos, tipos e regras elicitados na Fase 3.5
+> (ver `contrato-payload.md`), não apenas "deve funcionar".
 
 ## Componente: <nome-do-componente>
 
@@ -18,11 +19,23 @@ Quando <ação>
 Então <resultado esperado, verificável objetivamente>
 ```
 
-**AC ADR-XXX-AC-02** (se houver contrato entre componentes)
+**AC ADR-XXX-AC-02** (se houver contrato REST entre componentes)
 ```
-Dado que <componente A> chama <componente B>
-O contrato deve ser: <schema/payload/status codes esperados>
-E casos de erro devem retornar: <comportamento esperado>
+Dado que <componente A> chama <componente B> via <método> <endpoint>
+O payload de request tem os campos: <campo: tipo, obrigatório/opcional>
+A resposta de sucesso é: <status code> com os campos: <campo: tipo>
+Os erros são: <status code> -> <formato do corpo de erro> quando <cenário>
+A escrita é idempotente via: <chave de idempotência ou semântica do método>
+```
+
+**AC ADR-XXX-AC-03** (se houver contrato de mensageria/evento)
+```
+Dado que <componente A> publica o evento <nome> no tópico/fila <id>
+Consumidores conhecidos na memória da plataforma: <lista, ou "nenhum ainda">
+O schema é versionado por: <campo de versão / convenção>
+Campos novos em relação à versão anterior são opcionais: <sim, quais>
+O consumidor trata duplicidade via: <chave de deduplicação>
+Após <N> falhas a mensagem vai para a DLQ <nome>, reprocessada por: <quem>
 ```
 
 ---
