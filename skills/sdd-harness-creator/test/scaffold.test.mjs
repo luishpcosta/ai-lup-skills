@@ -19,17 +19,18 @@ async function withTempProject(fn) {
   }
 }
 
-test('create-sdd-harness scaffolds all expected files', async () => {
+test('create-sdd-harness scaffolds all expected files (no spec-registry.json)', async () => {
   await withTempProject(async (dir) => {
     await run('node', [path.join(SCRIPTS, 'create-sdd-harness.mjs'), '--target', dir]);
     for (const rel of [
-      'AGENTS.md', 'constitution.md', 'spec-registry.json',
+      'AGENTS.md', 'constitution.md',
       'progress.md', 'init.sh',
       'specs/001-example/spec.md', 'specs/001-example/plan.md', 'specs/001-example/tasks.md'
     ]) {
       const content = await readFile(path.join(dir, rel), 'utf8');
       assert.ok(content.length > 0, `${rel} should exist and be non-empty`);
     }
+    await assert.rejects(readFile(path.join(dir, 'spec-registry.json')));
   });
 });
 
@@ -44,45 +45,9 @@ test('scaffold fills date placeholders (no YYYY-MM-DD masks left)', async () => 
   });
 });
 
-test('scaffolded harness passes the traceability gate', async () => {
+test('reverse-engineer adds a documented feature with phase/origin in the markdown', async () => {
   await withTempProject(async (dir) => {
     await run('node', [path.join(SCRIPTS, 'create-sdd-harness.mjs'), '--target', dir]);
-    const { stdout } = await run('node', [path.join(SCRIPTS, 'check-traceability.mjs'), '--target', dir]);
-    assert.match(stdout, /OK/);
-  });
-});
-
-test('check-traceability fails on an orphan AC', async () => {
-  await withTempProject(async (dir) => {
-    await run('node', [path.join(SCRIPTS, 'create-sdd-harness.mjs'), '--target', dir]);
-    const registryPath = path.join(dir, 'spec-registry.json');
-    const registry = JSON.parse(await readFile(registryPath, 'utf8'));
-    registry.features[0].acceptance_criteria[0].tasks = [];
-    await import('node:fs/promises').then((fs) => fs.writeFile(registryPath, JSON.stringify(registry)));
-    await assert.rejects(
-      run('node', [path.join(SCRIPTS, 'check-traceability.mjs'), '--target', dir]),
-      (error) => {
-        assert.equal(error.code, 1);
-        assert.match(error.stdout, /orphan-ac/);
-        return true;
-      }
-    );
-  });
-});
-
-test('validate-sdd-harness scores a scaffolded harness at or above 60', async () => {
-  await withTempProject(async (dir) => {
-    await run('node', [path.join(SCRIPTS, 'create-sdd-harness.mjs'), '--target', dir]);
-    const { stdout } = await run('node', [path.join(SCRIPTS, 'validate-sdd-harness.mjs'), '--target', dir, '--json']);
-    const result = JSON.parse(stdout);
-    assert.ok(result.overall >= 60, `expected overall >= 60, got ${result.overall}`);
-  });
-});
-
-test('reverse-engineer adds a documented feature and keeps traceability clean', async () => {
-  await withTempProject(async (dir) => {
-    await run('node', [path.join(SCRIPTS, 'create-sdd-harness.mjs'), '--target', dir]);
-    // Seed an existing module with code + a test.
     await mkdir(path.join(dir, 'src', 'auth'), { recursive: true });
     await writeFile(path.join(dir, 'src', 'auth', 'login.ts'), 'export function login() { return true; }\n');
     await writeFile(
@@ -93,19 +58,14 @@ test('reverse-engineer adds a documented feature and keeps traceability clean', 
     const { stdout } = await run('node', [path.join(SCRIPTS, 'reverse-engineer.mjs'), '--target', dir]);
     assert.match(stdout, /002-auth/);
 
-    const registry = JSON.parse(await readFile(path.join(dir, 'spec-registry.json'), 'utf8'));
-    const auth = registry.features.find((f) => f.id === '002-auth');
-    assert.ok(auth, 'expected reverse-engineered feature 002-auth');
-    assert.equal(auth.phase, 'documented');
-    assert.equal(auth.origin, 'reverse-engineered');
-
     const spec = await readFile(path.join(dir, 'specs', '002-auth', 'spec.md'), 'utf8');
-    assert.match(spec, /reverse-engineered/);
+    assert.match(spec, /\*\*Phase:\*\* documented/);
+    assert.match(spec, /\*\*Origin:\*\* reverse-engineered/);
     assert.doesNotMatch(spec, /YYYY-MM-DD/, 'retro-spec should not keep the date mask');
     assert.match(spec, /\*\*Last updated:\*\* \d{4}-\d{2}-\d{2}/);
 
-    const trace = await run('node', [path.join(SCRIPTS, 'check-traceability.mjs'), '--target', dir]);
-    assert.match(trace.stdout, /OK/);
+    const tasks = await readFile(path.join(dir, 'specs', '002-auth', 'tasks.md'), 'utf8');
+    assert.match(tasks, /AC-1/);
   });
 });
 
@@ -118,184 +78,84 @@ test('reverse-engineer --dry-run writes nothing', async () => {
     const { stdout } = await run('node', [path.join(SCRIPTS, 'reverse-engineer.mjs'), '--target', dir, '--dry-run']);
     assert.match(stdout, /Dry run/);
 
-    const registry = JSON.parse(await readFile(path.join(dir, 'spec-registry.json'), 'utf8'));
-    assert.equal(registry.features.some((f) => f.name === 'billing'), false);
+    await assert.rejects(readFile(path.join(dir, 'specs', '003-billing', 'spec.md')));
   });
 });
 
-test('registry-status prints one line per feature by default', async () => {
+test('reverse-engineer skips a module that already has a specs/ entry', async () => {
   await withTempProject(async (dir) => {
     await run('node', [path.join(SCRIPTS, 'create-sdd-harness.mjs'), '--target', dir]);
-    const { stdout } = await run('node', [path.join(SCRIPTS, 'registry-status.mjs'), '--target', dir]);
-    assert.match(stdout, /001-example \[draft\]/);
+    await mkdir(path.join(dir, 'src', 'example'), { recursive: true });
+    await writeFile(path.join(dir, 'src', 'example', 'thing.ts'), 'export function thing() {}\n');
+
+    const { stdout } = await run('node', [path.join(SCRIPTS, 'reverse-engineer.mjs'), '--target', dir]);
+    assert.doesNotMatch(stdout, /001-example/);
   });
 });
 
-test('registry-status --feature prints that feature\'s ACs only', async () => {
+test('check-traceability.mjs shim exits 0 and points at migrate-from-registry.mjs when spec-registry.json exists', async () => {
   await withTempProject(async (dir) => {
-    await run('node', [path.join(SCRIPTS, 'create-sdd-harness.mjs'), '--target', dir]);
-    const { stdout } = await run('node', [path.join(SCRIPTS, 'registry-status.mjs'), '--target', dir, '--feature', '001-example']);
-    assert.match(stdout, /AC-1/);
+    await writeFile(path.join(dir, 'spec-registry.json'), JSON.stringify({ features: [] }));
+    const { stderr } = await run('node', [path.join(SCRIPTS, 'check-traceability.mjs'), '--target', dir]);
+    assert.match(stderr, /removed/i);
+    assert.match(stderr, /migrate-from-registry\.mjs/);
   });
 });
 
-test('registry-status --open lists non-verified ACs, standalone and per-feature', async () => {
+test('check-traceability.mjs shim exits 0 with no spec-registry.json present', async () => {
   await withTempProject(async (dir) => {
-    await run('node', [path.join(SCRIPTS, 'create-sdd-harness.mjs'), '--target', dir]);
-    const standalone = await run('node', [path.join(SCRIPTS, 'registry-status.mjs'), '--target', dir, '--open']);
-    assert.match(standalone.stdout, /001-example\/AC-1/);
-
-    const scoped = await run('node', [path.join(SCRIPTS, 'registry-status.mjs'), '--target', dir, '--feature', '001-example', '--open']);
-    assert.match(scoped.stdout, /AC-1/);
+    await run('node', [path.join(SCRIPTS, 'check-traceability.mjs'), '--target', dir]);
   });
 });
 
-test('registry-status fails on unknown feature id', async () => {
+test('validate-sdd-harness.mjs shim exits 0', async () => {
   await withTempProject(async (dir) => {
-    await run('node', [path.join(SCRIPTS, 'create-sdd-harness.mjs'), '--target', dir]);
-    await assert.rejects(
-      run('node', [path.join(SCRIPTS, 'registry-status.mjs'), '--target', dir, '--feature', '999-nope']),
-      (error) => {
-        assert.equal(error.code, 2);
-        assert.match(error.stderr, /Unknown feature id/);
-        return true;
-      }
-    );
+    await run('node', [path.join(SCRIPTS, 'validate-sdd-harness.mjs'), '--target', dir]);
   });
 });
 
-test('registry-status fails when registry is missing', async () => {
+test('migrate-from-registry reports nothing to migrate when there is no spec-registry.json', async () => {
   await withTempProject(async (dir) => {
-    await assert.rejects(
-      run('node', [path.join(SCRIPTS, 'registry-status.mjs'), '--target', dir]),
-      (error) => {
-        assert.equal(error.code, 2);
-        assert.match(error.stderr, /No spec-registry\.json found/);
-        return true;
-      }
-    );
+    const { stdout } = await run('node', [path.join(SCRIPTS, 'migrate-from-registry.mjs'), '--target', dir]);
+    assert.match(stdout, /Nothing to migrate/);
   });
 });
 
-test('registry-update --set-phase updates the phase, reflected by registry-status', async () => {
+test('migrate-from-registry summarizes and backs up an existing spec-registry.json', async () => {
   await withTempProject(async (dir) => {
-    await run('node', [path.join(SCRIPTS, 'create-sdd-harness.mjs'), '--target', dir]);
-    const update = await run('node', [path.join(SCRIPTS, 'registry-update.mjs'), '--target', dir, '--feature', '001-example', '--set-phase', 'tasked']);
-    assert.match(update.stdout, /001-example: phase -> tasked/);
+    const registry = {
+      features: [{
+        id: '001-example', name: 'Example Feature', phase: 'tasked',
+        acceptance_criteria: [
+          { id: 'AC-1', description: 'x', tasks: ['T-1'], status: 'verified', evidence: 'tests pass' },
+          { id: 'AC-2', description: 'y', tasks: ['T-1'], status: 'pending' }
+        ]
+      }]
+    };
+    await writeFile(path.join(dir, 'spec-registry.json'), JSON.stringify(registry));
 
-    const status = await run('node', [path.join(SCRIPTS, 'registry-status.mjs'), '--target', dir]);
-    assert.match(status.stdout, /001-example \[tasked\]/);
+    const { stdout } = await run('node', [path.join(SCRIPTS, 'migrate-from-registry.mjs'), '--target', dir]);
+    assert.match(stdout, /001-example \[tasked\]/);
+    assert.match(stdout, /AC 1\/2 verified/);
+    assert.match(stdout, /Renamed spec-registry\.json/);
+
+    await assert.rejects(readFile(path.join(dir, 'spec-registry.json')));
+    const backup = JSON.parse(await readFile(path.join(dir, 'spec-registry.json.bak'), 'utf8'));
+    assert.deepEqual(backup, registry);
   });
 });
 
-test('registry-update --ac --status verified --evidence updates status and evidence', async () => {
+test('migrate-from-registry does not overwrite an existing backup', async () => {
   await withTempProject(async (dir) => {
-    await run('node', [path.join(SCRIPTS, 'create-sdd-harness.mjs'), '--target', dir]);
-    await run('node', [
-      path.join(SCRIPTS, 'registry-update.mjs'), '--target', dir,
-      '--feature', '001-example', '--ac', 'AC-1', '--status', 'verified', '--evidence', 'npm test passing'
-    ]);
+    await writeFile(path.join(dir, 'spec-registry.json'), JSON.stringify({ features: [] }));
+    await writeFile(path.join(dir, 'spec-registry.json.bak'), 'previous backup');
 
-    const registry = JSON.parse(await readFile(path.join(dir, 'spec-registry.json'), 'utf8'));
-    const ac = registry.features[0].acceptance_criteria[0];
-    assert.equal(ac.status, 'verified');
-    assert.equal(ac.evidence, 'npm test passing');
-  });
-});
+    const { stderr } = await run('node', [path.join(SCRIPTS, 'migrate-from-registry.mjs'), '--target', dir]);
+    assert.match(stderr, /already exists/);
 
-test('registry-update rejects verified status without --evidence', async () => {
-  await withTempProject(async (dir) => {
-    await run('node', [path.join(SCRIPTS, 'create-sdd-harness.mjs'), '--target', dir]);
-    await assert.rejects(
-      run('node', [path.join(SCRIPTS, 'registry-update.mjs'), '--target', dir, '--feature', '001-example', '--ac', 'AC-1', '--status', 'verified']),
-      (error) => {
-        assert.equal(error.code, 1);
-        assert.match(error.stderr, /without --evidence/);
-        return true;
-      }
-    );
-  });
-});
-
-test('registry-update rejects unknown feature id', async () => {
-  await withTempProject(async (dir) => {
-    await run('node', [path.join(SCRIPTS, 'create-sdd-harness.mjs'), '--target', dir]);
-    await assert.rejects(
-      run('node', [path.join(SCRIPTS, 'registry-update.mjs'), '--target', dir, '--feature', '999-nope', '--set-phase', 'tasked']),
-      (error) => {
-        assert.equal(error.code, 2);
-        assert.match(error.stderr, /Unknown feature id/);
-        return true;
-      }
-    );
-  });
-});
-
-test('registry-update rejects unknown AC id', async () => {
-  await withTempProject(async (dir) => {
-    await run('node', [path.join(SCRIPTS, 'create-sdd-harness.mjs'), '--target', dir]);
-    await assert.rejects(
-      run('node', [path.join(SCRIPTS, 'registry-update.mjs'), '--target', dir, '--feature', '001-example', '--ac', 'AC-99', '--status', 'covered']),
-      (error) => {
-        assert.equal(error.code, 2);
-        assert.match(error.stderr, /Unknown acceptance criterion id/);
-        return true;
-      }
-    );
-  });
-});
-
-test('registry-update rejects unknown phase', async () => {
-  await withTempProject(async (dir) => {
-    await run('node', [path.join(SCRIPTS, 'create-sdd-harness.mjs'), '--target', dir]);
-    await assert.rejects(
-      run('node', [path.join(SCRIPTS, 'registry-update.mjs'), '--target', dir, '--feature', '001-example', '--set-phase', 'shipped']),
-      (error) => {
-        assert.equal(error.code, 2);
-        assert.match(error.stderr, /Unknown phase/);
-        return true;
-      }
-    );
-  });
-});
-
-test('registry-update --add-task relinks an orphan AC and clears the traceability gap', async () => {
-  await withTempProject(async (dir) => {
-    await run('node', [path.join(SCRIPTS, 'create-sdd-harness.mjs'), '--target', dir]);
-    const registryPath = path.join(dir, 'spec-registry.json');
-    const registry = JSON.parse(await readFile(registryPath, 'utf8'));
-    registry.features[0].acceptance_criteria[0].tasks = [];
-    await writeFile(registryPath, JSON.stringify(registry));
-
-    await assert.rejects(run('node', [path.join(SCRIPTS, 'check-traceability.mjs'), '--target', dir]));
-
-    const update = await run('node', [path.join(SCRIPTS, 'registry-update.mjs'), '--target', dir, '--feature', '001-example', '--ac', 'AC-1', '--add-task', 'T-1']);
-    assert.match(update.stdout, /001-example\/AC-1: \+task T-1/);
-
-    const trace = await run('node', [path.join(SCRIPTS, 'check-traceability.mjs'), '--target', dir]);
-    assert.match(trace.stdout, /OK/);
-  });
-});
-
-test('registry-update rejects a duplicate task id', async () => {
-  await withTempProject(async (dir) => {
-    await run('node', [path.join(SCRIPTS, 'create-sdd-harness.mjs'), '--target', dir]);
-    await assert.rejects(
-      run('node', [path.join(SCRIPTS, 'registry-update.mjs'), '--target', dir, '--feature', '001-example', '--ac', 'AC-1', '--add-task', 'T-1']),
-      (error) => {
-        assert.equal(error.code, 1);
-        assert.match(error.stderr, /already linked/);
-        return true;
-      }
-    );
-  });
-});
-
-test('registry-update writes valid, round-trip-parseable JSON', async () => {
-  await withTempProject(async (dir) => {
-    await run('node', [path.join(SCRIPTS, 'create-sdd-harness.mjs'), '--target', dir]);
-    await run('node', [path.join(SCRIPTS, 'registry-update.mjs'), '--target', dir, '--feature', '001-example', '--set-phase', 'planned']);
-    const content = await readFile(path.join(dir, 'spec-registry.json'), 'utf8');
-    assert.doesNotThrow(() => JSON.parse(content));
+    const original = await readFile(path.join(dir, 'spec-registry.json'), 'utf8');
+    assert.equal(JSON.parse(original).features.length, 0);
+    const backup = await readFile(path.join(dir, 'spec-registry.json.bak'), 'utf8');
+    assert.equal(backup, 'previous backup');
   });
 });

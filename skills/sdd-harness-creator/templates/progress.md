@@ -40,7 +40,7 @@
 ## Evidence of Completion
 
 - [ ] AC-X verified: `[command and output]`
-- [ ] Traceability gate clean: `node skills/sdd-harness-creator/scripts/check-traceability.mjs --target .`
+- [ ] Coverage check clean: every AC in `tasks.md` has ≥1 task and every task references an AC
 
 ## Notes for Next Session
 

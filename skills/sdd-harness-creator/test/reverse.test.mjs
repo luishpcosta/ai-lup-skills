@@ -1,6 +1,5 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { analyzeTraceability } from '../scripts/lib/sdd-utils.mjs';
 import {
   buildReverseFeature,
   detectSourceRoot,
@@ -78,9 +77,7 @@ test('buildReverseFeature derives ACs from tests and stays traceability-clean', 
   });
   assert.equal(feature.id, '002-auth');
   assert.equal(feature.acSource, 'tests');
-  assert.equal(feature.registryFeature.acceptance_criteria.length, 2);
-  const trace = analyzeTraceability({ features: [feature.registryFeature] });
-  assert.equal(trace.ok, true, JSON.stringify(trace.problems));
+  assert.equal(feature.criteria.length, 2);
 });
 
 test('buildReverseFeature falls back to exports, then to module-level AC', () => {
@@ -91,7 +88,7 @@ test('buildReverseFeature falls back to exports, then to module-level AC', () =>
     testNames: []
   });
   assert.equal(exportsOnly.acSource, 'exports');
-  assert.equal(exportsOnly.registryFeature.acceptance_criteria.length, 2);
+  assert.equal(exportsOnly.criteria.length, 2);
 
   const bare = buildReverseFeature({
     module: { name: 'util', sourceFiles: ['src/util/x.ts'], testFiles: [] },
@@ -100,5 +97,5 @@ test('buildReverseFeature falls back to exports, then to module-level AC', () =>
     testNames: []
   });
   assert.equal(bare.acSource, 'module');
-  assert.equal(bare.registryFeature.acceptance_criteria.length, 1);
+  assert.equal(bare.criteria.length, 1);
 });

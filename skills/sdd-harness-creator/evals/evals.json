@@ -14,10 +14,16 @@
       "should_trigger": true
     },
     {
-      "id": "trigger-audit",
+      "id": "trigger-migrate",
       "kind": "trigger",
-      "prompt": "Audit whether our SDD harness actually links acceptance criteria to tasks and evidence.",
+      "prompt": "We have an old spec-registry.json from this harness lying around — help us migrate off it.",
       "should_trigger": true
+    },
+    {
+      "id": "negative-audit-score",
+      "kind": "trigger",
+      "prompt": "Give me a structural score for our SDD harness across constitution, planning, and verification.",
+      "should_trigger": false
     },
     {
       "id": "negative-model-choice",
@@ -32,16 +38,16 @@
       "should_trigger": false
     },
     {
-      "id": "behavior-traceability-gap",
-      "kind": "behavior",
-      "prompt": "After scaffolding, an AC has no task. The traceability check must fail with a non-zero exit and name the orphan AC.",
-      "expect": "check-traceability reports orphan-ac and exits 1"
-    },
-    {
       "id": "behavior-clean-scaffold",
       "kind": "behavior",
-      "prompt": "A freshly scaffolded harness should pass the traceability check and score well on validation.",
-      "expect": "check-traceability ok; validate-sdd-harness overall >= 60"
+      "prompt": "A freshly scaffolded harness should have no separate state file — each feature's phase lives in its own markdown.",
+      "expect": "create-sdd-harness.mjs writes no spec-registry.json; spec.md/plan.md/tasks.md each carry a **Phase:** line"
+    },
+    {
+      "id": "behavior-deprecated-scripts-noop",
+      "kind": "behavior",
+      "prompt": "An older project still calls check-traceability.mjs from init.sh against a spec-registry.json it has on disk. Running it must not break init.sh.",
+      "expect": "check-traceability.mjs and validate-sdd-harness.mjs always exit 0 and print a deprecation notice, regardless of spec-registry.json content"
     }
   ]
 }

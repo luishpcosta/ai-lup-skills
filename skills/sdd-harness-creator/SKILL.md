@@ -1,11 +1,11 @@
 ---
 name: sdd-harness-creator
 description: >-
-  Build, audit, and improve spec-driven (SDD) harnesses for AI coding agents:
-  constitution, per-feature spec/plan/tasks, acceptance-criteria traceability,
-  phase gates, verification-against-spec, and session lifecycle. Use when a
-  repository should drive implementation from specifications instead of ad-hoc
-  feature lists.
+  Build spec-driven (SDD) harnesses for AI coding agents: constitution,
+  per-feature spec/plan/tasks, acceptance-criteria traceability, phase gates,
+  verification-against-spec, and session lifecycle — all tracked in markdown,
+  no external state file. Use when a repository should drive implementation
+  from specifications instead of ad-hoc feature lists.
 metadata:
   language: agnostic
   tags: [meta, sdd, spec-driven, skill-creation]
@@ -21,7 +21,7 @@ Not for model selection, prompt tuning in isolation, chat UI design, or general 
 
 ## Build-time vs. run-time
 
-This skill runs **once per repository** (build-time): it scaffolds the structure, gates, and validators. The actual per-feature authoring of `spec.md`/`plan.md`/`tasks.md` happens **inside the target repo** (run-time), done by whatever agent follows the generated `AGENTS.md`. So authoring guidance must live in the target repo — it is baked into the templates and `AGENTS.md`, not kept only in this skill. No second "authoring" skill is required.
+This skill runs **once per repository** (build-time): it scaffolds the structure and gates. The actual per-feature authoring of `spec.md`/`plan.md`/`tasks.md` happens **inside the target repo** (run-time), done by whatever agent follows the generated `AGENTS.md`. So authoring guidance must live in the target repo — it is baked into the templates and `AGENTS.md`, not kept only in this skill. No second "authoring" skill is required.
 
 ## The SDD Flow
 
@@ -32,9 +32,9 @@ This skill runs **once per repository** (build-time): it scaffolds the structure
 | Plan | `specs/NNN-slug/plan.md` | Every functional requirement is covered; decisions consistent with `constitution.md` |
 | Tasks | `specs/NNN-slug/tasks.md` | Bidirectional coverage: every AC has ≥1 task and every task references an AC |
 | Implement | code | One task at a time; never start before the Tasks gate passes |
-| Verify | evidence in `spec-registry.json` (via `registry-update.mjs`) | Every AC has recorded passing evidence; traceability complete |
+| Verify | evidence in `tasks.md`'s Evidence column and `progress.md` | Every AC has recorded passing evidence; traceability complete |
 
-`spec-registry.json` is the structured source of truth (phases, AC↔task links, evidence). The markdown docs carry the same AC IDs for humans. For agents, prefer `registry-status.mjs`/`registry-update.mjs` over reading/editing the file directly once it has more than a few features — see Common Tasks below.
+Markdown is the only source of truth: each `spec.md`/`plan.md`/`tasks.md` carries its own `**Phase:**` line, and `tasks.md` carries per-task Status/Evidence. There is no separate machine-readable registry to keep in sync — traceability is confirmed manually against `tasks.md`'s Coverage Check before advancing a phase.
 
 ## First Move
 
@@ -66,47 +66,20 @@ node skills/sdd-harness-creator/scripts/reverse-engineer.mjs --target /path/to/p
 node skills/sdd-harness-creator/scripts/reverse-engineer.mjs --target /path/to/project
 ```
 
-It scans source modules, derives acceptance criteria (preferring existing test names, else exported symbols), writes `specs/NNN-slug/{spec,plan,tasks}.md`, and merges features into `spec-registry.json` with `phase: "documented"` and `origin: "reverse-engineered"`. Existing registry features are preserved. Then review each retro-spec, confirm the criteria reflect *intended* (not just current) behavior, and run the traceability check.
+It scans source modules, derives acceptance criteria (preferring existing test names, else exported symbols), and writes `specs/NNN-slug/{spec,plan,tasks}.md` with `**Phase:** documented` and `**Origin:** reverse-engineered`. Modules that already have a `specs/NNN-slug` entry are skipped. Then review each retro-spec and confirm the criteria reflect *intended* (not just current) behavior.
 
-### Check traceability (the core SDD gate)
-
-```bash
-node skills/sdd-harness-creator/scripts/check-traceability.mjs --target /path/to/project
-```
-
-Reports orphan acceptance criteria (no task), orphan tasks (no AC), open clarifications, and ACs without evidence. Non-zero exit on any gap, so it works inside `init.sh`.
-
-### Check feature/AC status without loading the whole registry
+### Migrate a harness scaffolded before this version
 
 ```bash
-node skills/sdd-harness-creator/scripts/registry-status.mjs --target /path/to/project
-node skills/sdd-harness-creator/scripts/registry-status.mjs --target /path/to/project --feature 002-auth --open
+node skills/sdd-harness-creator/scripts/migrate-from-registry.mjs --target /path/to/project
 ```
 
-Prints a compact summary (one line per feature, or one feature's open ACs) instead of the full `spec-registry.json`. Use this for routine phase/AC checks; read the JSON file directly only for a first-time scaffold or a very small registry.
-
-### Update registry state without a full read+edit round-trip
-
-```bash
-node skills/sdd-harness-creator/scripts/registry-update.mjs --target /path/to/project --feature 002-auth --set-phase tasked
-node skills/sdd-harness-creator/scripts/registry-update.mjs --target /path/to/project --feature 002-auth --ac AC-3 --status verified --evidence "test/auth.test.ts:12 passing"
-node skills/sdd-harness-creator/scripts/registry-update.mjs --target /path/to/project --feature 002-auth --ac AC-2 --add-task T-2
-```
-
-Sets one phase, one AC's status/evidence, or appends one task link, and writes the file directly — no full-file read is required first. Rejects unknown feature/AC ids, unknown phases/statuses, and `verified` without `--evidence`. Editing `spec-registry.json` by hand remains valid for small registries or initial scaffolding.
-
-### Audit an existing SDD harness
-
-```bash
-node skills/sdd-harness-creator/scripts/validate-sdd-harness.mjs --target /path/to/project
-```
-
-Reports the six SDD subsystem scores, the lowest-scoring area, and the first 2-3 changes that would improve reliability.
+For projects that already have a `spec-registry.json` from an older version of this skill: prints a summary of what it tracked, renames it to `spec-registry.json.bak` (never deletes), and prints a manual checklist for anything in `AGENTS.md`/`CLAUDE.md`/`init.sh`/`constitution.md` that still references the old file or the removed scripts. If the user asks to update this skill in a repo that already has a harness, run through [Upgrading](references/upgrading.md) — it covers more than this one script does.
 
 ## When to Read References
 
-- Methodology, gates, and traceability rules: [Spec-Driven Pattern](references/spec-driven-pattern.md)
-- Registry structure (reference only — not scaffolded into target repos): [spec-registry.schema.json](references/spec-registry.schema.json)
+- Methodology and gates: [Spec-Driven Pattern](references/spec-driven-pattern.md)
+- After updating this skill in a repo that already has a harness: [Upgrading](references/upgrading.md)
 
 ## Design Rules
 
@@ -121,11 +94,10 @@ Reports the six SDD subsystem scores, the lowest-scoring area, and the first 2-3
 
 - [ ] `AGENTS.md` or `CLAUDE.md` with the SDD flow and gates
 - [ ] `constitution.md` (project principles/invariants)
-- [ ] `spec-registry.json`
 - [ ] `specs/NNN-slug/{spec,plan,tasks}.md` example feature
 - [ ] `progress.md`
-- [ ] `init.sh` running verification + traceability check
+- [ ] `init.sh` running verification
 
-For an existing codebase, additionally run `reverse-engineer.mjs` to seed `specs/` and the registry from current behavior before planning new features.
+For an existing codebase, additionally run `reverse-engineer.mjs` to seed `specs/` from current behavior before planning new features.
 
 If you cannot create files, provide exact file contents and commands instead.

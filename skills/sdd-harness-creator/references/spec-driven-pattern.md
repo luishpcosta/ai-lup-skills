@@ -25,21 +25,18 @@ Each arrow is a **gate**. You cannot enter the next phase until the current gate
 | Implement | code + tests | One task at a time; AC proven by a test |
 | Verify | evidence | Every AC `verified` with recorded evidence |
 
-## Why two sources (markdown + registry)
+## Single source: markdown
 
-- **Markdown** (`spec.md`/`plan.md`/`tasks.md`) is the human narrative.
-- **`spec-registry.json`** is the machine-readable truth: phases, AC↔task links, evidence.
-
-The registry is what the traceability checker validates, because parsing prose is brittle. The same AC IDs appear in both so humans and tools stay in sync.
+There is no separate machine-readable registry. Each `spec.md`/`plan.md`/`tasks.md` carries its own `**Phase:**` line, and `tasks.md` carries a Status/Evidence column per task plus a Coverage Check section. The same AC IDs appear in `spec.md` and `tasks.md` so the two stay in sync by construction.
 
 ## Traceability rules (the core invariant)
 
-1. **No orphan ACs** — every acceptance criterion links to ≥1 task.
-2. **No orphan tasks** — every task in `tasks_index` links from some AC.
+1. **No orphan ACs** — every acceptance criterion links to ≥1 task in `tasks.md`.
+2. **No orphan tasks** — every task in `tasks.md` references some AC.
 3. **No open clarifications** past the draft phase.
-4. **Evidence before done** — a `verified` AC must carry evidence; a `verified`/`done` feature must have *all* ACs verified.
+4. **Evidence before done** — a task marked `done` must carry evidence; a `verified`/`done` feature must have *all* its ACs covered by `done` tasks.
 
-`check-traceability.mjs` enforces all four and exits non-zero on any gap, so it belongs in `init.sh`.
+These are confirmed manually against `tasks.md`'s Coverage Check before advancing a phase — there's no script gate, so this depends on the agent actually checking before claiming a feature done.
 
 ## Gates vs. the classic harness
 
@@ -54,16 +51,16 @@ The sibling `harness-creator` uses a feature list and a single "definition of do
 - **Spec leaks implementation** — tech/file names in `spec.md`. Keep how in `plan.md`.
 - **Untestable ACs** — "works well" is not an AC. Use Given/When/Then with an observable outcome.
 - **Silent gate skipping** — starting code before the Tasks gate. Record any deliberate skip in `progress.md`.
-- **Done without evidence** — marking an AC verified with no command/output. The checker flags this.
+- **Done without evidence** — marking a task done with no command/output. Nothing checks this automatically; review `tasks.md`/`progress.md` before claiming the feature done.
 
 ## Brownfield adoption (reverse-engineering)
 
-Most repos already have code. To adopt SDD without rewriting, run `reverse-engineer.mjs`: it scans source modules and reconstructs **retro-specs** plus registry entries so future work builds on documented behavior instead of guesses.
+Most repos already have code. To adopt SDD without rewriting, run `reverse-engineer.mjs`: it scans source modules and reconstructs **retro-specs** so future work builds on documented behavior instead of guesses.
 
 - Acceptance criteria are derived from **existing test names** when present (tests are de-facto specs), else from **exported/public symbols**.
-- Features land in phase **`documented`** with `origin: "reverse-engineered"` — meaning "code exists, spec reconstructed, pending re-verification." Advance them toward `verified`/`done` by confirming the criteria reflect *intended* behavior and recording evidence.
-- Generated criteria describe *current* behavior. Always review them: current behavior is not necessarily correct behavior. Uncertainties go under "Assumptions / To Confirm" (not as gate-blocking `[NEEDS CLARIFICATION]` markers), so the traceability gate stays green while you triage.
+- Features land with `**Phase:** documented` and `**Origin:** reverse-engineered` in the generated `spec.md` — meaning "code exists, spec reconstructed, pending re-verification." Advance them toward `verified`/`done` by confirming the criteria reflect *intended* behavior and recording evidence.
+- Generated criteria describe *current* behavior. Always review them: current behavior is not necessarily correct behavior. Uncertainties go under "Assumptions / To Confirm" (not as gate-blocking `[NEEDS CLARIFICATION]` markers), so the Coverage Check stays clean while you triage.
 
 ## Authoring lives in the target repo
 
-This pattern is enforced by the files the harness drops into the target repo (templates with inline guidance + `AGENTS.md` gates + the checker), so any agent can author specs without installing a skill. A dedicated authoring skill is only worth extracting later if the heuristics outgrow the templates.
+This pattern is enforced by the files the harness drops into the target repo (templates with inline guidance + `AGENTS.md` gates), so any agent can author specs without installing a skill. A dedicated authoring skill is only worth extracting later if the heuristics outgrow the templates.
