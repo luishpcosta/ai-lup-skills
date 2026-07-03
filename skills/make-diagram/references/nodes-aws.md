@@ -1,0 +1,536 @@
+# Nós AWS (diagrams.aws.*)
+
+Todas as classes de nós AWS da lib `diagrams`, agrupadas por módulo. Importe como `from diagrams.aws.<modulo> import <Classe>`.
+
+Módulos: analytics, ar, blockchain, business, compute, cost, database, devtools, enablement, enduser, engagement, game, general, integration, iot, management, media, migration, ml, mobile, network, quantum, robotics, satellite, security, storage
+
+## aws.analytics
+- AmazonOpensearchService
+- Analytics
+- Athena
+- CloudsearchSearchDocuments
+- Cloudsearch
+- DataLakeResource
+- DataPipeline
+- ElasticsearchService (alias: ES)
+- EMRCluster
+- EMREngineMaprM3
+- EMREngineMaprM5
+- EMREngineMaprM7
+- EMREngine
+- EMRHdfsCluster
+- EMR
+- GlueCrawlers
+- GlueDataCatalog
+- Glue
+- KinesisDataAnalytics
+- KinesisDataFirehose
+- KinesisDataStreams
+- KinesisVideoStreams
+- Kinesis
+- LakeFormation
+- ManagedStreamingForKafka
+- Quicksight
+- RedshiftDenseComputeNode
+- RedshiftDenseStorageNode
+- Redshift
+## aws.ar
+- ArVr
+- Sumerian
+## aws.blockchain
+- BlockchainResource
+- Blockchain
+- ManagedBlockchain
+- QuantumLedgerDatabaseQldb (alias: QLDB)
+## aws.business
+- AlexaForBusiness (alias: A4B)
+- BusinessApplications
+- Chime
+- Workmail
+## aws.compute
+- AppRunner
+- ApplicationAutoScaling (alias: AutoScaling)
+- Batch
+- ComputeOptimizer
+- Compute
+- EC2Ami (alias: AMI)
+- EC2AutoScaling
+- EC2ContainerRegistryImage
+- EC2ContainerRegistryRegistry
+- EC2ContainerRegistry (alias: ECR)
+- EC2ElasticIpAddress
+- EC2ImageBuilder
+- EC2Instance
+- EC2Instances
+- EC2Rescue
+- EC2SpotInstance
+- EC2
+- ElasticBeanstalkApplication
+- ElasticBeanstalkDeployment
+- ElasticBeanstalk (alias: EB)
+- ElasticContainerServiceContainer
+- ElasticContainerServiceServiceConnect
+- ElasticContainerServiceService
+- ElasticContainerServiceTask
+- ElasticContainerService (alias: ECS)
+- ElasticKubernetesService (alias: EKS)
+- Fargate
+- LambdaFunction
+- Lambda
+- Lightsail
+- LocalZones
+- Outposts
+- ServerlessApplicationRepository (alias: SAR)
+- ThinkboxDeadline
+- ThinkboxDraft
+- ThinkboxFrost
+- ThinkboxKrakatoa
+- ThinkboxSequoia
+- ThinkboxStoke
+- ThinkboxXmesh
+- VmwareCloudOnAWS
+- Wavelength
+## aws.cost
+- Budgets
+- CostAndUsageReport
+- CostExplorer
+- CostManagement
+- ReservedInstanceReporting
+- SavingsPlans
+## aws.database
+- AuroraInstance
+- Aurora
+- DatabaseMigrationServiceDatabaseMigrationWorkflow
+- DatabaseMigrationService (alias: DMS)
+- Database (alias: DB)
+- DocumentdbMongodbCompatibility (alias: DocumentDB)
+- DynamodbAttribute
+- DynamodbAttributes
+- DynamodbDax (alias: DAX)
+- DynamodbGlobalSecondaryIndex (alias: DynamodbGSI)
+- DynamodbItem
+- DynamodbItems
+- DynamodbStreams
+- DynamodbTable
+- Dynamodb (alias: DDB)
+- ElasticacheCacheNode
+- ElasticacheForMemcached
+- ElasticacheForRedis
+- Elasticache (alias: ElastiCache)
+- KeyspacesManagedApacheCassandraService
+- Neptune
+- QuantumLedgerDatabaseQldb (alias: QLDB)
+- RDSInstance
+- RDSMariadbInstance
+- RDSMysqlInstance
+- RDSOnVmware
+- RDSOracleInstance
+- RDSPostgresqlInstance
+- RDSSqlServerInstance
+- RDS
+- RedshiftDenseComputeNode
+- RedshiftDenseStorageNode
+- Redshift
+- Timestream
+## aws.devtools
+- CloudDevelopmentKit
+- Cloud9Resource
+- Cloud9
+- Cloudshell
+- Codeartifact
+- Codebuild
+- Codecommit
+- Codedeploy
+- Codepipeline
+- Codestar
+- CommandLineInterface (alias: CLI)
+- DeveloperTools (alias: DevTools)
+- ToolsAndSdks
+- XRay
+## aws.enablement
+- CustomerEnablement
+- Iq
+- ManagedServices
+- ProfessionalServices
+- Support
+## aws.enduser
+- Appstream20
+- DesktopAndAppStreaming
+- Workdocs
+- Worklink
+- Workspaces
+## aws.engagement
+- Connect
+- CustomerEngagement
+- Pinpoint
+- SimpleEmailServiceSesEmail
+- SimpleEmailServiceSes (alias: SES)
+## aws.game
+- GameTech
+- Gamelift
+## aws.general
+- Client
+- Disk
+- Forums
+- General
+- GenericDatabase
+- GenericFirewall
+- GenericOfficeBuilding (alias: OfficeBuilding)
+- GenericSamlToken
+- GenericSDK
+- InternetAlt1
+- InternetAlt2
+- InternetGateway
+- Marketplace
+- MobileClient
+- Multimedia
+- OfficeBuilding
+- SamlToken
+- SDK
+- SslPadlock
+- TapeStorage
+- Toolkit
+- TraditionalServer
+- User
+- Users
+## aws.integration
+- ApplicationIntegration
+- Appsync
+- ConsoleMobileApplication
+- EventResource
+- EventbridgeCustomEventBusResource
+- EventbridgeDefaultEventBusResource
+- EventbridgeEvent
+- EventbridgePipes
+- EventbridgeRule
+- EventbridgeSaasPartnerEventBusResource
+- EventbridgeScheduler
+- EventbridgeSchema
+- Eventbridge
+- ExpressWorkflows
+- MQ
+- SimpleNotificationServiceSnsEmailNotification
+- SimpleNotificationServiceSnsHttpNotification
+- SimpleNotificationServiceSnsTopic
+- SimpleNotificationServiceSns (alias: SNS)
+- SimpleQueueServiceSqsMessage
+- SimpleQueueServiceSqsQueue
+- SimpleQueueServiceSqs (alias: SQS)
+- StepFunctions (alias: SF)
+## aws.iot
+- Freertos (alias: FreeRTOS)
+- InternetOfThings
+- Iot1Click
+- IotAction
+- IotActuator
+- IotAlexaEcho
+- IotAlexaEnabledDevice
+- IotAlexaSkill
+- IotAlexaVoiceService
+- IotAnalyticsChannel
+- IotAnalyticsDataSet
+- IotAnalyticsDataStore
+- IotAnalyticsNotebook
+- IotAnalyticsPipeline
+- IotAnalytics
+- IotBank
+- IotBicycle
+- IotButton
+- IotCamera
+- IotCar
+- IotCart
+- IotCertificate
+- IotCoffeePot
+- IotCore
+- IotDesiredState
+- IotDeviceDefender
+- IotDeviceGateway
+- IotDeviceManagement
+- IotDoorLock
+- IotEvents
+- IotFactory
+- IotFireTvStick
+- IotFireTv
+- IotGeneric
+- IotGreengrassConnector
+- IotGreengrass
+- IotHardwareBoard (alias: IotBoard)
+- IotHouse
+- IotHttp
+- IotHttp2
+- IotJobs
+- IotLambda
+- IotLightbulb
+- IotMedicalEmergency
+- IotMqtt
+- IotOverTheAirUpdate
+- IotPolicyEmergency
+- IotPolicy
+- IotReportedState
+- IotRule
+- IotSensor
+- IotServo
+- IotShadow
+- IotSimulator
+- IotSitewise
+- IotThermostat
+- IotThingsGraph
+- IotTopic
+- IotTravel
+- IotUtility
+- IotWindfarm
+## aws.management
+- AmazonDevopsGuru
+- AmazonManagedGrafana
+- AmazonManagedPrometheus
+- AmazonManagedWorkflowsApacheAirflow
+- AutoScaling
+- Chatbot
+- CloudformationChangeSet
+- CloudformationStack
+- CloudformationTemplate
+- Cloudformation
+- Cloudtrail
+- CloudwatchAlarm
+- CloudwatchEventEventBased
+- CloudwatchEventTimeBased
+- CloudwatchLogs
+- CloudwatchRule
+- Cloudwatch
+- Codeguru
+- CommandLineInterface
+- Config
+- ControlTower
+- LicenseManager
+- ManagedServices
+- ManagementAndGovernance
+- ManagementConsole
+- OpsworksApps
+- OpsworksDeployments
+- OpsworksInstances
+- OpsworksLayers
+- OpsworksMonitoring
+- OpsworksPermissions
+- OpsworksResources
+- OpsworksStack
+- Opsworks
+- OrganizationsAccount
+- OrganizationsOrganizationalUnit
+- Organizations
+- PersonalHealthDashboard
+- Proton
+- ServiceCatalog
+- SystemsManagerAppConfig
+- SystemsManagerAutomation
+- SystemsManagerDocuments
+- SystemsManagerInventory
+- SystemsManagerMaintenanceWindows
+- SystemsManagerOpscenter
+- SystemsManagerParameterStore (alias: ParameterStore)
+- SystemsManagerPatchManager
+- SystemsManagerRunCommand
+- SystemsManagerStateManager
+- SystemsManager (alias: SSM)
+- TrustedAdvisorChecklistCost
+- TrustedAdvisorChecklistFaultTolerant
+- TrustedAdvisorChecklistPerformance
+- TrustedAdvisorChecklistSecurity
+- TrustedAdvisorChecklist
+- TrustedAdvisor
+- UserNotifications
+- WellArchitectedTool
+## aws.media
+- ElasticTranscoder
+- ElementalConductor
+- ElementalDelta
+- ElementalLive
+- ElementalMediaconnect
+- ElementalMediaconvert
+- ElementalMedialive
+- ElementalMediapackage
+- ElementalMediastore
+- ElementalMediatailor
+- ElementalServer
+- KinesisVideoStreams
+- MediaServices
+## aws.migration
+- ApplicationDiscoveryService (alias: ADS)
+- CloudendureMigration (alias: CEM)
+- DatabaseMigrationService (alias: DMS)
+- DatasyncAgent
+- Datasync
+- MigrationAndTransfer (alias: MAT)
+- MigrationHub
+- ServerMigrationService (alias: SMS)
+- SnowballEdge
+- Snowball
+- Snowmobile
+- TransferForSftp
+## aws.ml
+- ApacheMxnetOnAWS
+- AugmentedAi
+- Bedrock
+- Comprehend
+- DeepLearningAmis
+- DeepLearningContainers (alias: DLC)
+- Deepcomposer
+- Deeplens
+- Deepracer
+- ElasticInference
+- Forecast
+- FraudDetector
+- Kendra
+- Lex
+- MachineLearning
+- Personalize
+- Polly
+- Q
+- RekognitionImage
+- RekognitionVideo
+- Rekognition
+- SagemakerGroundTruth
+- SagemakerModel
+- SagemakerNotebook
+- SagemakerTrainingJob
+- Sagemaker
+- TensorflowOnAWS
+- Textract
+- Transcribe
+- Transform
+- Translate
+## aws.mobile
+- Amplify
+- APIGatewayEndpoint
+- APIGateway
+- Appsync
+- DeviceFarm
+- Mobile
+- Pinpoint
+## aws.network
+- APIGatewayEndpoint
+- APIGateway
+- AppMesh
+- ClientVpn
+- CloudMap
+- CloudFrontDownloadDistribution
+- CloudFrontEdgeLocation
+- CloudFrontStreamingDistribution
+- CloudFront (alias: CF)
+- DirectConnect
+- ElasticLoadBalancing (alias: ELB)
+- ElbApplicationLoadBalancer (alias: ALB)
+- ElbClassicLoadBalancer (alias: CLB)
+- ElbNetworkLoadBalancer (alias: NLB)
+- Endpoint
+- GlobalAccelerator (alias: GAX)
+- InternetGateway (alias: IGW)
+- Nacl
+- NATGateway
+- NetworkFirewall
+- NetworkingAndContentDelivery
+- PrivateSubnet
+- Privatelink
+- PublicSubnet
+- Route53HostedZone
+- Route53
+- RouteTable
+- SiteToSiteVpn
+- TransitGatewayAttachment (alias: TGWAttach)
+- TransitGateway (alias: TGW)
+- VerifiedAccess
+- VPCCustomerGateway
+- VPCElasticNetworkAdapter
+- VPCElasticNetworkInterface
+- VPCFlowLogs
+- VPCPeering
+- VPCRouter
+- VPCTrafficMirroring
+- VPC
+- VpnConnection
+- VpnGateway
+## aws.quantum
+- Braket
+- QuantumTechnologies
+## aws.robotics
+- RobomakerCloudExtensionRos
+- RobomakerDevelopmentEnvironment
+- RobomakerFleetManagement
+- RobomakerSimulator
+- Robomaker
+- Robotics
+## aws.satellite
+- GroundStation
+- Satellite
+## aws.security
+- AdConnector
+- Artifact
+- CertificateAuthority
+- CertificateManager (alias: ACM)
+- CloudDirectory
+- Cloudhsm (alias: CloudHSM)
+- Cognito
+- Detective
+- DirectoryService (alias: DS)
+- FirewallManager (alias: FMS)
+- Guardduty
+- IdentityAndAccessManagementIamAccessAnalyzer (alias: IAMAccessAnalyzer)
+- IdentityAndAccessManagementIamAddOn
+- IdentityAndAccessManagementIamAWSStsAlternate
+- IdentityAndAccessManagementIamAWSSts (alias: IAMAWSSts)
+- IdentityAndAccessManagementIamDataEncryptionKey
+- IdentityAndAccessManagementIamEncryptedData
+- IdentityAndAccessManagementIamLongTermSecurityCredential
+- IdentityAndAccessManagementIamMfaToken
+- IdentityAndAccessManagementIamPermissions (alias: IAMPermissions)
+- IdentityAndAccessManagementIamRole (alias: IAMRole)
+- IdentityAndAccessManagementIamTemporarySecurityCredential
+- IdentityAndAccessManagementIam (alias: IAM)
+- InspectorAgent
+- Inspector
+- KeyManagementService (alias: KMS)
+- Macie
+- ManagedMicrosoftAd
+- ResourceAccessManager (alias: RAM)
+- SecretsManager
+- SecurityHubFinding
+- SecurityHub
+- SecurityIdentityAndCompliance
+- SecurityLake
+- ShieldAdvanced
+- Shield
+- SimpleAd
+- SingleSignOn
+- WAFFilteringRule
+- WAF
+## aws.storage
+- Backup
+- CloudendureDisasterRecovery (alias: CDR)
+- EFSInfrequentaccessPrimaryBg
+- EFSStandardPrimaryBg
+- ElasticBlockStoreEBSSnapshot
+- ElasticBlockStoreEBSVolume
+- ElasticBlockStoreEBS (alias: EBS)
+- ElasticFileSystemEFSFileSystem
+- ElasticFileSystemEFS (alias: EFS)
+- FsxForLustre
+- FsxForWindowsFileServer
+- Fsx (alias: FSx)
+- MultipleVolumesResource
+- S3AccessPoints
+- S3GlacierArchive
+- S3GlacierVault
+- S3Glacier
+- S3ObjectLambdaAccessPoints
+- SimpleStorageServiceS3BucketWithObjects
+- SimpleStorageServiceS3Bucket
+- SimpleStorageServiceS3Object
+- SimpleStorageServiceS3 (alias: S3)
+- SnowFamilySnowballImportExport
+- SnowballEdge
+- Snowball
+- Snowmobile
+- StorageGatewayCachedVolume
+- StorageGatewayNonCachedVolume
+- StorageGatewayVirtualTapeLibrary
+- StorageGateway
+- Storage

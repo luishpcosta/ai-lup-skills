@@ -1,0 +1,52 @@
+{
+  "skill_name": "make-diagram",
+  "evals": [
+    {
+      "id": 0,
+      "name": "aws-event-pipeline",
+      "prompt": "Preciso de um diagrama da nossa arquitetura de processamento de pedidos na AWS: o cliente chama um API Gateway, que aciona uma Lambda de checkout. Ela publica numa fila SQS chamada 'orders'. Três workers em ECS consomem essa fila, gravam os pedidos numa tabela DynamoDB 'orders-table' e também mandam eventos de auditoria pra um bucket S3 'audit'. Gera uma imagem PNG dessa arquitetura e salva em {output_dir}.",
+      "expected_output": "PNG gerado com ícones oficiais AWS: APIGateway -> Lambda -> SQS -> 3x ECS (agrupados) -> DynamoDB e S3; arquivo salvo no diretório indicado.",
+      "files": [],
+      "assertions": [
+        "png_gerado_no_diretorio: existe pelo menos um arquivo .png no diretório de outputs",
+        "codigo_python_salvo: existe um arquivo .py no outputs usando a lib diagrams (import de 'diagrams')",
+        "nos_oficiais_aws: o código usa classes oficiais de diagrams.aws.* para API Gateway, Lambda, SQS, ECS, DynamoDB e S3 (sem nós genéricos para esses serviços)",
+        "tres_workers_ecs: o diagrama contém exatamente 3 nós ECS de workers",
+        "fluxo_correto: as conexões seguem gateway -> lambda -> sqs -> workers -> dynamodb e workers -> s3",
+        "headless_show_false: o Diagram usa show=False (não tenta abrir a imagem)"
+      ]
+    },
+    {
+      "id": 1,
+      "name": "k8s-from-mermaid",
+      "prompt": "Converte esse mermaid num diagrama de imagem com os ícones do Kubernetes e salva o PNG em {output_dir}:\n\n```mermaid\nflowchart TB\n  ing[Ingress api.meusite.com] --> svc[Service api]\n  subgraph ns[namespace: prod]\n    svc --> p1[Pod api-1]\n    svc --> p2[Pod api-2]\n    svc --> p3[Pod api-3]\n    dep[Deployment api] --> p1\n    dep --> p2\n    dep --> p3\n    hpa[HPA] --> dep\n  end\n```",
+      "expected_output": "PNG com ícones k8s: Ingress -> Service -> 3 Pods dentro de um cluster/namespace 'prod', Deployment gerenciando os pods e HPA apontando pro Deployment; direção TB.",
+      "files": [],
+      "assertions": [
+        "png_gerado_no_diretorio: existe pelo menos um arquivo .png no diretório de outputs",
+        "codigo_python_salvo: existe um arquivo .py no outputs usando a lib diagrams (import de 'diagrams')",
+        "nos_oficiais_k8s: o código usa classes de diagrams.k8s.* para Ingress, Service, Pod, Deployment e HPA",
+        "namespace_como_cluster: o subgraph 'namespace: prod' do mermaid virou um Cluster no diagrama",
+        "tres_pods: o diagrama contém exatamente 3 nós Pod",
+        "direcao_tb: o Diagram usa direction='TB' (respeitando o flowchart TB do mermaid)",
+        "headless_show_false: o Diagram usa show=False"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "c4-container-delivery",
+      "prompt": "Faz um diagrama C4 (nível container) do nosso sistema de delivery e salva o PNG em {output_dir}. O cliente (pessoa) usa o app mobile (React Native) e o site (Next.js); os dois chamam a API (Go/Gin) via JSON/HTTPS; a API lê e escreve no Postgres e usa Redis como cache; a API também integra com um gateway de pagamento externo (sistema de terceiros).",
+      "expected_output": "PNG no estilo C4 com Person, SystemBoundary contendo Containers (mobile, web, api) com technology preenchida, Database (Postgres) e Redis, System external=True para o gateway de pagamento, Relationships rotulados.",
+      "files": [],
+      "assertions": [
+        "png_gerado_no_diretorio: existe pelo menos um arquivo .png no diretório de outputs",
+        "codigo_python_salvo: existe um arquivo .py no outputs usando a lib diagrams (import de 'diagrams')",
+        "usa_classes_c4: o código usa as classes de diagrams.c4 (Person, Container, Database, SystemBoundary, Relationship) em vez de ícones de cloud",
+        "technology_preenchida: os Containers informam technology (React Native, Next.js, Go/Gin)",
+        "gateway_externo: o gateway de pagamento é um System com external=True (fora da SystemBoundary)",
+        "relacionamentos_rotulados: as conexões usam Relationship com rótulos descritivos (ex.: protocolo JSON/HTTPS)",
+        "headless_show_false: o Diagram usa show=False"
+      ]
+    }
+  ]
+}
