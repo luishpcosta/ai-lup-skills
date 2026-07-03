@@ -41,6 +41,20 @@
         {"name": "no_indiscriminate_adr", "text": "Não cria/oferece uma ADR de forma automática antes de a decisão estar de fato tomada e justificada pelos 3 critérios"},
         {"name": "no_premature_context_edit", "text": "Não edita CONTEXT.md nesta rodada, já que nenhum termo foi de fato confirmado pelo usuário ainda"}
       ]
+    },
+    {
+      "id": 4,
+      "name": "map-guided-navigation",
+      "prompt": "Quero estressar o plano de cancelamento parcial de pedido antes de implementar. A documentação do projeto já está organizada — usa o que tem no repo.",
+      "expected_output": "A skill lê o CONTEXT-MAP.md na raiz primeiro e navega somente pelos caminhos referenciados nele: o CONTEXT.md do contexto Ordering, as regras as-is em docs/dominio/ordering/pedidos/cancelamento.md e o to-be em docs/refinamento/ordering/PRODUCT_BRIEF.md. Confronta o plano to-be (cancelamento parcial, estorno proporcional) com as regras as-is (cancelamento sempre do pedido inteiro, evento PedidoCancelado consumido por Payment) e com o glossário. Ignora docs/notas-antigas/brainstorm-cancelamento.md, que não está referenciado no mapa.",
+      "files": ["eval-4-map-guided-navigation/CONTEXT-MAP.md", "eval-4-map-guided-navigation/docs/dominio/ordering/CONTEXT.md", "eval-4-map-guided-navigation/docs/dominio/ordering/pedidos/cancelamento.md", "eval-4-map-guided-navigation/docs/refinamento/ordering/PRODUCT_BRIEF.md", "eval-4-map-guided-navigation/docs/notas-antigas/brainstorm-cancelamento.md"],
+      "assertions": [
+        {"name": "reads_map_as_entrypoint", "text": "Usa o CONTEXT-MAP.md como ponto de entrada da navegação (referencia os caminhos/contextos que o mapa lista) em vez de escanear a árvore de docs às cegas"},
+        {"name": "uses_asis_rules", "text": "Referencia as regras as-is reais de docs/dominio/ordering/pedidos/cancelamento.md (cancelamento só antes do despacho e sempre do pedido inteiro)"},
+        {"name": "uses_tobe_doc", "text": "Referencia o conteúdo real do to-be em docs/refinamento/ordering/PRODUCT_BRIEF.md (cancelamento parcial por item, estorno proporcional)"},
+        {"name": "surfaces_asis_tobe_conflict", "text": "Aponta explicitamente a tensão entre o as-is (pedido inteiro, estorno integral via PedidoCancelado) e o to-be (parcial, estorno proporcional), incluindo o impacto no consumidor Payment"},
+        {"name": "ignores_unmapped_doc", "text": "Não usa o conteúdo de docs/notas-antigas/brainstorm-cancelamento.md (cancelamento pós-entrega, termo 'Reversão', estorno no Ordering) como fonte, pois não está referenciado no CONTEXT-MAP.md"}
+      ]
     }
   ]
 }

@@ -70,8 +70,10 @@ que motivou a discussão, ou o documento de negócio de origem. 2-4 frases.>
 ## Decisão
 
 <Descrição objetiva do que foi decidido — fronteira de contexto, padrão de
-integração, escolha de linguagem onipresente. Inclua diagrama Mermaid se ajudar a
-visualizar a relação entre contextos.>
+integração, escolha de linguagem onipresente. Inclua diagrama se ajudar a
+visualizar a relação entre contextos: se a skill `make-diagram` estiver
+disponível, gere a imagem com ela assim que a ADR for criada e referencie aqui
+(`![Decisão](./ADR-<id>-diagrama.png)`); senão, use Mermaid inline.>
 
 ## Alternativas consideradas
 

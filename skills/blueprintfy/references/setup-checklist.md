@@ -81,10 +81,19 @@ escolha define onde tudo vai morar dali em diante e é cara de desfazer depois.
 
 - **Contexto único** → crie `CONTEXT.md` na raiz com os termos confirmados. Parta do
   esqueleto em `assets/CONTEXT.md.template`.
-- **Múltiplos contextos** → crie `CONTEXT-MAP.md` na raiz listando os contextos
+- **Múltiplos contextos** → crie `CONTEXT-MAP.md` **na raiz** listando os contextos
   identificados e como se relacionam (ver formato em `context-format.md`, esqueleto em
   `assets/CONTEXT-MAP.md.template`), e um `CONTEXT.md` por contexto com os termos que
-  pertencem a ele.
+  pertencem a ele. O `CONTEXT.md` de cada contexto pode viver onde o repo preferir
+  (`src/<contexto>/`, `docs/<dominio>/<contexto>/`...) — pergunte ao usuário onde
+  cada um deve morar; é o mapa que registra o caminho.
+- **Registre no mapa os documentos que já existem** → se as Perguntas 1 e 2
+  identificaram documentos de negócio (as-is) e/ou pastas de planejamento to-be
+  (PRDs/ADRs/SPECs de SDD), adicione-os às seções opcionais **Documentos de negócio
+  (as-is)** e **Planejamento (to-be)** do `CONTEXT-MAP.md`. A partir daí valem as
+  regras de navegação de `context-format.md`: o mapa é o único ponto de entrada, e
+  documentos fora do mapa são ignorados nas sessões seguintes — por isso, confirme
+  com o usuário o que entra e o que fica de fora.
 
 Se nenhum documento de negócio nem ADR existia, não crie nada ainda neste passo —
 os arquivos nascem no Modo 2, no momento em que o primeiro termo/decisão for

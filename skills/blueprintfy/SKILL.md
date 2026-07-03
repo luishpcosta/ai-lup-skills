@@ -1,6 +1,6 @@
 ---
 name: blueprintfy
-description: "Constrói e afia o modelo de domínio de um projeto: entrevista implacável para estressar um plano/design, glossário de linguagem onipresente (CONTEXT.md/CONTEXT-MAP.md) e ADRs de decisões arquiteturais, tudo em um único fluxo contínuo. Use sempre que o usuário quiser definir/discutir terminologia de domínio, apertar um plano antes de construir, mapear bounded contexts, ou disser algo como 'grilar isso comigo', 'vamos estressar essa decisão', 'preciso alinhar a linguagem do domínio', 'isso é uma Order ou uma Invoice mesmo?'. Também cobre o setup inicial de um repositório sem CONTEXT.md: rode o checklist de bootstrap (references/setup-checklist.md) sempre que o usuário pedir para 'começar a modelagem de domínio', 'criar o glossário do zero' ou 'mapear os contextos do sistema' — pergunte primeiro se já existem documentos de negócio e ADRs no repo antes de propor qualquer estrutura. Acione mesmo sem o usuário citar 'DDD', 'ADR' ou 'CONTEXT.md' explicitamente — se a intenção é sair de um entendimento vago para um modelo de domínio preciso e registrado, esta skill se aplica."
+description: "Constrói e afia o modelo de domínio de um projeto: entrevista implacável para estressar um plano/design, glossário de linguagem onipresente (CONTEXT.md/CONTEXT-MAP.md) e ADRs de decisões arquiteturais, tudo em um fluxo contínuo. Use sempre que o usuário quiser definir/discutir terminologia de domínio, apertar um plano antes de construir, mapear bounded contexts, ou disser algo como 'grilar isso comigo', 'vamos estressar essa decisão', 'preciso alinhar a linguagem do domínio', 'isso é uma Order ou uma Invoice mesmo?'. Também cobre o setup inicial de repositório sem CONTEXT.md: rode o checklist de bootstrap sempre que o usuário pedir para 'começar a modelagem de domínio', 'criar o glossário do zero' ou 'mapear os contextos do sistema' — pergunte primeiro se já existem documentos de negócio e ADRs no repo. Acione mesmo sem o usuário citar 'DDD', 'ADR' ou 'CONTEXT.md' — se a intenção é sair de um entendimento vago para um modelo de domínio preciso e registrado, esta skill se aplica."
 metadata:
   language: agnostic
   tags: [domain-modeling, ddd, glossary, adr, architecture, interview, bounded-context]
@@ -57,6 +57,11 @@ primeiro termo estiver de fato validado, só crie `docs/adr/` (ou a pasta de ADR
 repo) quando a primeira decisão realmente merecer uma.
 
 ## Modo 2 — Sessão contínua (entrevista + modelagem ativa)
+
+Se existir `CONTEXT-MAP.md` na raiz, leia-o antes de explorar qualquer pasta de
+documentação — ele é o índice de navegação do repo (contextos, docs as-is, docs
+to-be) e delimita o que entra na sessão (ver "Estrutura de arquivos" e as regras de
+navegação em `references/context-format.md`).
 
 ### Entreviste sem descanso
 
@@ -121,6 +126,12 @@ Se faltar qualquer uma das três, não ofereça ADR — o rascunho de decisão f
 histórico da conversa. Use o template e o gerador de ID em
 `references/adr-template.md`.
 
+Assim que uma ADR for criada, se a skill `make-diagram` estiver disponível no
+ambiente, acione-a para gerar o diagrama da decisão (relação entre contextos,
+integração, fronteira) como imagem ao lado da ADR (`adr/ADR-<id>-diagrama.png`),
+referenciando-o na seção **Decisão**. Sem `make-diagram`, use Mermaid inline como
+fallback.
+
 ## Estrutura de arquivos
 
 A maioria dos repositórios tem um único contexto:
@@ -134,8 +145,16 @@ A maioria dos repositórios tem um único contexto:
 └── src/
 ```
 
-Se existir um `CONTEXT-MAP.md` na raiz, o repo tem múltiplos contextos. O mapa aponta
-onde cada um vive:
+Se existir um `CONTEXT-MAP.md`, ele fica **sempre na raiz** e é o **índice de
+navegação do repositório**: antes de explorar qualquer pasta, leia o mapa e siga
+apenas os caminhos que ele referencia. O mapa diz onde vive cada contexto, onde estão
+os documentos de negócio já produtivos (as-is) e onde está o planejamento to-be
+(PRDs/ADRs/SPECs de Spec-Driven Development). **Documentos que existem na árvore mas
+não estão referenciados no mapa são ignorados** — não os escaneie nem os trate como
+fonte do modelo; se um deles parecer relevante, pergunte ao usuário se deve entrar no
+mapa em vez de usá-lo por conta própria.
+
+A forma mais simples de multi-contexto aponta para `CONTEXT.md` dentro do código:
 
 ```
 /
@@ -150,13 +169,46 @@ onde cada um vive:
 │       └── adr/
 ```
 
-Quando existirem múltiplos contextos, infira a qual o assunto atual pertence. Se não
-estiver claro, pergunte — não adivinhe uma decisão que muda onde tudo é gravado.
+Mas o mapa não é restrito a `src/` — os contextos e documentos podem viver em
+qualquer lugar que o mapa apontar. Um cenário frequente combina domínios de negócio
+documentados (as-is) com planejamento to-be em `docs/`:
+
+```
+/
+├── CONTEXT-MAP.md                     ← na raiz, sempre
+├── docs/refinamento/                  ← to-be (SDD): o que está sendo planejado
+│   ├── ordering/
+│   │   ├── PRODUCT_BRIEF.md
+│   │   └── {funcionalidade}/
+│   │       ├── NNN-slug-{funcionalidade}-PRD.md
+│   │       ├── NNN-slug-{funcionalidade}-ADR.md
+│   │       └── {especificacao}/
+│   │           └── NNN-slug-{atividade-componente}-SPEC.md
+│   └── payment/
+│       └── ...mesma estrutura...
+├── docs/dominio/                      ← as-is: negócio já produtivo
+│   └── {bounded-context}/
+│       ├── CONTEXT.md                 ← visão geral de negócio (com BPM)
+│       └── {area-do-dominio}/
+│           ├── {dominio-1}.md         ← detalhamento e regras do domínio
+│           └── {dominio-2}.md
+```
+
+Os nomes das pastas acima são ilustrativos — cada repo usa os seus; é o
+`CONTEXT-MAP.md` que registra os caminhos reais (formato e regras de navegação em
+`references/context-format.md`).
+
+Quando existirem múltiplos contextos, infira a qual o assunto atual pertence — e, ao
+estressar um plano, considere tanto as regras as-is do domínio quanto os documentos
+to-be referenciados no mapa. Se não estiver claro a que contexto o assunto pertence,
+pergunte — não adivinhe uma decisão que muda onde tudo é gravado.
 
 ## Arquivos de referência
 
 - `references/context-format.md` — formato de `CONTEXT.md`/`CONTEXT-MAP.md`, regras de
-  linguagem (ser opinativo, definições curtas, o que entra e o que não entra).
+  linguagem (ser opinativo, definições curtas, o que entra e o que não entra) e regras
+  de navegação quando existe `CONTEXT-MAP.md` (mapa como ponto de entrada, docs as-is
+  vs. to-be, ignorar o que não está no mapa).
 - `references/adr-template.md` — template de ADR e como gerar o ID (mesma convenção de
   `prd-to-adr`/`issue-to-adr` deste catálogo), e o critério de quando vale a pena
   registrar uma.
