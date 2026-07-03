@@ -1,6 +1,6 @@
 ---
 name: blueprintfy
-description: "Constrói e afia o modelo de domínio de um projeto: entrevista implacável para estressar um plano/design, glossário de linguagem onipresente (CONTEXT.md/CONTEXT-MAP.md) e ADRs de decisões arquiteturais, tudo em um fluxo contínuo. Use sempre que o usuário quiser definir/discutir terminologia de domínio, apertar um plano antes de construir, mapear bounded contexts, ou disser algo como 'grilar isso comigo', 'vamos estressar essa decisão', 'preciso alinhar a linguagem do domínio', 'isso é uma Order ou uma Invoice mesmo?'. Também cobre o setup inicial de repositório sem CONTEXT.md: rode o checklist de bootstrap sempre que o usuário pedir para 'começar a modelagem de domínio', 'criar o glossário do zero' ou 'mapear os contextos do sistema' — pergunte primeiro se já existem documentos de negócio e ADRs no repo. Acione mesmo sem o usuário citar 'DDD', 'ADR' ou 'CONTEXT.md' — se a intenção é sair de um entendimento vago para um modelo de domínio preciso e registrado, esta skill se aplica."
+description: "Constrói e afia o modelo de domínio de um projeto: entrevista implacável para estressar um plano/design, glossário de linguagem onipresente (CONTEXT.md/CONTEXT-MAP.md) e ADRs de decisões arquiteturais, tudo em um fluxo contínuo. Use sempre que o usuário quiser definir/discutir terminologia de domínio, apertar um plano antes de construir, mapear bounded contexts, ou disser algo como 'grilar isso comigo', 'vamos estressar essa decisão', 'preciso alinhar a linguagem do domínio', 'isso é uma Order ou uma Invoice mesmo?'. Também cobre o setup inicial de repositório sem CONTEXT-MAP.md: rode o checklist de bootstrap sempre que o usuário pedir para 'começar a modelagem de domínio', 'criar o glossário do zero' ou 'mapear os contextos do sistema' — pergunte primeiro se já existem documentos de negócio e ADRs no repo. Acione mesmo sem o usuário citar 'DDD', 'ADR' ou 'CONTEXT.md' — se a intenção é sair de um entendimento vago para um modelo de domínio preciso e registrado, esta skill se aplica."
 metadata:
   language: agnostic
   tags: [domain-modeling, ddd, glossary, adr, architecture, interview, bounded-context]
@@ -22,9 +22,12 @@ está só sendo consumido.
 
 ## Como decidir o modo
 
-- **Repositório sem `CONTEXT.md`/`CONTEXT-MAP.md` e sem sessão em andamento** → comece
-  pelo **Modo 1 (Setup inicial)**.
-- **Já existe `CONTEXT.md`/`CONTEXT-MAP.md`, ou o usuário quer discutir/estressar um
+- **Repositório sem `CONTEXT-MAP.md` na raiz e sem sessão em andamento** → comece
+  pelo **Modo 1 (Setup inicial)**. Isso inclui o caso **brownfield**: o repo já tem
+  código e documentação (às vezes até um `CONTEXT.md` solto na raiz, de uma convenção
+  antiga), mas nenhum mapa — o Modo 1 questiona o usuário para criar o
+  `CONTEXT-MAP.md` na raiz a partir do que já existe.
+- **Já existe `CONTEXT-MAP.md` na raiz, ou o usuário quer discutir/estressar um
   plano agora** → vá direto para o **Modo 2 (Sessão contínua)**.
 - Nunca se force a rodar o Modo 1 se o usuário só quer bater um papo rápido sobre um
   termo — o setup completo é para quando o objetivo é estabelecer a base do modelo.
@@ -42,26 +45,33 @@ sobre o que já existe:
 3. **"O sistema tem mais de um bounded context/domínio?"** Não assuma a partir da
    estrutura de pastas sozinho — proponha sua leitura ("percebi múltiplos serviços em
    `src/ordering` e `src/billing`, parece que são contextos separados — confere?") e
-   confirme antes de decidir entre `CONTEXT.md` único ou `CONTEXT-MAP.md` +
-   `CONTEXT.md` por contexto.
+   confirme com o usuário. A estrutura é **sempre** `CONTEXT-MAP.md` na raiz — mesmo
+   com um único contexto o mapa existe (com uma entrada só); o que se decide aqui com
+   o usuário é **quantos contextos entram no mapa e onde o `CONTEXT.md` de cada um
+   vive**.
 
 Depois de coletar essas três respostas, siga o roteiro completo em
 `references/setup-checklist.md` — ele detalha como escanear os documentos existentes,
 propor um rascunho de glossário termo a termo (nunca grave direto sem validar com o
-usuário) e como decidir estrutura de contexto único vs. múltiplo. Se não houver nada
-documentado ainda, pule o escaneamento e vá direto para o Modo 2 — o glossário nasce
-organicamente durante a conversa.
+usuário) e como decidir quantos contextos entram no `CONTEXT-MAP.md` e onde o
+`CONTEXT.md` de cada um vive. Se não houver nada documentado ainda, pule o
+escaneamento e vá direto para o Modo 2 — o glossário nasce organicamente durante a
+conversa.
 
-Crie os arquivos de forma preguiçosa: só grave `CONTEXT.md`/`CONTEXT-MAP.md` quando o
-primeiro termo estiver de fato validado, só crie `docs/adr/` (ou a pasta de ADR do
-repo) quando a primeira decisão realmente merecer uma.
+Crie os arquivos de forma preguiçosa: só grave o `CONTEXT-MAP.md` (na raiz) e o
+primeiro `CONTEXT.md` de contexto quando o primeiro termo estiver de fato validado,
+só crie `docs/adr/` (ou a pasta de ADR do repo) quando a primeira decisão realmente
+merecer uma. Os dois nascem juntos: nunca grave um `CONTEXT.md` sem que o
+`CONTEXT-MAP.md` da raiz o referencie.
 
 ## Modo 2 — Sessão contínua (entrevista + modelagem ativa)
 
-Se existir `CONTEXT-MAP.md` na raiz, leia-o antes de explorar qualquer pasta de
-documentação — ele é o índice de navegação do repo (contextos, docs as-is, docs
-to-be) e delimita o que entra na sessão (ver "Estrutura de arquivos" e as regras de
-navegação em `references/context-format.md`).
+Leia o `CONTEXT-MAP.md` da raiz antes de explorar qualquer pasta de documentação —
+ele é o índice de navegação do repo (contextos, docs as-is, docs to-be) e delimita o
+que entra na sessão (ver "Estrutura de arquivos" e as regras de navegação em
+`references/context-format.md`). Se o repo tiver só um `CONTEXT.md` solto na raiz e
+nenhum mapa (convenção antiga/brownfield), não siga sem mapa: proponha criar o
+`CONTEXT-MAP.md` na raiz referenciando-o (Modo 1, Pergunta 3) antes de continuar.
 
 ### Entreviste sem descanso
 
@@ -104,8 +114,8 @@ acabou de dizer que cancelamento parcial é possível — qual dos dois está ce
 
 ### Atualize `CONTEXT.md` inline
 
-Quando um termo for resolvido, atualize `CONTEXT.md` (ou o `CONTEXT.md` do contexto
-certo, se houver `CONTEXT-MAP.md`) ali mesmo, na hora — não acumule para depois. Use o
+Quando um termo for resolvido, atualize o `CONTEXT.md` do contexto certo (localize-o
+pelo `CONTEXT-MAP.md` da raiz) ali mesmo, na hora — não acumule para depois. Use o
 formato em `references/context-format.md`.
 
 `CONTEXT.md` deve ser totalmente livre de detalhes de implementação. Não trate
@@ -130,24 +140,32 @@ Assim que uma ADR for criada, se a skill `make-diagram` estiver disponível no
 ambiente, acione-a para gerar o diagrama da decisão (relação entre contextos,
 integração, fronteira) como imagem ao lado da ADR (`adr/ADR-<id>-diagrama.png`),
 referenciando-o na seção **Decisão**. Sem `make-diagram`, use Mermaid inline como
-fallback.
+fallback. A ADR criada passa pelo gate de criação de documento (ver "Mapa sempre em
+dia"): confirme que ela é alcançável a partir do `CONTEXT-MAP.md` e valide o
+registro.
 
 ## Estrutura de arquivos
 
-A maioria dos repositórios tem um único contexto:
+A estrutura é **sempre `CONTEXT-MAP.md` na raiz** — mesmo em repositório de contexto
+único, o mapa existe (com uma entrada só) e aponta onde o `CONTEXT.md` daquele
+contexto vive. **Nunca deixe um `CONTEXT.md` solto na raiz sem mapa como estrutura
+final**; se encontrar um assim (convenção antiga/brownfield), proponha ao usuário
+criar o `CONTEXT-MAP.md` na raiz referenciando-o.
+
+Contexto único:
 
 ```
 /
-├── CONTEXT.md
+├── CONTEXT-MAP.md                     ← na raiz, sempre
+├── docs/dominio/loja/CONTEXT.md       ← onde o usuário preferir; o mapa aponta
 ├── adr/
 │   ├── ADR-20260615-0930-a1f2-nome-da-decisao.md
 │   └── ADR-20260620-1542-3f0a-outra-decisao.md
 └── src/
 ```
 
-Se existir um `CONTEXT-MAP.md`, ele fica **sempre na raiz** e é o **índice de
-navegação do repositório**: antes de explorar qualquer pasta, leia o mapa e siga
-apenas os caminhos que ele referencia. O mapa diz onde vive cada contexto, onde estão
+O `CONTEXT-MAP.md` é o **índice de navegação do repositório**: antes de explorar
+qualquer pasta, leia o mapa e siga apenas os caminhos que ele referencia. O mapa diz onde vive cada contexto, onde estão
 os documentos de negócio já produtivos (as-is) e onde está o planejamento to-be
 (PRDs/ADRs/SPECs de Spec-Driven Development). **Documentos que existem na árvore mas
 não estão referenciados no mapa são ignorados** — não os escaneie nem os trate como
@@ -203,6 +221,26 @@ estressar um plano, considere tanto as regras as-is do domínio quanto os docume
 to-be referenciados no mapa. Se não estiver claro a que contexto o assunto pertence,
 pergunte — não adivinhe uma decisão que muda onde tudo é gravado.
 
+## Mapa sempre em dia (gate de criação de documento)
+
+Se o mapa é o único ponto de entrada, um documento fora do mapa é invisível — por
+isso a criação de qualquer documento na estrutura mapeada (`CONTEXT.md` de contexto,
+doc de domínio, PRODUCT_BRIEF, PRD, ADR, SPEC) carrega um gate obrigatório para quem
+criou o arquivo:
+
+1. **Verifique o alcance**: o novo arquivo é alcançável a partir do `CONTEXT-MAP.md`?
+   (o próprio arquivo, ou a pasta que o contém, está referenciado no mapa).
+2. **Registre se não for**: adicione a referência na seção certa do mapa (Contextos /
+   Documentos de negócio as-is / Planejamento to-be). Se a seção for ambígua,
+   pergunte ao usuário.
+3. **Valide**: releia o `CONTEXT-MAP.md`, confirme que o caminho referenciado existe
+   no disco (sem link quebrado) e que o novo arquivo está alcançável, e reporte o
+   resultado da validação ao usuário.
+
+Um documento só está entregue quando passa por esse gate — criar o arquivo sem
+registrá-lo no mapa é entrega incompleta. O detalhamento está em
+`references/context-format.md` ("Gate de criação de documento").
+
 ## Arquivos de referência
 
 - `references/context-format.md` — formato de `CONTEXT.md`/`CONTEXT-MAP.md`, regras de
@@ -212,6 +250,7 @@ pergunte — não adivinhe uma decisão que muda onde tudo é gravado.
 - `references/adr-template.md` — template de ADR e como gerar o ID (mesma convenção de
   `prd-to-adr`/`issue-to-adr` deste catálogo), e o critério de quando vale a pena
   registrar uma.
-- `references/setup-checklist.md` — roteiro completo do Modo 1: como escanear docs de
-  negócio/ADRs existentes, propor rascunho de glossário e decidir contexto único vs.
-  múltiplo.
+- `references/setup-checklist.md` — roteiro completo do Modo 1 (greenfield e
+  brownfield): como escanear docs de negócio/ADRs existentes, propor rascunho de
+  glossário e montar o `CONTEXT-MAP.md` da raiz (quantos contextos, onde cada
+  `CONTEXT.md` vive).

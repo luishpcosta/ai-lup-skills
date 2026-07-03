@@ -114,6 +114,13 @@ Idêntico à skill de PRD: confirmar quebra de atividades em ADRs separados.
 - `adr/ADR-XXX-acs.md`
 - `adr/ADR-XXX-diagrama.png` (somente se `make-diagram` estiver disponível — ver Fase 3)
 
+**Gate do CONTEXT-MAP (se existir `CONTEXT-MAP.md` na raiz do projeto):** igual à
+skill de PRD — depois de gravar os arquivos, verifique se cada um é alcançável a
+partir do `CONTEXT-MAP.md`; se não for, adicione a referência na seção adequada
+(tipicamente *Planejamento (to-be)* do contexto certo, perguntando ao usuário se for
+ambíguo); e valide relendo o mapa e conferindo que o caminho existe, reportando o
+resultado. Os entregáveis só estão completos depois desse gate.
+
 ## Arquivos de referência
 
 - `references/checklist-elicitacao.md` — o que sempre checar antes de

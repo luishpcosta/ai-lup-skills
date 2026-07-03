@@ -128,6 +128,15 @@ Gere como arquivos (sempre arquivo, nunca só inline):
 - `adr/ADR-XXX-acs.md`
 - `adr/ADR-XXX-diagrama.png` (somente se `make-diagram` estiver disponível — ver Fase 3)
 
+**Gate do CONTEXT-MAP (se existir `CONTEXT-MAP.md` na raiz do projeto):** o mapa é o
+índice de navegação do repo, e documento fora do mapa é invisível. Depois de gravar
+os arquivos, (1) verifique se cada um é alcançável a partir do `CONTEXT-MAP.md` (o
+arquivo ou a pasta que o contém está referenciado — tipicamente na seção
+*Planejamento (to-be)* do contexto certo); (2) se não for, adicione a referência na
+seção adequada, perguntando ao usuário se o contexto/seção for ambíguo; (3) valide:
+releia o mapa, confira que o caminho referenciado existe no disco e reporte o
+resultado ao usuário. Os entregáveis só estão completos depois desse gate.
+
 ## Arquivos de referência
 
 - `references/adr-template.md` — template de ADR.

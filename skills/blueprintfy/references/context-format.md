@@ -35,14 +35,17 @@ _Evitar_: Client, buyer, account
 - **Agrupe termos sob subtítulos** quando surgirem clusters naturais. Se todos os
   termos pertencem a uma única área coesa, uma lista simples está de bom tamanho.
 
-## Contexto único vs. múltiplo
+## O `CONTEXT-MAP.md` (sempre na raiz)
 
-**Contexto único (a maioria dos repos):** um único `CONTEXT.md` na raiz do repo.
+A estrutura é sempre a mesma: um `CONTEXT-MAP.md` **na raiz do repo** como índice de
+navegação, e um `CONTEXT.md` por contexto vivendo onde o mapa apontar. Repositório de
+contexto único é só um mapa com uma entrada — **não existe a variante "um `CONTEXT.md`
+solto na raiz sem mapa"**; se um repo antigo tiver essa forma, proponha a migração
+(criar o mapa na raiz referenciando o arquivo existente) antes de seguir.
 
-**Múltiplos contextos:** um `CONTEXT-MAP.md` **sempre na raiz** funciona como índice
-de navegação do repositório: lista os contextos, onde cada um vive, como se
-relacionam e — quando existirem — onde estão os documentos de negócio já produtivos
-(as-is) e o planejamento to-be (SDD):
+O mapa lista os contextos, onde cada um vive, como se relacionam e — quando
+existirem — onde estão os documentos de negócio já produtivos (as-is) e o
+planejamento to-be (SDD):
 
 ```md
 # Context Map
@@ -95,13 +98,39 @@ a estrutura é o mapa, não uma convenção de pastas.
   refinamento surgir na conversa, adicione a referência ao `CONTEXT-MAP.md` na hora,
   como se faz com termos no `CONTEXT.md`.
 
-A skill infere qual estrutura se aplica:
+## Gate de criação de documento
 
-- Se `CONTEXT-MAP.md` existir, leia-o para localizar os contextos e documentos.
-- Se só existir um `CONTEXT.md` na raiz, é contexto único.
-- Se nenhum dos dois existir, crie um `CONTEXT.md` na raiz de forma preguiçosa, quando
-  o primeiro termo for resolvido (ver `setup-checklist.md` se for a primeira vez que
-  o repo recebe um).
+Todo documento novo criado na estrutura mapeada (`CONTEXT.md` de contexto, doc de
+domínio, PRODUCT_BRIEF, PRD, ADR, SPEC) passa por este gate, executado **pelo mesmo
+agente que criou o arquivo**, na mesma ação:
+
+1. **Alcance** — verifique se o novo arquivo é alcançável a partir do
+   `CONTEXT-MAP.md`: o próprio arquivo está referenciado, ou a pasta que o contém
+   está (uma pasta referenciada cobre os arquivos dentro dela).
+2. **Registro** — se não for alcançável, adicione a referência na seção adequada do
+   mapa (`## Contextos`, `## Documentos de negócio (as-is)` ou `## Planejamento
+   (to-be)`). Se não estiver claro em qual seção ou contexto o documento entra,
+   pergunte ao usuário — não adivinhe.
+3. **Validação** — releia o `CONTEXT-MAP.md` depois do registro e confira: (a) o
+   caminho recém-referenciado existe no disco; (b) nenhum outro link do mapa quebrou;
+   (c) o novo documento está alcançável a partir do mapa. Reporte o resultado ao
+   usuário (ex.: "criei `X`, registrei em *Planejamento (to-be) → Ordering* e
+   validei que o link resolve").
+
+O documento só está entregue quando os três passos passam. Isso vale também para
+skills externas que criam documentos no repo (ex.: ADRs geradas por `prd-to-adr`/
+`issue-to-adr`) — quem cria, registra e valida.
+
+A skill infere o estado do repo:
+
+- Se `CONTEXT-MAP.md` existir na raiz, leia-o para localizar os contextos e
+  documentos.
+- Se só existir um `CONTEXT.md` solto na raiz (convenção antiga/brownfield), proponha
+  ao usuário criar o `CONTEXT-MAP.md` na raiz referenciando-o — não trabalhe sem
+  mapa.
+- Se nenhum dos dois existir, crie `CONTEXT-MAP.md` + o primeiro `CONTEXT.md` de
+  forma preguiçosa, quando o primeiro termo for resolvido (ver `setup-checklist.md`
+  se for a primeira vez que o repo recebe um).
 
 Quando houver múltiplos contextos, infira a qual o tópico atual se relaciona. Se não
 estiver claro, pergunte.

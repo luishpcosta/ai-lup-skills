@@ -59,8 +59,8 @@ existe `adr/ADR-<id>-*.md`; se houver colisão, gere um novo sufixo e tente de n
 
 - **Status**: Proposto
 - **Data**: <data>
-- **Contexto de domínio**: <nome do contexto/bounded context afetado, se houver
-  CONTEXT-MAP.md; omita em repositório de contexto único>
+- **Contexto de domínio**: <nome do contexto/bounded context afetado, com o nome
+  exato da entrada correspondente no CONTEXT-MAP.md>
 
 ## Contexto
 

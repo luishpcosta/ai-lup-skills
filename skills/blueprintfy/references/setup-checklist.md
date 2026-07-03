@@ -1,8 +1,17 @@
 # Checklist de setup inicial (Modo 1)
 
-Este roteiro só roda quando o repositório ainda não tem `CONTEXT.md`/`CONTEXT-MAP.md`
-e o usuário quer estabelecer a base do modelo de domínio — não em toda conversa. Se já
-existe glossário, vá direto para o Modo 2 do `SKILL.md`.
+Este roteiro só roda quando o repositório ainda não tem `CONTEXT-MAP.md` na raiz e o
+usuário quer estabelecer a base do modelo de domínio — não em toda conversa. Se o mapa
+já existe, vá direto para o Modo 2 do `SKILL.md`.
+
+Isso cobre dois cenários: **greenfield** (nada documentado ainda) e **brownfield** (o
+repo já está em produção, com código e documentação espalhada — às vezes até um
+`CONTEXT.md` solto na raiz, de uma convenção antiga, mas sem mapa). No brownfield o
+roteiro é o mesmo, com uma diferença de postura: há mais coisa existente para
+inventariar nas Perguntas 1-3, e o resultado do setup é sempre **criar o
+`CONTEXT-MAP.md` na raiz** registrando o que o usuário confirmar — questione, não
+imponha: cada documento/pasta encontrado é uma proposta a validar, nunca uma entrada
+automática do mapa.
 
 ## 1. Pergunte, não assuma
 
@@ -41,8 +50,13 @@ separados] — isso sugere contextos separados. Isso está certo, ou é tudo um 
 só?"
 
 Se os sinais estruturais forem fracos ou ambíguos, pergunte diretamente sem propor
-hipótese. **Nunca decida sozinho** entre `CONTEXT.md` único e `CONTEXT-MAP.md` — essa
-escolha define onde tudo vai morar dali em diante e é cara de desfazer depois.
+hipótese. A estrutura é sempre `CONTEXT-MAP.md` na raiz — o que está em jogo aqui é
+**quantos contextos entram no mapa e onde o `CONTEXT.md` de cada um vai viver**.
+**Nunca decida isso sozinho** — essa escolha define onde tudo vai morar dali em
+diante e é cara de desfazer depois. Se já existir um `CONTEXT.md` solto na raiz
+(convenção antiga), inclua-o na proposta: pergunte se ele vira o `CONTEXT.md` do
+contexto único (referenciado pelo mapa, movido ou não para uma pasta própria) ou se
+precisa ser dividido entre contextos.
 
 ## 2. Se houver documentos de negócio: escaneie e proponha rascunho
 
@@ -62,7 +76,7 @@ escolha define onde tudo vai morar dali em diante e é cara de desfazer depois.
    Isso bate com o que vocês usam? Algum termo faltando, errado ou que deveria virar
    "Evitar" de outro?
    ```
-5. Só grave `CONTEXT.md` (ou o `CONTEXT.md` de cada contexto, se multi-contexto) depois
+5. Só grave o `CONTEXT-MAP.md` e o(s) `CONTEXT.md` de contexto depois
    da confirmação. Nunca escreva o arquivo direto a partir da extração automática —
    documentos de negócio usam a linguagem de quem escreveu, que nem sempre é a
    linguagem que o time quer canonizar no código.
@@ -79,14 +93,18 @@ escolha define onde tudo vai morar dali em diante e é cara de desfazer depois.
 
 ## 4. Decida a estrutura e crie os arquivos
 
-- **Contexto único** → crie `CONTEXT.md` na raiz com os termos confirmados. Parta do
-  esqueleto em `assets/CONTEXT.md.template`.
-- **Múltiplos contextos** → crie `CONTEXT-MAP.md` **na raiz** listando os contextos
-  identificados e como se relacionam (ver formato em `context-format.md`, esqueleto em
-  `assets/CONTEXT-MAP.md.template`), e um `CONTEXT.md` por contexto com os termos que
-  pertencem a ele. O `CONTEXT.md` de cada contexto pode viver onde o repo preferir
-  (`src/<contexto>/`, `docs/<dominio>/<contexto>/`...) — pergunte ao usuário onde
-  cada um deve morar; é o mapa que registra o caminho.
+- **Sempre crie o `CONTEXT-MAP.md` na raiz** (esqueleto em
+  `assets/CONTEXT-MAP.md.template`, formato em `context-format.md`) listando os
+  contextos confirmados e como se relacionam — mesmo que seja um único contexto (o
+  mapa terá uma entrada só). Não existe a variante "só `CONTEXT.md` na raiz".
+- **Um `CONTEXT.md` por contexto** (esqueleto em `assets/CONTEXT.md.template`) com os
+  termos que pertencem a ele. O `CONTEXT.md` de cada contexto pode viver onde o repo
+  preferir (`src/<contexto>/`, `docs/<dominio>/<contexto>/`...) — pergunte ao usuário
+  onde cada um deve morar; é o mapa que registra o caminho.
+- **Brownfield com `CONTEXT.md` solto na raiz** → proponha criar o mapa
+  referenciando-o e pergunte se o arquivo deve ser movido para a pasta do contexto ou
+  permanecer na raiz (referenciado como `./CONTEXT.md`). Questione antes de mover ou
+  gravar qualquer coisa.
 - **Registre no mapa os documentos que já existem** → se as Perguntas 1 e 2
   identificaram documentos de negócio (as-is) e/ou pastas de planejamento to-be
   (PRDs/ADRs/SPECs de SDD), adicione-os às seções opcionais **Documentos de negócio

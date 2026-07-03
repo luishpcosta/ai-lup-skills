@@ -18,7 +18,7 @@
       "id": 2,
       "name": "bootstrap-existing-docs",
       "prompt": "A gente tem um monte de PRD parado em docs/prds/ e algumas ADRs em adr/ de decisões antigas, mas nunca formalizamos o glossário do domínio. Quero montar o CONTEXT.md a partir disso.",
-      "expected_output": "A skill pergunta as três perguntas do checklist, recebe 'sim' para documentos e ADRs, lê os arquivos indicados (docs/prds/pedidos-cancelamento.md e adr/ADR-20250110-0900-9c3d-fatura-assincrona.md), extrai termos candidatos (Pedido, Cliente, Cancelamento, Fatura) e propõe um rascunho de CONTEXT.md termo a termo para validação antes de gravar qualquer coisa. Também verifica se há sinal de múltiplos contextos antes de decidir entre CONTEXT.md único ou CONTEXT-MAP.md.",
+      "expected_output": "A skill pergunta as três perguntas do checklist, recebe 'sim' para documentos e ADRs, lê os arquivos indicados (docs/prds/pedidos-cancelamento.md e adr/ADR-20250110-0900-9c3d-fatura-assincrona.md), extrai termos candidatos (Pedido, Cliente, Cancelamento, Fatura) e propõe um rascunho de CONTEXT.md termo a termo para validação antes de gravar qualquer coisa. Também verifica se há sinal de múltiplos contextos antes de decidir quantas entradas o CONTEXT-MAP.md da raiz terá e onde o CONTEXT.md de cada contexto vai viver.",
       "files": ["eval-2-bootstrap-existing-docs/docs/prds/pedidos-cancelamento.md", "eval-2-bootstrap-existing-docs/adr/ADR-20250110-0900-9c3d-fatura-assincrona.md"],
       "assertions": [
         {"name": "reads_prd_content", "text": "A resposta referencia termos reais extraídos do PRD (Pedido, Cliente, Cancelamento, Fatura), não termos genéricos inventados"},
@@ -32,8 +32,8 @@
       "id": 3,
       "name": "mid-session-ambiguous-term",
       "prompt": "No meu sistema de e-commerce eu tenho um conceito de 'conta' que às vezes significa o usuário que loga e às vezes o cliente que compra. Também quero decidir se cancelamento de pedido é total ou parcial antes de implementar isso.",
-      "expected_output": "A skill entra no Modo 2 direto (já existe CONTEXT.md), desafia o termo vago 'conta' propondo separar Customer vs. User, propõe cenários concretos para estressar a definição de cancelamento (parcial vs. total), cruza com o código em src/order/cancel.js (que hoje cancela o Order inteiro) apontando a contradição com 'cancelamento parcial', atualiza o CONTEXT.md inline com os termos resolvidos, e só oferece uma ADR se a decisão de cancelamento parcial vs. total for de fato difícil de reverter e fruto de um trade-off real — não oferece ADR para qualquer decisão pequena.",
-      "files": ["eval-3-mid-session/CONTEXT.md", "eval-3-mid-session/src/order/cancel.js"],
+      "expected_output": "A skill entra no Modo 2 direto (já existe CONTEXT-MAP.md na raiz apontando para o CONTEXT.md do contexto E-commerce), desafia o termo vago 'conta' propondo separar Customer vs. User, propõe cenários concretos para estressar a definição de cancelamento (parcial vs. total), cruza com o código em src/order/cancel.js (que hoje cancela o Order inteiro) apontando a contradição com 'cancelamento parcial', atualiza o CONTEXT.md inline com os termos resolvidos, e só oferece uma ADR se a decisão de cancelamento parcial vs. total for de fato difícil de reverter e fruto de um trade-off real — não oferece ADR para qualquer decisão pequena.",
+      "files": ["eval-3-mid-session/CONTEXT-MAP.md", "eval-3-mid-session/CONTEXT.md", "eval-3-mid-session/src/order/cancel.js"],
       "assertions": [
         {"name": "proposes_customer_user_split", "text": "Propõe separar 'conta' em dois termos precisos (ex.: Customer vs. User)"},
         {"name": "references_actual_code", "text": "Referencia o comportamento real de src/order/cancel.js (cancela todos os itens / o pedido inteiro)"},
@@ -54,6 +54,21 @@
         {"name": "uses_tobe_doc", "text": "Referencia o conteúdo real do to-be em docs/refinamento/ordering/PRODUCT_BRIEF.md (cancelamento parcial por item, estorno proporcional)"},
         {"name": "surfaces_asis_tobe_conflict", "text": "Aponta explicitamente a tensão entre o as-is (pedido inteiro, estorno integral via PedidoCancelado) e o to-be (parcial, estorno proporcional), incluindo o impacto no consumidor Payment"},
         {"name": "ignores_unmapped_doc", "text": "Não usa o conteúdo de docs/notas-antigas/brainstorm-cancelamento.md (cancelamento pós-entrega, termo 'Reversão', estorno no Ordering) como fonte, pois não está referenciado no CONTEXT-MAP.md"}
+      ]
+    },
+    {
+      "id": 5,
+      "name": "brownfield-map-bootstrap",
+      "prompt": "Esse sistema já está em produção há anos. Tem um CONTEXT.md antigo na raiz com termos de pedidos e regras de faturamento escritas em docs/negocio/faturamento.md. Quero organizar a modelagem de domínio do jeito certo daqui pra frente.",
+      "expected_output": "A skill reconhece o cenário brownfield (repo com código e docs, mas sem CONTEXT-MAP.md na raiz) e roda o Modo 1 questionando o usuário. Propõe criar o CONTEXT-MAP.md na raiz como índice de navegação: reaproveita o CONTEXT.md existente como contexto de pedidos (perguntando se ele fica na raiz referenciado pelo mapa ou é movido para a pasta do contexto), levanta a hipótese de um segundo contexto de faturamento (sinais em docs/negocio/faturamento.md e src/billing) pedindo confirmação, e propõe registrar docs/negocio/faturamento.md na seção de documentos de negócio (as-is) do mapa. Nada é gravado ou movido sem confirmação do usuário, e a estrutura final proposta nunca é apenas um CONTEXT.md solto na raiz sem mapa.",
+      "files": ["eval-5-brownfield-map-bootstrap/CONTEXT.md", "eval-5-brownfield-map-bootstrap/docs/negocio/faturamento.md", "eval-5-brownfield-map-bootstrap/src/ordering/order.js", "eval-5-brownfield-map-bootstrap/src/billing/invoice.js"],
+      "assertions": [
+        {"name": "proposes_root_context_map", "text": "Propõe criar um CONTEXT-MAP.md na raiz do repositório como índice de navegação, mesmo já existindo um CONTEXT.md antigo na raiz"},
+        {"name": "no_lone_root_context", "text": "Não propõe manter apenas o CONTEXT.md solto na raiz (sem mapa) como estrutura final"},
+        {"name": "questions_before_writing", "text": "Questiona o usuário (checklist do Modo 1) e não grava nem move nenhum arquivo antes da confirmação explícita"},
+        {"name": "inventories_existing_docs", "text": "Propõe registrar docs/negocio/faturamento.md no mapa (seção de documentos de negócio as-is), perguntando ao usuário o que entra e o que fica de fora"},
+        {"name": "multi_context_hypothesis", "text": "Levanta a hipótese de dois contextos (pedidos e faturamento/billing) a partir dos sinais do repo (docs/negocio/faturamento.md, src/ordering, src/billing) e pede confirmação em vez de decidir sozinha"},
+        {"name": "asks_about_legacy_context_file", "text": "Pergunta o destino do CONTEXT.md antigo (referenciar como ./CONTEXT.md no mapa ou mover para a pasta do contexto), em vez de decidir sozinha"}
       ]
     }
   ]
