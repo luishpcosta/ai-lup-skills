@@ -1,0 +1,46 @@
+{
+  "skill_name": "blueprintfy",
+  "evals": [
+    {
+      "id": 1,
+      "name": "bootstrap-from-scratch",
+      "prompt": "Estamos começando um sistema novo de gestão de pedidos e ainda não documentamos nada. Não tem PRD, não tem ADR, nada. Quero começar a modelar o domínio do zero.",
+      "expected_output": "A skill roda o checklist do Modo 1 (pergunta sobre docs de negócio e ADRs existentes, recebe 'não' para ambos), pula o escaneamento, e faz a transição para o Modo 2 (entrevista) para começar a construir o CONTEXT.md organicamente, uma pergunta por vez com resposta recomendada.",
+      "files": [],
+      "assertions": [
+        {"name": "asks_business_docs_question", "text": "Pergunta explicitamente se já existem documentos de negócio (PRD/briefing/spec) no repositório"},
+        {"name": "asks_adr_question", "text": "Pergunta explicitamente se já existem ADRs registradas no repositório"},
+        {"name": "single_question_first", "text": "Faz apenas a primeira pergunta do checklist nesta rodada, sem empilhar as três perguntas de uma vez"},
+        {"name": "no_premature_file_creation", "text": "Não cria CONTEXT.md nem qualquer outro arquivo no workdir antes de qualquer confirmação do usuário"}
+      ]
+    },
+    {
+      "id": 2,
+      "name": "bootstrap-existing-docs",
+      "prompt": "A gente tem um monte de PRD parado em docs/prds/ e algumas ADRs em adr/ de decisões antigas, mas nunca formalizamos o glossário do domínio. Quero montar o CONTEXT.md a partir disso.",
+      "expected_output": "A skill pergunta as três perguntas do checklist, recebe 'sim' para documentos e ADRs, lê os arquivos indicados (docs/prds/pedidos-cancelamento.md e adr/ADR-20250110-0900-9c3d-fatura-assincrona.md), extrai termos candidatos (Pedido, Cliente, Cancelamento, Fatura) e propõe um rascunho de CONTEXT.md termo a termo para validação antes de gravar qualquer coisa. Também verifica se há sinal de múltiplos contextos antes de decidir entre CONTEXT.md único ou CONTEXT-MAP.md.",
+      "files": ["eval-2-bootstrap-existing-docs/docs/prds/pedidos-cancelamento.md", "eval-2-bootstrap-existing-docs/adr/ADR-20250110-0900-9c3d-fatura-assincrona.md"],
+      "assertions": [
+        {"name": "reads_prd_content", "text": "A resposta referencia termos reais extraídos do PRD (Pedido, Cliente, Cancelamento, Fatura), não termos genéricos inventados"},
+        {"name": "reads_adr_content", "text": "A resposta referencia o conteúdo real da ADR existente (fatura assíncrona / evento PedidoConfirmado)"},
+        {"name": "proposes_draft_for_validation", "text": "A resposta apresenta um rascunho termo a termo e pede validação explícita do usuário antes de prosseguir"},
+        {"name": "no_premature_file_creation", "text": "Não grava CONTEXT.md no workdir sem confirmação prévia do usuário"},
+        {"name": "checks_multi_context_signal", "text": "A resposta aborda se o repositório tem um único contexto ou múltiplos, antes de assumir a estrutura de arquivos"}
+      ]
+    },
+    {
+      "id": 3,
+      "name": "mid-session-ambiguous-term",
+      "prompt": "No meu sistema de e-commerce eu tenho um conceito de 'conta' que às vezes significa o usuário que loga e às vezes o cliente que compra. Também quero decidir se cancelamento de pedido é total ou parcial antes de implementar isso.",
+      "expected_output": "A skill entra no Modo 2 direto (já existe CONTEXT.md), desafia o termo vago 'conta' propondo separar Customer vs. User, propõe cenários concretos para estressar a definição de cancelamento (parcial vs. total), cruza com o código em src/order/cancel.js (que hoje cancela o Order inteiro) apontando a contradição com 'cancelamento parcial', atualiza o CONTEXT.md inline com os termos resolvidos, e só oferece uma ADR se a decisão de cancelamento parcial vs. total for de fato difícil de reverter e fruto de um trade-off real — não oferece ADR para qualquer decisão pequena.",
+      "files": ["eval-3-mid-session/CONTEXT.md", "eval-3-mid-session/src/order/cancel.js"],
+      "assertions": [
+        {"name": "proposes_customer_user_split", "text": "Propõe separar 'conta' em dois termos precisos (ex.: Customer vs. User)"},
+        {"name": "references_actual_code", "text": "Referencia o comportamento real de src/order/cancel.js (cancela todos os itens / o pedido inteiro)"},
+        {"name": "surfaces_contradiction", "text": "Aponta explicitamente a contradição entre o código (cancelamento total) e a pergunta sobre cancelamento parcial"},
+        {"name": "no_indiscriminate_adr", "text": "Não cria/oferece uma ADR de forma automática antes de a decisão estar de fato tomada e justificada pelos 3 critérios"},
+        {"name": "no_premature_context_edit", "text": "Não edita CONTEXT.md nesta rodada, já que nenhum termo foi de fato confirmado pelo usuário ainda"}
+      ]
+    }
+  ]
+}

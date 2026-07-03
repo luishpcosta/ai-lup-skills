@@ -1,0 +1,11 @@
+# Context Map
+
+## Contextos
+
+- [{Nome do contexto}](./{caminho}/CONTEXT.md) — {uma frase sobre a responsabilidade
+  do contexto}
+
+## Relacionamentos
+
+- **{Contexto A} → {Contexto B}**: {como um contexto afeta/aciona o outro — evento,
+  chamada, dado compartilhado}
