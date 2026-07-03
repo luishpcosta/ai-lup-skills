@@ -75,6 +75,11 @@ informal (não um documento) e **listar as assunções registradas na Fase 1**
 de forma destacada, para quem ler depois saber o que foi suposto e não
 validado.
 
+Como na skill de PRD, se a skill `make-diagram` estiver disponível no
+ambiente, acione-a logo após gravar o arquivo do ADR para gerar o diagrama
+da arquitetura como imagem (`adr/ADR-<id>-diagrama.png`), referenciando-o
+na seção **Decisão**; sem `make-diagram`, use Mermaid inline como fallback.
+
 ### Fase 3.5 — Elicitar o contrato de payload (antes das ACs)
 
 Idêntica à skill de PRD: para toda conexão com payload estruturado
@@ -107,6 +112,7 @@ Idêntico à skill de PRD: confirmar quebra de atividades em ADRs separados.
 
 - `adr/ADR-XXX-titulo.md` (com a seção de assunções, se houver)
 - `adr/ADR-XXX-acs.md`
+- `adr/ADR-XXX-diagrama.png` (somente se `make-diagram` estiver disponível — ver Fase 3)
 
 ## Arquivos de referência
 

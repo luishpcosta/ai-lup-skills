@@ -51,6 +51,14 @@ Use `references/adr-template.md`. Pontos obrigatórios:
   Antes de usar, confira se já existe `adr/ADR-<id>-*.md` no projeto; se
   existir (colisão), gere um novo sufixo e tente de novo.
 
+**Diagrama da arquitetura (assim que o ADR for criado):** se a skill
+`make-diagram` estiver disponível no ambiente (instalada como skill do
+agente), acione-a logo após gravar o arquivo do ADR para gerar o diagrama
+da arquitetura decidida como imagem, salvando ao lado do ADR
+(`adr/ADR-<id>-diagrama.png`) e referenciando-o na seção **Decisão**
+(`![Arquitetura](./ADR-<id>-diagrama.png)`). Se `make-diagram` não estiver
+disponível, use o diagrama Mermaid inline do template como fallback.
+
 ### Fase 3.5 — Elicitar o contrato de payload (antes das ACs)
 
 "Descrever o contrato explicitamente" na AC (Fase 4) não acontece por conta
@@ -118,6 +126,7 @@ Antes de finalizar:
 Gere como arquivos (sempre arquivo, nunca só inline):
 - `adr/ADR-XXX-titulo.md`
 - `adr/ADR-XXX-acs.md`
+- `adr/ADR-XXX-diagrama.png` (somente se `make-diagram` estiver disponível — ver Fase 3)
 
 ## Arquivos de referência
 
