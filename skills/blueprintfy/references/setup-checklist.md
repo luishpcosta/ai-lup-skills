@@ -69,7 +69,7 @@ do contexto) ou se os termos precisam ser divididos entre contextos.
    documento diz — não invente comportamento que o texto não sustenta.
 4. Apresente o rascunho **termo a termo** ao usuário antes de gravar qualquer arquivo:
    ```
-   Rascunho de CONTEXT.md a partir de <documento>:
+   Rascunho da seção de linguagem (CONTEXT.md) a partir de <documento>:
 
    **Order**: <definição extraída>
    **Invoice**: <definição extraída>
@@ -98,10 +98,11 @@ do contexto) ou se os termos precisam ser divididos entre contextos.
   `assets/CONTEXT-MAP.md.template`, formato em `context-format.md`) listando os
   contextos confirmados e como se relacionam — mesmo que seja um único contexto (o
   mapa terá uma entrada só). Não existe a variante "só `CONTEXT.md` na raiz".
-- **Um `CONTEXT.md` por contexto** (esqueleto em `assets/CONTEXT.md.template`) com os
-  termos que pertencem a ele. O `CONTEXT.md` de cada contexto pode viver onde o repo
-  preferir (`src/<contexto>/`, `docs/<dominio>/<contexto>/`...) — pergunte ao usuário
-  onde cada um deve morar; é o mapa que registra o caminho.
+- **Um `CONTEXT.md` por contexto**, vivendo onde o repo preferir (`src/<contexto>/`,
+  `docs/<dominio>/<contexto>/`...) — pergunte ao usuário onde cada um deve morar; é o
+  mapa que registra o caminho. O conteúdo do arquivo é do repo (visão geral de
+  negócio, BPM...); a skill não impõe esqueleto — ela cria/mantém apenas a seção
+  `## Linguagem` com os termos confirmados (formato em `context-format.md`).
 - **Glossário já escrito no repo** → proponha incorporá-lo: pergunte se o arquivo
   vira o `CONTEXT.md` de um contexto (referenciado pelo mapa onde está, ou movido
   para a pasta do contexto) ou se os termos são divididos entre contextos. Questione

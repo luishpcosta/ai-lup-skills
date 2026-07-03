@@ -1,28 +1,31 @@
 # Formato de CONTEXT.md
 
-## Estrutura
+O conteúdo do `CONTEXT.md` de cada contexto pertence ao repositório, não à skill:
+cada projeto define o que entra nele (visão geral de negócio, BPM, processos, links
+para regras do domínio). Por isso a skill **não impõe esqueleto nem template** para
+o arquivo — o que ela cria e mantém é a **seção de linguagem** dentro dele.
+
+## Seção de linguagem
+
+Ao resolver um termo, escreva na seção `## Linguagem` do `CONTEXT.md` do contexto —
+criando a seção se o arquivo ainda não a tiver, e criando o arquivo (referenciado no
+`CONTEXT-MAP.md`) se o contexto ainda não tiver um. Cada termo segue este formato:
 
 ```md
-# {Nome do Contexto}
-
-{Uma ou duas frases descrevendo o que é esse contexto e por que ele existe.}
-
-## Linguagem
-
-**Order**:
+**{Termo}**:
 {Uma ou duas frases descrevendo o termo}
-_Evitar_: Purchase, transaction
+_Evitar_: {sinônimos a não usar}
+```
 
+Exemplo de entrada:
+
+```md
 **Invoice**:
 Uma cobrança enviada ao cliente após a entrega.
 _Evitar_: Bill, payment request
-
-**Customer**:
-Uma pessoa ou organização que faz pedidos.
-_Evitar_: Client, buyer, account
 ```
 
-## Regras
+## Regras (da seção de linguagem)
 
 - **Seja opinativo.** Quando existirem várias palavras para o mesmo conceito, escolha
   a melhor e liste as outras em `_Evitar_`.

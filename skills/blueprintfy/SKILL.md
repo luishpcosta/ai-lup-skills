@@ -120,9 +120,11 @@ Quando um termo for resolvido, atualize o `CONTEXT.md` do contexto certo (locali
 pelo `CONTEXT-MAP.md` da raiz) ali mesmo, na hora — não acumule para depois. Use o
 formato em `references/context-format.md`.
 
-`CONTEXT.md` deve ser totalmente livre de detalhes de implementação. Não trate
-`CONTEXT.md` como spec, rascunho ou repositório de decisões técnicas — é glossário e
-nada mais.
+O conteúdo do `CONTEXT.md` pertence ao repositório (visão geral de negócio, BPM,
+processos) — a skill não impõe formato ao arquivo; ela cria e mantém apenas a seção
+`## Linguagem` dentro dele. Essa seção deve ser totalmente livre de detalhes de
+implementação: não a trate como spec, rascunho ou repositório de decisões técnicas —
+é glossário e nada mais.
 
 ### Ofereça ADR com moderação
 
@@ -246,10 +248,10 @@ registrá-lo no mapa é entrega incompleta. O detalhamento está em
 
 ## Arquivos de referência
 
-- `references/context-format.md` — formato de `CONTEXT.md`/`CONTEXT-MAP.md`, regras de
-  linguagem (ser opinativo, definições curtas, o que entra e o que não entra) e regras
-  de navegação quando existe `CONTEXT-MAP.md` (mapa como ponto de entrada, docs as-is
-  vs. to-be, ignorar o que não está no mapa).
+- `references/context-format.md` — formato da seção de linguagem do `CONTEXT.md` (o
+  restante do arquivo é do repo) e do `CONTEXT-MAP.md`, regras de linguagem (ser
+  opinativo, definições curtas, o que entra e o que não entra) e regras de navegação
+  (mapa como ponto de entrada, docs as-is vs. to-be, ignorar o que não está no mapa).
 - `references/adr-template.md` — template de ADR e como gerar o ID (mesma convenção de
   `prd-to-adr`/`issue-to-adr` deste catálogo), e o critério de quando vale a pena
   registrar uma.
