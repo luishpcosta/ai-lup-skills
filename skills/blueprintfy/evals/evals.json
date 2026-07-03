@@ -58,17 +58,17 @@
     },
     {
       "id": 5,
-      "name": "brownfield-map-bootstrap",
-      "prompt": "Esse sistema já está em produção há anos. Tem um CONTEXT.md antigo na raiz com termos de pedidos e regras de faturamento escritas em docs/negocio/faturamento.md. Quero organizar a modelagem de domínio do jeito certo daqui pra frente.",
-      "expected_output": "A skill reconhece o cenário brownfield (repo com código e docs, mas sem CONTEXT-MAP.md na raiz) e roda o Modo 1 questionando o usuário. Propõe criar o CONTEXT-MAP.md na raiz como índice de navegação: reaproveita o CONTEXT.md existente como contexto de pedidos (perguntando se ele fica na raiz referenciado pelo mapa ou é movido para a pasta do contexto), levanta a hipótese de um segundo contexto de faturamento (sinais em docs/negocio/faturamento.md e src/billing) pedindo confirmação, e propõe registrar docs/negocio/faturamento.md na seção de documentos de negócio (as-is) do mapa. Nada é gravado ou movido sem confirmação do usuário, e a estrutura final proposta nunca é apenas um CONTEXT.md solto na raiz sem mapa.",
-      "files": ["eval-5-brownfield-map-bootstrap/CONTEXT.md", "eval-5-brownfield-map-bootstrap/docs/negocio/faturamento.md", "eval-5-brownfield-map-bootstrap/src/ordering/order.js", "eval-5-brownfield-map-bootstrap/src/billing/invoice.js"],
+      "name": "documented-repo-first-setup",
+      "prompt": "Esse sistema já está em produção há anos e tem documentação espalhada: um glossário de termos de pedidos em docs/glossario.md e regras de faturamento em docs/negocio/faturamento.md. Nunca organizamos a modelagem de domínio — quero configurar isso do jeito certo daqui pra frente.",
+      "expected_output": "A skill trata como primeira configuração de um repo já documentado (sem CONTEXT-MAP.md na raiz) e roda o Modo 1 questionando o usuário, sem assumir nenhum uso anterior da skill. Propõe criar o CONTEXT-MAP.md na raiz como índice de navegação: pergunta como incorporar o glossário existente de docs/glossario.md (virar o CONTEXT.md do contexto de pedidos, referenciado onde está ou movido), levanta a hipótese de um segundo contexto de faturamento (sinais em docs/negocio/faturamento.md e src/billing) pedindo confirmação, e propõe registrar docs/negocio/faturamento.md na seção de documentos de negócio (as-is) do mapa. Nada é gravado ou movido sem confirmação do usuário, e a estrutura final proposta sempre tem o CONTEXT-MAP.md na raiz.",
+      "files": ["eval-5-documented-repo-setup/docs/glossario.md", "eval-5-documented-repo-setup/docs/negocio/faturamento.md", "eval-5-documented-repo-setup/src/ordering/order.js", "eval-5-documented-repo-setup/src/billing/invoice.js"],
       "assertions": [
-        {"name": "proposes_root_context_map", "text": "Propõe criar um CONTEXT-MAP.md na raiz do repositório como índice de navegação, mesmo já existindo um CONTEXT.md antigo na raiz"},
-        {"name": "no_lone_root_context", "text": "Não propõe manter apenas o CONTEXT.md solto na raiz (sem mapa) como estrutura final"},
+        {"name": "proposes_root_context_map", "text": "Propõe criar um CONTEXT-MAP.md na raiz do repositório como índice de navegação"},
+        {"name": "no_prior_use_assumption", "text": "Não assume que a skill já foi usada antes no repo (não fala em migração, convenção anterior ou estrutura pré-existente da skill) — trata o glossário e os docs encontrados apenas como documentação existente do projeto"},
         {"name": "questions_before_writing", "text": "Questiona o usuário (checklist do Modo 1) e não grava nem move nenhum arquivo antes da confirmação explícita"},
         {"name": "inventories_existing_docs", "text": "Propõe registrar docs/negocio/faturamento.md no mapa (seção de documentos de negócio as-is), perguntando ao usuário o que entra e o que fica de fora"},
         {"name": "multi_context_hypothesis", "text": "Levanta a hipótese de dois contextos (pedidos e faturamento/billing) a partir dos sinais do repo (docs/negocio/faturamento.md, src/ordering, src/billing) e pede confirmação em vez de decidir sozinha"},
-        {"name": "asks_about_legacy_context_file", "text": "Pergunta o destino do CONTEXT.md antigo (referenciar como ./CONTEXT.md no mapa ou mover para a pasta do contexto), em vez de decidir sozinha"}
+        {"name": "asks_about_existing_glossary", "text": "Pergunta como incorporar o glossário existente (docs/glossario.md): referenciar onde está, mover para a pasta do contexto ou dividir os termos entre contextos — em vez de decidir sozinha"}
       ]
     }
   ]

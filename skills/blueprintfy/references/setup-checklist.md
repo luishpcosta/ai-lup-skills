@@ -4,14 +4,15 @@ Este roteiro só roda quando o repositório ainda não tem `CONTEXT-MAP.md` na r
 usuário quer estabelecer a base do modelo de domínio — não em toda conversa. Se o mapa
 já existe, vá direto para o Modo 2 do `SKILL.md`.
 
-Isso cobre dois cenários: **greenfield** (nada documentado ainda) e **brownfield** (o
-repo já está em produção, com código e documentação espalhada — às vezes até um
-`CONTEXT.md` solto na raiz, de uma convenção antiga, mas sem mapa). No brownfield o
-roteiro é o mesmo, com uma diferença de postura: há mais coisa existente para
-inventariar nas Perguntas 1-3, e o resultado do setup é sempre **criar o
-`CONTEXT-MAP.md` na raiz** registrando o que o usuário confirmar — questione, não
-imponha: cada documento/pasta encontrado é uma proposta a validar, nunca uma entrada
-automática do mapa.
+Este roteiro é sempre a **primeira configuração** da skill no repositório — não
+assuma nenhum uso anterior dela, nem estrutura deixada por ela. Só existem dois
+cenários: **repo sem documentação** (nada escrito ainda) e **repo já documentado**
+(código em produção e documentos de negócio espalhados — em qualquer formato, nome ou
+pasta). O roteiro é o mesmo nos dois, com uma diferença de postura no repo
+documentado: há mais coisa para inventariar nas Perguntas 1-3, e o resultado do setup
+é sempre **criar o `CONTEXT-MAP.md` na raiz** registrando o que o usuário confirmar —
+questione, não imponha: cada documento/pasta encontrado é uma proposta a validar,
+nunca uma entrada automática do mapa.
 
 ## 1. Pergunte, não assuma
 
@@ -53,10 +54,10 @@ Se os sinais estruturais forem fracos ou ambíguos, pergunte diretamente sem pro
 hipótese. A estrutura é sempre `CONTEXT-MAP.md` na raiz — o que está em jogo aqui é
 **quantos contextos entram no mapa e onde o `CONTEXT.md` de cada um vai viver**.
 **Nunca decida isso sozinho** — essa escolha define onde tudo vai morar dali em
-diante e é cara de desfazer depois. Se já existir um `CONTEXT.md` solto na raiz
-(convenção antiga), inclua-o na proposta: pergunte se ele vira o `CONTEXT.md` do
-contexto único (referenciado pelo mapa, movido ou não para uma pasta própria) ou se
-precisa ser dividido entre contextos.
+diante e é cara de desfazer depois. Se a Pergunta 1 tiver identificado um glossário
+já escrito (qualquer nome ou local), inclua-o na proposta: pergunte se ele vira o
+`CONTEXT.md` de um contexto (referenciado pelo mapa onde está, ou movido para a pasta
+do contexto) ou se os termos precisam ser divididos entre contextos.
 
 ## 2. Se houver documentos de negócio: escaneie e proponha rascunho
 
@@ -101,10 +102,10 @@ precisa ser dividido entre contextos.
   termos que pertencem a ele. O `CONTEXT.md` de cada contexto pode viver onde o repo
   preferir (`src/<contexto>/`, `docs/<dominio>/<contexto>/`...) — pergunte ao usuário
   onde cada um deve morar; é o mapa que registra o caminho.
-- **Brownfield com `CONTEXT.md` solto na raiz** → proponha criar o mapa
-  referenciando-o e pergunte se o arquivo deve ser movido para a pasta do contexto ou
-  permanecer na raiz (referenciado como `./CONTEXT.md`). Questione antes de mover ou
-  gravar qualquer coisa.
+- **Glossário já escrito no repo** → proponha incorporá-lo: pergunte se o arquivo
+  vira o `CONTEXT.md` de um contexto (referenciado pelo mapa onde está, ou movido
+  para a pasta do contexto) ou se os termos são divididos entre contextos. Questione
+  antes de mover ou gravar qualquer coisa.
 - **Registre no mapa os documentos que já existem** → se as Perguntas 1 e 2
   identificaram documentos de negócio (as-is) e/ou pastas de planejamento to-be
   (PRDs/ADRs/SPECs de SDD), adicione-os às seções opcionais **Documentos de negócio

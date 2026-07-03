@@ -39,9 +39,10 @@ _Evitar_: Client, buyer, account
 
 A estrutura é sempre a mesma: um `CONTEXT-MAP.md` **na raiz do repo** como índice de
 navegação, e um `CONTEXT.md` por contexto vivendo onde o mapa apontar. Repositório de
-contexto único é só um mapa com uma entrada — **não existe a variante "um `CONTEXT.md`
-solto na raiz sem mapa"**; se um repo antigo tiver essa forma, proponha a migração
-(criar o mapa na raiz referenciando o arquivo existente) antes de seguir.
+contexto único é só um mapa com uma entrada — **não existe a variante "`CONTEXT.md`
+sem mapa"**. Glossários que o repo já tenha (qualquer nome ou local) são documentação
+existente: entram no inventário do setup (ver `setup-checklist.md`), e o mapa nasce
+referenciando o que o usuário confirmar.
 
 O mapa lista os contextos, onde cada um vive, como se relacionam e — quando
 existirem — onde estão os documentos de negócio já produtivos (as-is) e o
@@ -125,12 +126,10 @@ A skill infere o estado do repo:
 
 - Se `CONTEXT-MAP.md` existir na raiz, leia-o para localizar os contextos e
   documentos.
-- Se só existir um `CONTEXT.md` solto na raiz (convenção antiga/brownfield), proponha
-  ao usuário criar o `CONTEXT-MAP.md` na raiz referenciando-o — não trabalhe sem
-  mapa.
-- Se nenhum dos dois existir, crie `CONTEXT-MAP.md` + o primeiro `CONTEXT.md` de
-  forma preguiçosa, quando o primeiro termo for resolvido (ver `setup-checklist.md`
-  se for a primeira vez que o repo recebe um).
+- Se não existir, é a primeira configuração: rode o setup (`setup-checklist.md`) —
+  vale tanto para repo já documentado quanto sem documentação — e crie o
+  `CONTEXT-MAP.md` + o primeiro `CONTEXT.md` de forma preguiçosa, quando o primeiro
+  termo for resolvido. Não trabalhe sem mapa.
 
 Quando houver múltiplos contextos, infira a qual o tópico atual se relaciona. Se não
 estiver claro, pergunte.

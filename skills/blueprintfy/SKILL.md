@@ -23,10 +23,12 @@ está só sendo consumido.
 ## Como decidir o modo
 
 - **Repositório sem `CONTEXT-MAP.md` na raiz e sem sessão em andamento** → comece
-  pelo **Modo 1 (Setup inicial)**. Isso inclui o caso **brownfield**: o repo já tem
-  código e documentação (às vezes até um `CONTEXT.md` solto na raiz, de uma convenção
-  antiga), mas nenhum mapa — o Modo 1 questiona o usuário para criar o
-  `CONTEXT-MAP.md` na raiz a partir do que já existe.
+  pelo **Modo 1 (Setup inicial)** — é sempre a **primeira configuração** da skill no
+  repo; não assuma nenhum uso anterior. Só existem dois cenários, e o roteiro cobre
+  ambos: repo **já documentado** (docs de negócio, glossários, ADRs — em qualquer
+  formato, nome ou pasta) e repo **sem documentação**. No primeiro, o Modo 1
+  questiona o usuário para criar o `CONTEXT-MAP.md` na raiz a partir do que já
+  existe.
 - **Já existe `CONTEXT-MAP.md` na raiz, ou o usuário quer discutir/estressar um
   plano agora** → vá direto para o **Modo 2 (Sessão contínua)**.
 - Nunca se force a rodar o Modo 1 se o usuário só quer bater um papo rápido sobre um
@@ -69,9 +71,9 @@ merecer uma. Os dois nascem juntos: nunca grave um `CONTEXT.md` sem que o
 Leia o `CONTEXT-MAP.md` da raiz antes de explorar qualquer pasta de documentação —
 ele é o índice de navegação do repo (contextos, docs as-is, docs to-be) e delimita o
 que entra na sessão (ver "Estrutura de arquivos" e as regras de navegação em
-`references/context-format.md`). Se o repo tiver só um `CONTEXT.md` solto na raiz e
-nenhum mapa (convenção antiga/brownfield), não siga sem mapa: proponha criar o
-`CONTEXT-MAP.md` na raiz referenciando-o (Modo 1, Pergunta 3) antes de continuar.
+`references/context-format.md`). Se não existir `CONTEXT-MAP.md` na raiz, não siga
+sem mapa: rode o Modo 1 (primeira configuração) antes de continuar — a documentação
+que já existir no repo entra como insumo do setup, não como estrutura pronta.
 
 ### Entreviste sem descanso
 
@@ -148,9 +150,10 @@ registro.
 
 A estrutura é **sempre `CONTEXT-MAP.md` na raiz** — mesmo em repositório de contexto
 único, o mapa existe (com uma entrada só) e aponta onde o `CONTEXT.md` daquele
-contexto vive. **Nunca deixe um `CONTEXT.md` solto na raiz sem mapa como estrutura
-final**; se encontrar um assim (convenção antiga/brownfield), proponha ao usuário
-criar o `CONTEXT-MAP.md` na raiz referenciando-o.
+contexto vive. **Nunca deixe um `CONTEXT.md` sem mapa como estrutura final.**
+Glossários que já existirem no repo (qualquer nome ou local) são documentação
+existente como outra qualquer: entram no inventário do Modo 1 e só viram o
+`CONTEXT.md` de um contexto com a confirmação do usuário.
 
 Contexto único:
 
@@ -250,7 +253,7 @@ registrá-lo no mapa é entrega incompleta. O detalhamento está em
 - `references/adr-template.md` — template de ADR e como gerar o ID (mesma convenção de
   `prd-to-adr`/`issue-to-adr` deste catálogo), e o critério de quando vale a pena
   registrar uma.
-- `references/setup-checklist.md` — roteiro completo do Modo 1 (greenfield e
-  brownfield): como escanear docs de negócio/ADRs existentes, propor rascunho de
-  glossário e montar o `CONTEXT-MAP.md` da raiz (quantos contextos, onde cada
-  `CONTEXT.md` vive).
+- `references/setup-checklist.md` — roteiro completo do Modo 1 (repo já documentado
+  ou sem documentação): como escanear docs de negócio/ADRs existentes, propor
+  rascunho de glossário e montar o `CONTEXT-MAP.md` da raiz (quantos contextos, onde
+  cada `CONTEXT.md` vive).
