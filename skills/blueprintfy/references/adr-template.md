@@ -52,15 +52,47 @@ printf '%04x' $((RANDOM % 65536))
 Não depende de histórico nem de perguntar ao usuário. Antes de usar, confira se já
 existe `adr/ADR-<id>-*.md`; se houver colisão, gere um novo sufixo e tente de novo.
 
+## Front matter de relação (obrigatório)
+
+Toda ADR abre com um front matter YAML — é o metadado que alimenta o grafo de
+dependências (`scripts/graph_query.py`); o corpo continua markdown/prosa. Os valores de
+`contextos`/`afeta` usam **o nome exato da entrada no `CONTEXT-MAP.md`**.
+
+```yaml
+---
+id: ADR-<id>
+titulo: <título curto da decisão>
+status: proposto            # proposto | aceito | superado
+contextos: [<contexto(s) a que a decisão pertence>]
+afeta: [<contexto(s)/componente(s) impactado(s)>]
+supera: [<ADR-id que esta decisão substitui>]   # [] se não substitui nenhuma
+depende_de: [<ADR-id>]                           # opcional
+---
+```
+
+Regras:
+- **`supera` é declarado na ADR nova**, não na antiga. `graph_query.py` deriva
+  `status: superado` para a ADR alvo — **não** edite a ADR antiga à mão.
+- Se a decisão vier de `prd-to-adr`/`issue-to-adr`, o front matter é o mesmo (mantêm o
+  formato uniforme para o grafo enxergar todas as ADRs).
+
 ## Template
 
 ```md
+---
+id: ADR-<id>
+titulo: <título curto da decisão>
+status: proposto
+contextos: [<contexto>]
+afeta: [<contexto/componente>]
+supera: []
+depende_de: []
+---
+
 # ADR-<id>: <título curto da decisão>
 
 - **Status**: Proposto
 - **Data**: <data>
-- **Contexto de domínio**: <nome do contexto/bounded context afetado, com o nome
-  exato da entrada correspondente no CONTEXT-MAP.md>
 
 ## Contexto
 
