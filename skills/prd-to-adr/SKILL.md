@@ -51,6 +51,14 @@ Use `references/adr-template.md`. Pontos obrigatórios:
   Antes de usar, confira se já existe `adr/ADR-<id>-*.md` no projeto; se
   existir (colisão), gere um novo sufixo e tente de novo.
 
+**Diagrama da arquitetura (assim que o ADR for criado):** se a skill
+`make-diagram` estiver disponível no ambiente (instalada como skill do
+agente), acione-a logo após gravar o arquivo do ADR para gerar o diagrama
+da arquitetura decidida como imagem, salvando ao lado do ADR
+(`adr/ADR-<id>-diagrama.png`) e referenciando-o na seção **Decisão**
+(`![Arquitetura](./ADR-<id>-diagrama.png)`). Se `make-diagram` não estiver
+disponível, use o diagrama Mermaid inline do template como fallback.
+
 ### Fase 3.5 — Elicitar o contrato de payload (antes das ACs)
 
 "Descrever o contrato explicitamente" na AC (Fase 4) não acontece por conta
@@ -118,6 +126,16 @@ Antes de finalizar:
 Gere como arquivos (sempre arquivo, nunca só inline):
 - `adr/ADR-XXX-titulo.md`
 - `adr/ADR-XXX-acs.md`
+- `adr/ADR-XXX-diagrama.png` (somente se `make-diagram` estiver disponível — ver Fase 3)
+
+**Gate do CONTEXT-MAP (se existir `CONTEXT-MAP.md` na raiz do projeto):** o mapa é o
+índice de navegação do repo, e documento fora do mapa é invisível. Depois de gravar
+os arquivos, (1) verifique se cada um é alcançável a partir do `CONTEXT-MAP.md` (o
+arquivo ou a pasta que o contém está referenciado — tipicamente na seção
+*Planejamento (to-be)* do contexto certo); (2) se não for, adicione a referência na
+seção adequada, perguntando ao usuário se o contexto/seção for ambíguo; (3) valide:
+releia o mapa, confira que o caminho referenciado existe no disco e reporte o
+resultado ao usuário. Os entregáveis só estão completos depois desse gate.
 
 ## Arquivos de referência
 

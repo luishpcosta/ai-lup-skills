@@ -19,8 +19,10 @@ motivam isso (RF-01, RNF-02...). 2-4 frases, sem prosa desnecessária.>
 
 ## Decisão
 
-<Descrição objetiva da arquitetura escolhida. Inclua diagrama Mermaid se
-houver mais de 2 componentes envolvidos.>
+<Descrição objetiva da arquitetura escolhida. Inclua diagrama se houver
+mais de 2 componentes envolvidos: se a skill `make-diagram` estiver
+disponível, gere a imagem com ela e referencie aqui
+(`![Arquitetura](./ADR-XXX-diagrama.png)`); senão, use Mermaid inline.>
 
 ```mermaid
 graph TD
