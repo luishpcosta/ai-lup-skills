@@ -5,6 +5,27 @@ cada projeto define o que entra nele (visão geral de negócio, BPM, processos, 
 para regras do domínio). Por isso a skill **não impõe esqueleto nem template** para
 o arquivo — o que ela cria e mantém é a **seção de linguagem** dentro dele.
 
+## Front matter de relação (opcional, alimenta o grafo)
+
+Além da seção de linguagem, o `CONTEXT.md` pode abrir com um front matter YAML que
+declara como o contexto se relaciona com os outros. É o insumo do grafo de dependências
+(ver "Grafo de dependências" abaixo); o corpo do arquivo continua livre.
+
+```yaml
+---
+contexto: Payment
+depende_de: [Identity]                 # Payment --depende_de--> Identity
+compartilha_contrato_com:
+  - contexto: Ordering
+    contrato: PedidoCancelado          # evento/contrato trocado entre os contextos
+---
+```
+
+Declare a relação **na hora** em que ela for resolvida na conversa, do mesmo jeito que
+se faz com um termo — uma dependência ou contrato novo entra no front matter do
+contexto certo assim que fica claro. Só declare o que é real: aresta não declarada é
+tratada como violação estrutural pela consulta `valida-aresta`.
+
 ## Seção de linguagem
 
 Ao resolver um termo, escreva na seção `## Linguagem` do `CONTEXT.md` do contexto —
@@ -86,6 +107,39 @@ As seções **Documentos de negócio (as-is)** e **Planejamento (to-be)** são o
 de um contexto pode viver em `src/`, em `docs/` ou onde o repo preferir); o que fixa
 a estrutura é o mapa, não uma convenção de pastas.
 
+## Grafo de dependências (view derivada)
+
+O mapa + o front matter de relação dos docs (CONTEXT.md e ADRs) formam **nativamente um
+grafo**: nós são contextos/ADRs/contratos; arestas são `depende_de`, `supera`, `afeta`,
+`compartilha_contrato`. Esse grafo **não é uma segunda fonte de verdade** — o markdown
+continua sendo a fonte legível. O grafo é reconstruído em memória, sob demanda, a partir
+do front matter, e serve só para responder perguntas relacionais que são caras de fazer
+lendo tabelas à mão.
+
+A ferramenta `scripts/graph_query.py` (stdlib-only) faz essa travessia e devolve
+markdown já-digerido. Delegue a ela quando a pergunta for relacional, em vez de reler
+todas as ADRs:
+
+```
+python3 scripts/graph_query.py vigentes contexto:Ordering     # ADRs vigentes x superadas
+python3 scripts/graph_query.py impacto contexto:Ordering      # blast radius (BFS)
+python3 scripts/graph_query.py valida-aresta contexto:Billing contexto:Ordering
+python3 scripts/graph_query.py ciclos                         # acoplamento circular
+```
+
+- **Supersessão de ADR**: a ferramenta marca como `superado` toda ADR que é alvo de um
+  `supera:` declarado em outra — mesmo que a ADR antiga nunca tenha sido editada. Use
+  `vigentes` antes de reafirmar uma garantia: se ela vier de uma ADR superada, aponte a
+  tensão em vez de aceitar o plano.
+- **Grafo vazio ≠ "sem tensões"**: num repo brownfield, os docs existentes ainda não
+  têm front matter, então o grafo nasce vazio — a ferramenta **avisa** isso
+  explicitamente (não devolve um `(nenhuma)` mudo). Nunca conclua "não há ADR superada"
+  a partir de um grafo vazio: ou faça o backfill do front matter (ver
+  `setup-checklist.md`, passo de backfill do Modo 1), ou leia as ADRs à mão.
+- **Fallback sem Python**: se `python3` (ou o script) não estiver disponível, faça a
+  mesma travessia à mão lendo o front matter dos docs alcançáveis pelo mapa — a skill
+  continua `agnostic`, o script só acelera um passo determinístico.
+
 ## Regras de navegação (quando existe `CONTEXT-MAP.md`)
 
 - **O mapa é o único ponto de entrada.** Antes de explorar pastas de documentação,
@@ -120,6 +174,9 @@ agente que criou o arquivo**, na mesma ação:
    (c) o novo documento está alcançável a partir do mapa. Reporte o resultado ao
    usuário (ex.: "criei `X`, registrei em *Planejamento (to-be) → Ordering* e
    validei que o link resolve").
+4. **Supersessão (se a ADR declara `supera:`)** — rode `graph_query.py vigentes
+   <contexto>` (ou faça a travessia à mão, no fallback) e reporte ao usuário qual ADR
+   passou a superada, para o histórico ficar consistente sem editar o doc antigo.
 
 O documento só está entregue quando os três passos passam. Isso vale também para
 skills externas que criam documentos no repo (ex.: ADRs geradas por `prd-to-adr`/

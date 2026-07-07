@@ -1,3 +1,18 @@
+<!-- Front matter de relação: metadado que alimenta o grafo de dependências mantido
+pela skill `blueprintfy` (scripts/graph_query.py). Use os nomes exatos das entradas do
+CONTEXT-MAP.md em `contextos`/`afeta`. `supera` vai na ADR NOVA (a antiga é marcada
+como superada pela ferramenta, não à mão). Mantenha os campos mesmo com lista vazia. -->
+
+---
+id: ADR-XXX
+titulo: <título curto da decisão>
+status: proposto            # proposto | aceito | superado
+contextos: [<contexto/componente a que a decisão pertence>]
+afeta: [<contexto(s)/componente(s) impactado(s)>]
+supera: []                  # [<ADR-id>] se substitui uma decisão anterior
+depende_de: []              # opcional
+---
+
 # ADR-XXX: <título curto da decisão>
 
 - **Status**: Proposto

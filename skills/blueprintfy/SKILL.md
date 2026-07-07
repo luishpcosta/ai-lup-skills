@@ -114,6 +114,32 @@ Quando o usuário descrever como algo funciona, confira se o código concorda. S
 encontrar contradição, traga à tona: "Seu código cancela o Order inteiro, mas você
 acabou de dizer que cancelamento parcial é possível — qual dos dois está certo?"
 
+### Consulte o grafo antes de reafirmar uma garantia
+
+Quando o plano tocar um contexto que já tem ADRs, não releia todas à mão para achar
+tensões: o mapa + o front matter de relação dos docs formam um grafo, e
+`scripts/graph_query.py` (stdlib-only) faz a travessia por você, devolvendo markdown
+já-digerido. Aponte `--map` para o `CONTEXT-MAP.md` da raiz do projeto:
+
+```
+python3 <skill>/scripts/graph_query.py --map ./CONTEXT-MAP.md vigentes contexto:<Nome>
+python3 <skill>/scripts/graph_query.py --map ./CONTEXT-MAP.md impacto contexto:<Nome>
+python3 <skill>/scripts/graph_query.py --map ./CONTEXT-MAP.md valida-aresta contexto:A contexto:B
+```
+
+Use `vigentes` **antes de aceitar uma garantia que o usuário reafirma**: se ela vier de
+uma ADR que já foi superada por outra (a ferramenta deriva isso do `supera:` da ADR
+nova, sem editar a antiga), aponte a tensão em vez de implementar o plano como descrito
+— é o mesmo tipo de contradição que "Cruze com o código" levanta, só que ADR↔ADR. Use
+`valida-aresta` para checar se uma integração proposta fura o bounded context.
+
+**Repo brownfield (docs sem front matter)**: se os `CONTEXT.md`/ADRs ainda não têm
+front matter de relação, o grafo nasce vazio e a ferramenta **avisa** — não leia esse
+vazio como "sem tensões". Faça a travessia à mão lendo as ADRs, e ofereça o backfill do
+front matter (ver Modo 1 / `references/setup-checklist.md`) para as próximas consultas
+funcionarem. **Sem Python** vale o mesmo fallback manual — o script só acelera; a skill
+continua `agnostic`. Detalhes em `references/context-format.md` ("Grafo de dependências").
+
 ### Atualize `CONTEXT.md` inline
 
 Quando um termo for resolvido, atualize o `CONTEXT.md` do contexto certo (localize-o
@@ -138,7 +164,10 @@ Só ofereça criar uma ADR quando as três condições forem verdadeiras ao mesm
 
 Se faltar qualquer uma das três, não ofereça ADR — o rascunho de decisão fica só no
 histórico da conversa. Use o template e o gerador de ID em
-`references/adr-template.md`.
+`references/adr-template.md`. Preencha o **front matter de relação** da ADR
+(`contextos`/`afeta`/`supera`/`depende_de`, com os nomes exatos das entradas do
+`CONTEXT-MAP.md`) — é o que faz a ADR entrar no grafo de dependências. Se a decisão
+substitui uma anterior, declare `supera:` na ADR **nova**; nunca edite a antiga à mão.
 
 Assim que uma ADR for criada, se a skill `make-diagram` estiver disponível no
 ambiente, acione-a para gerar o diagrama da decisão (relação entre contextos,
@@ -146,7 +175,9 @@ integração, fronteira) como imagem ao lado da ADR (`adr/ADR-<id>-diagrama.png`
 referenciando-o na seção **Decisão**. Sem `make-diagram`, use Mermaid inline como
 fallback. A ADR criada passa pelo gate de criação de documento (ver "Mapa sempre em
 dia"): confirme que ela é alcançável a partir do `CONTEXT-MAP.md` e valide o
-registro.
+registro. Se a ADR declarou `supera:`, rode `scripts/graph_query.py vigentes
+contexto:<Nome>` (ou a travessia manual no fallback) e reporte ao usuário qual ADR
+passou a superada.
 
 ## Estrutura de arquivos
 
@@ -259,3 +290,6 @@ registrá-lo no mapa é entrega incompleta. O detalhamento está em
   ou sem documentação): como escanear docs de negócio/ADRs existentes, propor
   rascunho de glossário e montar o `CONTEXT-MAP.md` da raiz (quantos contextos, onde
   cada `CONTEXT.md` vive).
+- `scripts/graph_query.py` — grafo de dependências derivado do front matter (view
+  descartável, stdlib-only): consultas `vigentes`/`impacto`/`valida-aresta`/`ciclos`
+  com saída já-digerida. Opcional; sem Python, a travessia é feita à mão.

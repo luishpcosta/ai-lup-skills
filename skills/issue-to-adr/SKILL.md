@@ -75,7 +75,13 @@ informal (não um documento) e **listar as assunções registradas na Fase 1**
 de forma destacada, para quem ler depois saber o que foi suposto e não
 validado.
 
-Como na skill de PRD, se a skill `make-diagram` estiver disponível no
+Como na skill de PRD, preencha o **front matter de relação** do template
+(`id`/`titulo`/`status`/`contextos`/`afeta`/`supera`/`depende_de`), usando os nomes
+exatos das entradas do `CONTEXT-MAP.md` quando ele existir — é o que registra a ADR no
+grafo de dependências mantido pela skill `blueprintfy`. Se esta decisão substitui uma
+anterior, declare `supera: [<ADR-id>]` na ADR **nova** (a antiga não é editada).
+
+Também como na skill de PRD, se a skill `make-diagram` estiver disponível no
 ambiente, acione-a logo após gravar o arquivo do ADR para gerar o diagrama
 da arquitetura como imagem (`adr/ADR-<id>-diagrama.png`), referenciando-o
 na seção **Decisão**; sem `make-diagram`, use Mermaid inline como fallback.
@@ -119,7 +125,9 @@ skill de PRD — depois de gravar os arquivos, verifique se cada um é alcançá
 partir do `CONTEXT-MAP.md`; se não for, adicione a referência na seção adequada
 (tipicamente *Planejamento (to-be)* do contexto certo, perguntando ao usuário se for
 ambíguo); e valide relendo o mapa e conferindo que o caminho existe, reportando o
-resultado. Os entregáveis só estão completos depois desse gate.
+resultado. Se a ADR declarou `supera:`, confira que o `<ADR-id>` alvo existe e avise o
+usuário que aquela decisão passou a superada. Os entregáveis só estão completos depois
+desse gate.
 
 ## Arquivos de referência
 

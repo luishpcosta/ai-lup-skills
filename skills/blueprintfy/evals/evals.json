@@ -70,6 +70,35 @@
         {"name": "multi_context_hypothesis", "text": "Levanta a hipótese de dois contextos (pedidos e faturamento/billing) a partir dos sinais do repo (docs/negocio/faturamento.md, src/ordering, src/billing) e pede confirmação em vez de decidir sozinha"},
         {"name": "asks_about_existing_glossary", "text": "Pergunta como incorporar o glossário existente (docs/glossario.md): referenciar onde está, mover para a pasta do contexto ou dividir os termos entre contextos — em vez de decidir sozinha"}
       ]
+    },
+    {
+      "id": 6,
+      "name": "adr-cross-impact",
+      "prompt": "Quero adicionar cancelamento em lote pra época de pico: o operador seleciona vários pedidos atrasados e cancela todos de uma vez. Pra manter a mesma garantia que já temos hoje, só quero marcar cada pedido como cancelado depois que o Payment confirmar que o estorno daquele pedido deu certo.",
+      "expected_output": "A skill lê o CONTEXT-MAP.md na raiz, identifica a seção de Decisões (ADR) e lê as duas ADRs em adr/: a ADR-20250115 (cancelamento só confirma pro cliente depois do estorno confirmado, via chamada síncrona a Payment) e a ADR-20250620 (Payment passa a processar estornos por fila assíncrona, só devolvendo confirmação de aceite, não mais o resultado final). Nenhuma das duas ADRs cita a outra explicitamente, então a skill precisa perceber sozinha que a ADR-20250620 já invalidou o mecanismo síncrono que a ADR-20250115 assumia — Payment não devolve mais o resultado final do estorno na mesma chamada. Ao ouvir o pedido do usuário (que reafirma exatamente a garantia síncrona da ADR-20250115, e ainda por cima em cenário de pico — o mesmo cenário que motivou a ADR-20250620 a abandonar o síncrono), a skill confronta o pedido com a tensão entre as duas ADRs em vez de aceitar a implementação como descrita, e pergunta ao usuário como resolver: manter a garantia da ADR-20250115 de outro jeito (ex.: confirmação assíncrona com callback/consulta de status) ou aceitar que o cancelamento em lote só pode confirmar 'estorno aceito', não 'estorno concluído'.",
+      "files": ["eval-6-adr-cross-impact/CONTEXT-MAP.md", "eval-6-adr-cross-impact/docs/dominio/ordering/CONTEXT.md", "eval-6-adr-cross-impact/docs/dominio/payment/CONTEXT.md", "eval-6-adr-cross-impact/adr/ADR-20250115-1030-7a2c-estorno-sincrono-antes-de-confirmar-cancelamento.md", "eval-6-adr-cross-impact/adr/ADR-20250620-1542-3f0a-fila-assincrona-para-estornos.md"],
+      "assertions": [
+        {"name": "reads_adr1_content", "text": "A resposta referencia o conteúdo real da ADR-20250115 (cancelamento só confirma pro cliente depois do estorno confirmado / chamada síncrona a Payment)"},
+        {"name": "reads_adr2_content", "text": "A resposta referencia o conteúdo real da ADR-20250620 (estornos processados por fila assíncrona / Payment só confirma aceite, não o resultado final)"},
+        {"name": "surfaces_adr_to_adr_conflict", "text": "A resposta aponta explicitamente que a ADR-20250620 mudou uma premissa de que a ADR-20250115 dependia — as duas ADRs entram em tensão direta, não é só um confronto genérico com o código ou com o glossário"},
+        {"name": "confronts_request_not_just_implements", "text": "A resposta não aceita implementar o cancelamento em lote como descrito sem antes confrontar o usuário com essa tensão entre as ADRs"},
+        {"name": "offers_concrete_resolution_paths", "text": "A resposta oferece pelo menos um caminho concreto de resolução (ex.: confirmação assíncrona via callback/consulta de status, ou redefinir a garantia para 'estorno aceito') em vez de só apontar o problema sem direção"},
+        {"name": "no_indiscriminate_new_adr", "text": "Não cria uma nova ADR automaticamente antes de essa tensão ser resolvida com o usuário e justificada pelos 3 critérios (difícil reverter, surpreendente, trade-off real)"}
+      ]
+    },
+    {
+      "id": 7,
+      "name": "graph-driven-cross-impact",
+      "prompt": "Quero adicionar cancelamento em lote pra época de pico: o operador seleciona vários pedidos atrasados e cancela todos de uma vez. Pra manter a mesma garantia que já temos hoje, só quero marcar cada pedido como cancelado depois que o Payment confirmar que o estorno daquele pedido deu certo. As ADRs deste repo já têm front matter de relação e a ferramenta scripts/graph_query.py da skill está disponível.",
+      "expected_output": "Mesmo cenário do eval-6, mas aqui as ADRs carregam front matter de relação (a ADR-20250620 declara `supera: [ADR-20250115-1030-7a2c]`) e a ferramenta scripts/graph_query.py está disponível. A skill delega a travessia ao grafo em vez de reler as ADRs à mão: roda `graph_query.py vigentes contexto:Ordering` (ou faz a travessia manual equivalente no fallback) e obtém que a ADR-20250115 (garantia síncrona) está SUPERADA pela ADR-20250620 (fila assíncrona, Payment só confirma aceite). Como o pedido do usuário reafirma exatamente a garantia síncrona já superada, a skill confronta o usuário com a tensão em vez de implementar, e oferece caminhos concretos (confirmação assíncrona via callback/consulta de status, ou redefinir a garantia para 'estorno aceito'). Não cria nova ADR automaticamente.",
+      "files": ["eval-7-graph-cross-impact/CONTEXT-MAP.md", "eval-7-graph-cross-impact/docs/dominio/ordering/CONTEXT.md", "eval-7-graph-cross-impact/docs/dominio/payment/CONTEXT.md", "eval-7-graph-cross-impact/adr/ADR-20250115-1030-7a2c-estorno-sincrono-antes-de-confirmar-cancelamento.md", "eval-7-graph-cross-impact/adr/ADR-20250620-1542-3f0a-fila-assincrona-para-estornos.md"],
+      "assertions": [
+        {"name": "uses_graph_tool_or_traversal", "text": "Usa o grafo derivado do front matter (roda scripts/graph_query.py — vigentes/impacto — ou faz a travessia equivalente pelo campo `supera`) em vez de só reler as ADRs em prosa"},
+        {"name": "detects_derived_supersession", "text": "Identifica que a ADR-20250115 está superada pela ADR-20250620 a partir do `supera:` declarado na ADR nova, sem depender de a ADR antiga ter sido editada"},
+        {"name": "confronts_request_not_just_implements", "text": "Não aceita implementar o cancelamento em lote como descrito sem antes confrontar o usuário com a tensão entre a garantia síncrona pedida e a decisão vigente assíncrona"},
+        {"name": "offers_concrete_resolution_paths", "text": "Oferece ao menos um caminho concreto de resolução (confirmação assíncrona via callback/consulta de status, ou redefinir a garantia para 'estorno aceito')"},
+        {"name": "no_indiscriminate_new_adr", "text": "Não cria uma nova ADR automaticamente antes de a tensão ser resolvida com o usuário e justificada pelos 3 critérios"}
+      ]
     }
   ]
 }
