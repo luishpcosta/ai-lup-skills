@@ -91,6 +91,16 @@ do contexto) ou se os termos precisam ser divididos entre contextos.
 3. Se alguma decisão já registrada conflita com a estrutura de contexto que está sendo
    proposta na Pergunta 3, traga isso à tona antes de seguir — é o mesmo tipo de
    contradição que o Modo 2 aponta ao cruzar glossário com código.
+4. **Proponha o backfill do front matter de relação** (opcional, mas é o que liga o
+   grafo). ADRs e `CONTEXT.md` de um repo brownfield vêm **sem** front matter, então
+   `scripts/graph_query.py` enxerga um grafo vazio e avisa que está vazio — ele não
+   inventa as relações. Ao resumir cada ADR relevante, ofereça preencher seu front
+   matter (`id`/`titulo`/`status`/`contextos`/`afeta`/`supera`) a partir do que a ADR já
+   diz — em especial, **detecte supersessões implícitas** (uma ADR nova que abandonou a
+   premissa de uma antiga) e proponha declarar `supera:` na nova. É preguiçoso e
+   validado: proponha ADR a ADR, não grave sem a confirmação do usuário, e comece pelas
+   que tocam fronteiras de contexto. Sem esse backfill, o repo funciona, mas as
+   consultas de grafo continuam no fallback manual.
 
 ## 4. Decida a estrutura e crie os arquivos
 
@@ -107,6 +117,11 @@ do contexto) ou se os termos precisam ser divididos entre contextos.
   vira o `CONTEXT.md` de um contexto (referenciado pelo mapa onde está, ou movido
   para a pasta do contexto) ou se os termos são divididos entre contextos. Questione
   antes de mover ou gravar qualquer coisa.
+- **Front matter de relação nos `CONTEXT.md`** → ao criar/incorporar cada contexto,
+  ofereça declarar no topo do `CONTEXT.md` as relações já conhecidas
+  (`depende_de`, `compartilha_contrato_com`) — é o que alimenta o grafo. Só declare o
+  que o usuário confirmar; relação não declarada é tratada como violação por
+  `valida-aresta`. Formato em `context-format.md` ("Front matter de relação").
 - **Registre no mapa os documentos que já existem** → se as Perguntas 1 e 2
   identificaram documentos de negócio (as-is) e/ou pastas de planejamento to-be
   (PRDs/ADRs/SPECs de SDD), adicione-os às seções opcionais **Documentos de negócio

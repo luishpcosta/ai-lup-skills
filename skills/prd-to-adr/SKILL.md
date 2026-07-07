@@ -50,6 +50,11 @@ Use `references/adr-template.md`. Pontos obrigatórios:
   para o sufixo. Não depende de histórico nem de perguntar ao usuário.
   Antes de usar, confira se já existe `adr/ADR-<id>-*.md` no projeto; se
   existir (colisão), gere um novo sufixo e tente de novo.
+- Preencha o **front matter de relação** do template
+  (`id`/`titulo`/`status`/`contextos`/`afeta`/`supera`/`depende_de`), usando os nomes
+  exatos das entradas do `CONTEXT-MAP.md` quando ele existir — é o que registra a ADR no
+  grafo de dependências mantido pela skill `blueprintfy`. Se esta decisão substitui uma
+  anterior, declare `supera: [<ADR-id>]` aqui, na ADR **nova** (a antiga não é editada).
 
 **Diagrama da arquitetura (assim que o ADR for criado):** se a skill
 `make-diagram` estiver disponível no ambiente (instalada como skill do
@@ -135,7 +140,9 @@ arquivo ou a pasta que o contém está referenciado — tipicamente na seção
 *Planejamento (to-be)* do contexto certo); (2) se não for, adicione a referência na
 seção adequada, perguntando ao usuário se o contexto/seção for ambíguo; (3) valide:
 releia o mapa, confira que o caminho referenciado existe no disco e reporte o
-resultado ao usuário. Os entregáveis só estão completos depois desse gate.
+resultado ao usuário. Se a ADR declarou `supera:`, confira que o `<ADR-id>` alvo
+existe e avise o usuário que aquela decisão passou a superada. Os entregáveis só estão
+completos depois desse gate.
 
 ## Arquivos de referência
 
