@@ -43,6 +43,26 @@ O resultado desta fase é um resumo curto apresentado ao usuário antes da prime
 pergunta: "a ideia parece tocar o contexto X; encontrei as ADRs A e B vigentes sobre
 isso; a ADR C foi superada — vou considerar isso na entrevista".
 
+### Conflito direto → argumente agora, não espere a entrevista terminar
+
+Se o passo 3 revelar que a ideia **reafirma uma premissa já superada** ou **contradiz
+diretamente uma ADR vigente** — não é uma tensão sutil que a entrevista ainda vai
+revelar, é um conflito visível já no reconhecimento —, não abra a Fase 1. Vá direto
+para a Fase 3 (argumentação + checkpoint humano, com pelo menos duas opções concretas)
+antes de fazer qualquer pergunta de entrevista. A razão é prática: a resposta do
+usuário a esse conflito redefine o escopo de tudo o que a entrevista perguntaria a
+seguir — perguntar antes é gastar a atenção do usuário em perguntas que talvez nem se
+apliquem ao recorte que ele vai escolher.
+
+Depois do checkpoint, a entrevista (Fase 1) roda normalmente, mas já dentro do recorte
+que o usuário decidiu — a pergunta "existe ADR que precisaria ser superada?" some da
+lista, porque já foi respondida aqui.
+
+Se o conflito só aparecer **durante** a entrevista (a pergunta 5 de
+`entrevista-de-impacto.md` é que o revela), aí sim ele dispara a Fase 3 no ponto em que
+foi descoberto — o curto-circuito acima é só para quando o conflito já é óbvio desde a
+Fase 0.
+
 **Se não existir `CONTEXT-MAP.md` na raiz**: avise que o repositório ainda não tem o
 mapa. Se a skill `blueprintfy` estiver disponível, ofereça rodar o bootstrap dela
 primeiro (o PB fica muito melhor ancorado). Se não estiver, pergunte ao usuário onde
@@ -88,8 +108,12 @@ Antes de fechar o PB, classifique o impacto com base no que a entrevista revelou
 
 ## Fase 3 — Argumentação + checkpoint humano (obrigatório quando amplo/conflitante)
 
-Argumente **antes** de fechar o PB — o objetivo é que a decisão de escopo seja do
-usuário, tomada com o mapa na mesa, e não uma surpresa embutida no documento. Formato:
+Pode ser disparada em dois momentos: aqui, depois da Fase 2, quando é a entrevista que
+revela o impacto amplo/conflitante; ou **antes da Fase 1**, quando a Fase 0 já
+encontrou um conflito direto com ADR vigente (ver "Conflito direto" acima). Em
+qualquer um dos dois casos, argumente **antes** de fechar o PB — o objetivo é que a
+decisão de escopo seja do usuário, tomada com o mapa na mesa, e não uma surpresa
+embutida no documento. Formato:
 
 > "Essa ideia toca os contextos X e Y, e Y já tem a ADR-012 que estabelece Z.
 > Prosseguir aqui exigiria revisar essa ADR. Sugiro:

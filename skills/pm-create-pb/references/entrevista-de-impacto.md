@@ -47,7 +47,11 @@ mudam, a postura não.
 5. **Decisões vigentes** — "Existe ADR que precisaria ser superada para essa ideia
    valer?" Use `vigentes` antes de aceitar a resposta: se a ideia reafirma uma
    premissa que vem de uma ADR **superada**, aponte a tensão — é o gatilho da Fase 3
-   (argumentação + checkpoint), não um detalhe de rodapé.
+   (argumentação + checkpoint), não um detalhe de rodapé. Na prática esta pergunta
+   raramente chega a ser feita: se o conflito já era visível no reconhecimento da Fase
+   0, o SKILL.md manda pular direto para a Fase 3 antes de abrir a entrevista — esta
+   pergunta 5 só sobra para o caso em que o conflito é sutil o suficiente para só
+   aparecer aqui, no meio da conversa.
 
 ## Quando parar
 

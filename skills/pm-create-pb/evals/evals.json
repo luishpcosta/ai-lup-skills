@@ -39,7 +39,7 @@
       "id": 2,
       "name": "pb-conflito-adr-checkpoint",
       "prompt": "Chegou esse ticket do time de atendimento: 'Operação em pico: precisamos de cancelamento em lote. O operador seleciona vários pedidos atrasados e cancela todos de uma vez, e cada pedido só pode ser marcado como cancelado depois que o Payment confirmar que o estorno daquele pedido foi concluído.' Formaliza isso num product brief.",
-      "expected_output": "A skill lê o CONTEXT-MAP.md, consulta o grafo (graph_query.py vigentes contexto:Ordering ou travessia manual pelo campo supera:) e detecta que a garantia pedida no ticket — confirmação síncrona do estorno — vem da ADR-20250115, que está SUPERADA pela ADR-20250620 (fila assíncrona: Payment só confirma o aceite na fila). Em vez de fechar o PB com a premissa superada, argumenta ANTES: explica a tensão, oferece caminhos concretos (ex.: marcar como 'cancelamento em processamento' e confirmar de forma assíncrona, ou abrir discussão para superar a ADR-20250620) e pede o checkpoint humano. Nenhum PRODUCT_BRIEF.md é criado nesta rodada.",
+      "expected_output": "A skill lê o CONTEXT-MAP.md, consulta o grafo (graph_query.py vigentes contexto:Ordering ou travessia manual pelo campo supera:) e detecta, ainda na Fase 0 (reconhecimento), que a garantia pedida no ticket — confirmação síncrona do estorno — vem da ADR-20250115, que está SUPERADA pela ADR-20250620 (fila assíncrona: Payment só confirma o aceite na fila). Por ser um conflito direto já visível no reconhecimento, a skill pula a entrevista de impacto e argumenta IMEDIATAMENTE: explica a tensão, oferece pelo menos dois caminhos concretos (ex.: marcar como 'cancelamento em processamento' e confirmar de forma assíncrona, ou abrir discussão para superar a ADR-20250620) e pede o checkpoint humano — sem fazer nenhuma pergunta de entrevista antes disso. Nenhum PRODUCT_BRIEF.md é criado nesta rodada.",
       "files": [
         "eval-2-pb-conflito-adr/CONTEXT-MAP.md",
         "eval-2-pb-conflito-adr/docs/dominio/ordering/CONTEXT.md",
@@ -58,7 +58,7 @@
         },
         {
           "name": "argues_before_closing_pb",
-          "text": "Argumenta a tensão ANTES de fechar o PB, oferecendo pelo menos duas opções concretas (ex.: recorte compatível com a decisão vigente, ou abrir discussão de superação da ADR)"
+          "text": "Argumenta a tensão IMEDIATAMENTE após o reconhecimento da Fase 0 — sem fazer nenhuma pergunta de entrevista antes —, oferecendo pelo menos duas opções concretas (ex.: recorte compatível com a decisão vigente, ou abrir discussão de superação da ADR)"
         },
         {
           "name": "human_checkpoint_requested",
