@@ -55,6 +55,10 @@ Use `references/adr-template.md`. Pontos obrigatórios:
   exatos das entradas do `CONTEXT-MAP.md` quando ele existir — é o que registra a ADR no
   grafo de dependências mantido pela skill `blueprintfy`. Se esta decisão substitui uma
   anterior, declare `supera: [<ADR-id>]` aqui, na ADR **nova** (a antiga não é editada).
+  Se o PRD de origem tiver front matter com `id: PRD-...` (gerado pela skill
+  `pm-create-prd`), inclua esse id em `depende_de: [PRD-<id>]` e parta dos
+  `contextos`/`afeta` do PRD ao preencher os da ADR — é o que fecha a cadeia
+  PB → PRD → ADR no grafo.
 
 **Diagrama da arquitetura (assim que o ADR for criado):** se a skill
 `make-diagram` estiver disponível no ambiente (instalada como skill do

@@ -232,8 +232,8 @@ documentados (as-is) com planejamento to-be em `docs/`:
 ├── CONTEXT-MAP.md                     ← na raiz, sempre
 ├── docs/refinamento/                  ← to-be (SDD): o que está sendo planejado
 │   ├── ordering/
-│   │   ├── PRODUCT_BRIEF.md
 │   │   └── {funcionalidade}/
+│   │       ├── PRODUCT_BRIEF.md
 │   │       ├── NNN-slug-{funcionalidade}-PRD.md
 │   │       ├── NNN-slug-{funcionalidade}-ADR.md
 │   │       └── {especificacao}/

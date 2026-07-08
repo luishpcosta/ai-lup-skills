@@ -7,20 +7,21 @@ partir do front matter dos documentos alcançáveis pelo `CONTEXT-MAP.md` da rai
 consumir — o agente delega a travessia a esta ferramenta em vez de reler todas as
 ADRs à mão.
 
-Nós:   `contexto:<Nome>`, `adr:<ID>`, `contrato:<Nome>`
+Nós:   `contexto:<Nome>`, `adr:<ID>`, `pb:<ID>`, `prd:<ID>`, `contrato:<Nome>`
 Arestas: depende_de, supera, afeta, compartilha_contrato
 
 Uso:
     graph_query.py impacto <no> [--saltos N] [--map CAMINHO]
         BFS de N saltos a partir de um nó; lista o que é afetado.
     graph_query.py vigentes <contexto> [--map CAMINHO]
-        ADRs vigentes (não-superadas) x superadas que tocam o contexto.
+        ADRs/PBs/PRDs vigentes (não-superados) x superados que tocam o contexto.
     graph_query.py valida-aresta <de> <para> [--contrato X] [--map CAMINHO]
         Verifica se a aresta proposta existe na topologia declarada (query "viola").
     graph_query.py ciclos [--map CAMINHO]
         Detecta ciclos em `depende_de` entre contextos.
 
-`<no>` aceita `contexto:Ordering`, `adr:ADR-...`, ou o nome curto (assume contexto).
+`<no>` aceita `contexto:Ordering`, `adr:ADR-...`, `pb:PB-...`, `prd:PRD-...`, ou o
+nome curto — IDs `ADR-`/`PB-`/`PRD-` têm o tipo inferido; o resto assume contexto.
 Stdlib-only: nenhuma dependência externa. Sem Python, o agente navega à mão (fallback).
 """
 import argparse
@@ -267,15 +268,27 @@ class Graph:
         self.node(tgt)
 
 
+def _id_type(raw):
+    """Tipo de nó inferido do prefixo do ID (convenção PB-/PRD-/ADR-...)."""
+    if raw.startswith("PB-"):
+        return "pb"
+    if raw.startswith("PRD-"):
+        return "prd"
+    return "adr"
+
+
 def _node_id(fm):
     if fm.get("id"):
-        return "adr:" + _as_scalar(fm["id"])
+        raw = _as_scalar(fm["id"])
+        return _id_type(raw) + ":" + raw
     if fm.get("contexto"):
         return "contexto:" + _as_scalar(fm["contexto"])
     return None
 
 
 def _norm_target(tgt, source_id):
+    if tgt.startswith(("ADR-", "PB-", "PRD-")):
+        return _id_type(tgt) + ":" + tgt
     return ("adr:" if source_id.startswith("adr:") else "contexto:") + tgt
 
 
@@ -296,7 +309,7 @@ def build_graph(map_path):
         for tgt in _as_list(fm.get("depende_de")):
             g.add_edge(nid, "depende_de", _norm_target(tgt, nid))
         for tgt in _as_list(fm.get("supera")):
-            g.add_edge(nid, "supera", "adr:" + tgt)
+            g.add_edge(nid, "supera", _id_type(tgt) + ":" + tgt)
         for tgt in _as_list(fm.get("afeta")):
             g.add_edge(nid, "afeta", "contexto:" + tgt)
         for c in _as_list(fm.get("compartilha_contrato_com")):
@@ -307,7 +320,7 @@ def build_graph(map_path):
 
 
 def derive_supersession(g):
-    """Marca como `superado` todo ADR alvo de uma aresta `supera` — sem editar o doc antigo."""
+    """Marca como `superado` todo doc alvo de uma aresta `supera` — sem editar o doc antigo."""
     for src, edges in list(g.out.items()):
         for kind, tgt, _extra in edges:
             if kind == "supera":
@@ -350,7 +363,7 @@ def _label(g, nid):
     return f"{_short(nid)} — {titulo}" if titulo else _short(nid)
 
 
-def _adr_contexts(fm):
+def _doc_contexts(fm):
     ctxs = set()
     for x in _as_list(fm.get("contextos")):
         ctxs.add("contexto:" + x)
@@ -359,19 +372,23 @@ def _adr_contexts(fm):
     return ctxs
 
 
+def _type_tag(nid):
+    return "[" + nid.split(":", 1)[0].upper() + "] "
+
+
 def cmd_vigentes(g, contexto):
     vig, sup = [], []
     for nid, node in g.nodes.items():
-        if not nid.startswith("adr:"):
+        if nid.split(":", 1)[0] not in ("adr", "pb", "prd"):
             continue
-        if contexto in _adr_contexts(node.get("fm", {})):
+        if contexto in _doc_contexts(node.get("fm", {})):
             (sup if node.get("status") == "superado" else vig).append(nid)
-    lines = [f"Decisões que tocam {_short(contexto)}:", ""]
+    lines = [f"Decisões e docs de produto que tocam {_short(contexto)}:", ""]
     lines.append("VIGENTES:")
     if vig:
         for nid in sorted(vig):
             node = g.nodes[nid]
-            lines.append(f"- {_label(g, nid)} [{node.get('status') or 'sem status'}]")
+            lines.append(f"- {_type_tag(nid)}{_label(g, nid)} [{node.get('status') or 'sem status'}]")
             for _k, tgt, _e in g.out.get(nid, []):
                 if _k == "supera":
                     lines.append(f"    ⚠ SUPERA {_short(tgt)} — não usar a premissa antiga.")
@@ -382,7 +399,7 @@ def cmd_vigentes(g, contexto):
     if sup:
         for nid in sorted(sup):
             por = ", ".join(_short(x) for x in g.nodes[nid]["superado_por"])
-            lines.append(f"- {_label(g, nid)}  [superado_por {por}]")
+            lines.append(f"- {_type_tag(nid)}{_label(g, nid)}  [superado_por {por}]")
     else:
         lines.append("- (nenhuma)")
     return "\n".join(lines)
@@ -470,8 +487,10 @@ def cmd_ciclos(g):
 # --------------------------------------------------------------------------- #
 
 def normalize_node_arg(s):
-    if ":" in s and s.split(":", 1)[0] in ("contexto", "adr", "contrato"):
+    if ":" in s and s.split(":", 1)[0] in ("contexto", "adr", "pb", "prd", "contrato"):
         return s
+    if s.startswith(("ADR-", "PB-", "PRD-")):
+        return _id_type(s) + ":" + s
     return "contexto:" + s
 
 

@@ -1,0 +1,109 @@
+{
+  "skill_name": "pm-create-pb",
+  "evals": [
+    {
+      "id": 1,
+      "name": "pb-contido-um-contexto",
+      "prompt": "Tive uma ideia: quero deixar o cliente adicionar uma observação de entrega ao pedido (tipo 'deixar na portaria') até o momento do despacho. Escreve um briefing disso pra mim.",
+      "expected_output": "A skill lê o CONTEXT-MAP.md antes de qualquer pergunta, identifica que a ideia é uma extensão do contexto Ordering (o glossário já define Pedido e Despacho), consulta as ADRs vigentes via grafo (graph_query.py vigentes/impacto) ou travessia manual e constata que não há conflito (a ADR de fila assíncrona não restringe a ideia). Trata a demanda como impacto sobre domínio existente — não como fundação de modelo do zero — e inicia a entrevista de impacto com UMA pergunta acompanhada de resposta recomendada (ex.: 'minha leitura é que isso estende Ordering, sem mexer no contrato PedidoCancelado — confere?'). Não grava o PRODUCT_BRIEF.md nesta primeira rodada, porque a entrevista ainda não terminou.",
+      "files": [
+        "eval-1-pb-contido/CONTEXT-MAP.md",
+        "eval-1-pb-contido/docs/dominio/ordering/CONTEXT.md",
+        "eval-1-pb-contido/docs/dominio/payment/CONTEXT.md",
+        "eval-1-pb-contido/adr/ADR-20250620-1542-3f0a-fila-assincrona-para-estornos.md"
+      ],
+      "assertions": [
+        {
+          "name": "reads_context_map_first",
+          "text": "Lê o CONTEXT-MAP.md como ponto de entrada e identifica Ordering como contexto candidato antes de fazer qualquer pergunta ao usuário"
+        },
+        {
+          "name": "checks_adrs_before_interview",
+          "text": "Consulta as ADRs vigentes (via graph_query.py ou travessia manual do front matter) antes de entrevistar, e reporta o resultado do reconhecimento ao usuário"
+        },
+        {
+          "name": "treats_as_impact_not_foundation",
+          "text": "Trata a ideia como extensão/impacto sobre o domínio existente (usa os termos do glossário, como Pedido e Despacho), não como modelagem de domínio do zero"
+        },
+        {
+          "name": "one_question_with_recommendation",
+          "text": "Inicia a entrevista com uma única pergunta por vez, acompanhada de uma resposta recomendada — não empilha várias perguntas"
+        },
+        {
+          "name": "no_pb_file_yet",
+          "text": "Não cria o PRODUCT_BRIEF.md nesta primeira rodada — a entrevista de impacto ainda não foi respondida"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "pb-conflito-adr-checkpoint",
+      "prompt": "Chegou esse ticket do time de atendimento: 'Operação em pico: precisamos de cancelamento em lote. O operador seleciona vários pedidos atrasados e cancela todos de uma vez, e cada pedido só pode ser marcado como cancelado depois que o Payment confirmar que o estorno daquele pedido foi concluído.' Formaliza isso num product brief.",
+      "expected_output": "A skill lê o CONTEXT-MAP.md, consulta o grafo (graph_query.py vigentes contexto:Ordering ou travessia manual pelo campo supera:) e detecta, ainda na Fase 0 (reconhecimento), que a garantia pedida no ticket — confirmação síncrona do estorno — vem da ADR-20250115, que está SUPERADA pela ADR-20250620 (fila assíncrona: Payment só confirma o aceite na fila). Por ser um conflito direto já visível no reconhecimento, a skill pula a entrevista de impacto e argumenta IMEDIATAMENTE: explica a tensão, oferece pelo menos dois caminhos concretos (ex.: marcar como 'cancelamento em processamento' e confirmar de forma assíncrona, ou abrir discussão para superar a ADR-20250620) e pede o checkpoint humano — sem fazer nenhuma pergunta de entrevista antes disso. Nenhum PRODUCT_BRIEF.md é criado nesta rodada.",
+      "files": [
+        "eval-2-pb-conflito-adr/CONTEXT-MAP.md",
+        "eval-2-pb-conflito-adr/docs/dominio/ordering/CONTEXT.md",
+        "eval-2-pb-conflito-adr/docs/dominio/payment/CONTEXT.md",
+        "eval-2-pb-conflito-adr/adr/ADR-20250115-1030-7a2c-estorno-sincrono-antes-de-confirmar-cancelamento.md",
+        "eval-2-pb-conflito-adr/adr/ADR-20250620-1542-3f0a-fila-assincrona-para-estornos.md"
+      ],
+      "assertions": [
+        {
+          "name": "uses_graph_or_traversal",
+          "text": "Consulta o grafo de dependências (graph_query.py vigentes/impacto) ou faz a travessia manual equivalente pelo front matter (supera:) em vez de só reler as ADRs em prosa"
+        },
+        {
+          "name": "detects_superseded_premise",
+          "text": "Detecta que a garantia síncrona pedida no ticket vem da ADR-20250115, que está superada pela ADR-20250620 (derivado do supera: da ADR nova)"
+        },
+        {
+          "name": "argues_before_closing_pb",
+          "text": "Argumenta a tensão IMEDIATAMENTE após o reconhecimento da Fase 0 — sem fazer nenhuma pergunta de entrevista antes —, oferecendo pelo menos duas opções concretas (ex.: recorte compatível com a decisão vigente, ou abrir discussão de superação da ADR)"
+        },
+        {
+          "name": "human_checkpoint_requested",
+          "text": "Pede explicitamente a decisão do usuário (checkpoint humano) sobre qual caminho seguir"
+        },
+        {
+          "name": "no_pb_file_before_checkpoint",
+          "text": "Não cria o PRODUCT_BRIEF.md antes de o usuário responder ao checkpoint"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "pb-multi-contexto-argumenta",
+      "prompt": "Quero tirar do papel um programa de indicação: o cliente indica um amigo, quando o amigo faz o primeiro pedido o indicador ganha um crédito pra usar no próximo pagamento, e os dois recebem uma comunicação na hora. Me escreve o product brief.",
+      "expected_output": "A skill lê o CONTEXT-MAP.md e usa o grafo (impacto/front matter) para nomear os contextos candidatos afetados — Ordering (primeiro pedido do indicado), Payment (crédito) e Notification (comunicação) — em vez de perguntar às cegas quem é impactado. Explicita que a ideia atravessa três bounded contexts (e possivelmente sugere um conceito novo, 'indicação', que não pertence claramente a nenhum), argumenta opções de recorte ANTES de gerar (ex.: começar pelo crédito em Payment com evento de Ordering, deixar Notification consumindo evento existente; ou discutir um contexto novo para indicações) e pede checkpoint humano. Nenhum PRODUCT_BRIEF.md é criado nesta rodada.",
+      "files": [
+        "eval-3-pb-multi-contexto/CONTEXT-MAP.md",
+        "eval-3-pb-multi-contexto/docs/dominio/ordering/CONTEXT.md",
+        "eval-3-pb-multi-contexto/docs/dominio/payment/CONTEXT.md",
+        "eval-3-pb-multi-contexto/docs/dominio/notification/CONTEXT.md",
+        "eval-3-pb-multi-contexto/adr/ADR-20250620-1542-3f0a-fila-assincrona-para-estornos.md"
+      ],
+      "assertions": [
+        {
+          "name": "names_affected_candidates_from_graph",
+          "text": "Nomeia os contextos afetados (Ordering, Payment, Notification) a partir do mapa/grafo/front matter, apresentando-os ao usuário em vez de perguntar às cegas 'quem é afetado?'"
+        },
+        {
+          "name": "states_cross_context_impact",
+          "text": "Explicita que a ideia atravessa múltiplos bounded contexts (impacto amplo), citando os contextos reais do fixture"
+        },
+        {
+          "name": "proposes_scope_options",
+          "text": "Propõe opções concretas de recorte/faseamento antes de gerar o PB (ex.: extensão contida de um contexto primeiro, ou discussão de conceito/contexto novo)"
+        },
+        {
+          "name": "human_checkpoint_requested",
+          "text": "Pede explicitamente a decisão do usuário (checkpoint humano) sobre o escopo antes de formalizar"
+        },
+        {
+          "name": "no_pb_file_before_checkpoint",
+          "text": "Não cria o PRODUCT_BRIEF.md antes de o usuário responder ao checkpoint"
+        }
+      ]
+    }
+  ]
+}
