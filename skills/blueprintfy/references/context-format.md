@@ -109,8 +109,10 @@ a estrutura é o mapa, não uma convenção de pastas.
 
 ## Grafo de dependências (view derivada)
 
-O mapa + o front matter de relação dos docs (CONTEXT.md e ADRs) formam **nativamente um
-grafo**: nós são contextos/ADRs/contratos; arestas são `depende_de`, `supera`, `afeta`,
+O mapa + o front matter de relação dos docs (CONTEXT.md, ADRs e docs de produto —
+PBs/PRDs criados por `pm-create-pb`/`pm-create-prd`) formam **nativamente um
+grafo**: nós são contextos/ADRs/PBs/PRDs/contratos (o tipo é inferido do prefixo do
+`id`: `ADR-`, `PB-`, `PRD-`); arestas são `depende_de`, `supera`, `afeta`,
 `compartilha_contrato`. Esse grafo **não é uma segunda fonte de verdade** — o markdown
 continua sendo a fonte legível. O grafo é reconstruído em memória, sob demanda, a partir
 do front matter, e serve só para responder perguntas relacionais que são caras de fazer
@@ -121,14 +123,15 @@ markdown já-digerido. Delegue a ela quando a pergunta for relacional, em vez de
 todas as ADRs:
 
 ```
-python3 scripts/graph_query.py vigentes contexto:Ordering     # ADRs vigentes x superadas
+python3 scripts/graph_query.py vigentes contexto:Ordering     # ADRs/PBs/PRDs vigentes x superados
 python3 scripts/graph_query.py impacto contexto:Ordering      # blast radius (BFS)
 python3 scripts/graph_query.py valida-aresta contexto:Billing contexto:Ordering
 python3 scripts/graph_query.py ciclos                         # acoplamento circular
 ```
 
-- **Supersessão de ADR**: a ferramenta marca como `superado` toda ADR que é alvo de um
-  `supera:` declarado em outra — mesmo que a ADR antiga nunca tenha sido editada. Use
+- **Supersessão**: a ferramenta marca como `superado` todo doc (ADR, PB ou PRD) que é
+  alvo de um `supera:` declarado em outro — mesmo que o doc antigo nunca tenha sido
+  editado. Use
   `vigentes` antes de reafirmar uma garantia: se ela vier de uma ADR superada, aponte a
   tensão em vez de aceitar o plano.
 - **Grafo vazio ≠ "sem tensões"**: num repo brownfield, os docs existentes ainda não

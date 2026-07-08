@@ -230,6 +230,101 @@ class BrownfieldTest(unittest.TestCase):
         self.assertIn("(nenhuma)", out)   # o corpo ainda vem, mas precedido do aviso
 
 
+class PbPrdFixtureTest(unittest.TestCase):
+    """Repo com PB/PRDs no planejamento to-be: nós pb:/prd: derivados do prefixo do id."""
+
+    def setUp(self):
+        self.tmp = tempfile.mkdtemp()
+        _write(
+            os.path.join(self.tmp, "CONTEXT-MAP.md"),
+            "# Context Map\n\n## Contextos\n"
+            "- [Ordering](./docs/ordering/CONTEXT.md) — pedidos\n"
+            "- [Payment](./docs/payment/CONTEXT.md) — pagamentos\n\n"
+            "## Decisões (ADR)\n- [Registro](./adr/)\n\n"
+            "## Planejamento (to-be)\n- [Refinamento](./docs/refinamento/)\n",
+        )
+        _write(
+            os.path.join(self.tmp, "docs/ordering/CONTEXT.md"),
+            "---\ncontexto: Ordering\n---\n# Ordering\n",
+        )
+        _write(
+            os.path.join(self.tmp, "docs/payment/CONTEXT.md"),
+            "---\ncontexto: Payment\n---\n# Payment\n",
+        )
+        _write(
+            os.path.join(self.tmp, "adr/ADR-20250620-1542-3f0a-fila-assincrona.md"),
+            "---\nid: ADR-20250620-1542-3f0a\ntitulo: Fila assíncrona para estornos\n"
+            "status: aceito\ncontextos: [Payment]\nafeta: [Payment, Ordering]\n---\n# ADR\n",
+        )
+        _write(
+            os.path.join(self.tmp, "docs/refinamento/ordering/reembolso/PRODUCT_BRIEF.md"),
+            "---\nid: PB-20260708-0900-aa01\ntitulo: Reembolso instantâneo\n"
+            "status: rascunho\ncontextos: [Ordering]\nafeta: [Payment]\n"
+            "supera: [PB-20260101-0800-ff00]\n---\n# Briefing de produto: Reembolso\n",
+        )
+        _write(
+            os.path.join(self.tmp, "docs/refinamento/ordering/reembolso-v0/PRODUCT_BRIEF.md"),
+            "---\nid: PB-20260101-0800-ff00\ntitulo: Reembolso (v0)\n"
+            "status: aprovado\ncontextos: [Ordering]\n---\n# Briefing antigo\n",
+        )
+        _write(
+            os.path.join(self.tmp, "docs/refinamento/ordering/reembolso/001-solicitacao-PRD.md"),
+            "---\nid: PRD-20260708-0910-bb02\ntitulo: Solicitação de reembolso\n"
+            "status: rascunho\ncontextos: [Ordering]\nafeta: [Payment]\n"
+            "depende_de: [PB-20260708-0900-aa01]\n---\n# PRD 1\n",
+        )
+        _write(
+            os.path.join(self.tmp, "docs/refinamento/ordering/reembolso/002-notificacao-PRD.md"),
+            "---\nid: PRD-20260708-0920-cc03\ntitulo: Notificação de reembolso\n"
+            "status: rascunho\ncontextos: [Ordering]\n"
+            "depende_de: [PRD-20260708-0910-bb02]\n---\n# PRD 2\n",
+        )
+        self.map = os.path.join(self.tmp, "CONTEXT-MAP.md")
+        self.g = gq.build_graph(self.map)
+
+    def test_pb_node_classified_as_pb(self):
+        self.assertIn("pb:PB-20260708-0900-aa01", self.g.nodes)
+        self.assertNotIn("adr:PB-20260708-0900-aa01", self.g.nodes)
+
+    def test_prd_node_classified_as_prd(self):
+        self.assertIn("prd:PRD-20260708-0910-bb02", self.g.nodes)
+        self.assertNotIn("adr:PRD-20260708-0910-bb02", self.g.nodes)
+
+    def test_prd_depende_de_pb_edge(self):
+        edges = self.g.out["prd:PRD-20260708-0910-bb02"]
+        self.assertIn(("depende_de", "pb:PB-20260708-0900-aa01", None), edges)
+
+    def test_prd_depende_de_prd_edge(self):
+        edges = self.g.out["prd:PRD-20260708-0920-cc03"]
+        self.assertIn(("depende_de", "prd:PRD-20260708-0910-bb02", None), edges)
+
+    def test_pb_supera_pb_derived(self):
+        antigo = self.g.nodes["pb:PB-20260101-0800-ff00"]
+        self.assertEqual(antigo["status"], "superado")
+        self.assertIn("pb:PB-20260708-0900-aa01", antigo["superado_por"])
+
+    def test_vigentes_lists_pb_and_prd_with_labels(self):
+        out = gq.cmd_vigentes(self.g, "contexto:Ordering")
+        self.assertIn("[PB] PB-20260708-0900-aa01 — Reembolso instantâneo", out)
+        self.assertIn("[PRD] PRD-20260708-0910-bb02 — Solicitação de reembolso", out)
+        self.assertIn("[ADR] ADR-20250620-1542-3f0a — Fila assíncrona para estornos", out)
+        sup_section = out.split("SUPERADAS")[1]
+        self.assertIn("[PB] PB-20260101-0800-ff00 — Reembolso (v0)", sup_section)
+
+    def test_impacto_reaches_prd_from_context(self):
+        out = gq.cmd_impacto(self.g, "contexto:Payment", saltos=2)
+        self.assertIn("PB-20260708-0900-aa01", out)
+        self.assertIn("PRD-20260708-0910-bb02", out)
+
+    def test_normalize_pb_prd_args(self):
+        self.assertEqual(gq.normalize_node_arg("PB-1"), "pb:PB-1")
+        self.assertEqual(gq.normalize_node_arg("PRD-1"), "prd:PRD-1")
+        self.assertEqual(gq.normalize_node_arg("ADR-1"), "adr:ADR-1")
+        self.assertEqual(gq.normalize_node_arg("pb:PB-1"), "pb:PB-1")
+        self.assertEqual(gq.normalize_node_arg("prd:PRD-1"), "prd:PRD-1")
+        self.assertEqual(gq.normalize_node_arg("Ordering"), "contexto:Ordering")
+
+
 class CliTest(unittest.TestCase):
     def test_normalize_node_arg(self):
         self.assertEqual(gq.normalize_node_arg("Ordering"), "contexto:Ordering")
