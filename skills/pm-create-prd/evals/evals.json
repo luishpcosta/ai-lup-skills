@@ -1,0 +1,110 @@
+{
+  "skill_name": "pm-create-prd",
+  "evals": [
+    {
+      "id": 1,
+      "name": "prd-atomico-direto",
+      "prompt": "Gera o PRD a partir do brief docs/refinamento/ordering/observacao-de-entrega/PRODUCT_BRIEF.md.",
+      "expected_output": "A skill lê o PB e o CONTEXT-MAP.md, valida via grafo/travessia que o PB está vigente, aplica explicitamente os quatro critérios de escala (1 contexto, 1-2 atores, capacidades acopladas, reversível) e conclui que é 1 PRD direto — sem propor quebra desnecessária. Gera o arquivo 001-<slug>-PRD.md na pasta do PB com as 10 seções do template, front matter com id PRD-<data>-<hora>-<hex> e depende_de contendo PB-20260701-0930-a1b2, requisitos identificados como RF-NN/RNF-NN, usando os termos do glossário (Pedido, Despacho — a edição termina no Despacho). Executa o gate do CONTEXT-MAP: confirma que a pasta do PB já é alcançável pela seção Planejamento (to-be) e reporta a validação.",
+      "files": [
+        "eval-1-prd-atomico/CONTEXT-MAP.md",
+        "eval-1-prd-atomico/docs/dominio/ordering/CONTEXT.md",
+        "eval-1-prd-atomico/docs/dominio/payment/CONTEXT.md",
+        "eval-1-prd-atomico/adr/ADR-20250620-1542-3f0a-fila-assincrona-para-estornos.md",
+        "eval-1-prd-atomico/docs/refinamento/ordering/observacao-de-entrega/PRODUCT_BRIEF.md"
+      ],
+      "assertions": [
+        {
+          "name": "applies_scale_criteria_explicitly",
+          "text": "Aplica e mostra os critérios de escala (contextos tocados, atores, dependência entre capacidades, reversibilidade) e conclui fundamentadamente que 1 PRD basta — não propõe quebra desnecessária"
+        },
+        {
+          "name": "generates_prd_with_10_sections",
+          "text": "Gera um arquivo NNN-<slug>-PRD.md na pasta do PB contendo as 10 seções do template (Identificação, Contexto e Problema, Objetivo, Escopo, Usuários/Personas, RFs, RNFs, Dependências e Restrições, Riscos, Premissas)"
+        },
+        {
+          "name": "frontmatter_links_pb",
+          "text": "O front matter do PRD tem id com prefixo PRD- e depende_de contendo o id do PB de origem (PB-20260701-0930-a1b2)"
+        },
+        {
+          "name": "rf_rnf_ids_present",
+          "text": "Os requisitos funcionais e não funcionais usam identificadores RF-NN/RNF-NN (rastreáveis pelo prd-to-adr)"
+        },
+        {
+          "name": "uses_domain_glossary",
+          "text": "Usa os termos do glossário do contexto (Pedido, Despacho) e respeita a regra de domínio de que o pedido não aceita alterações após o Despacho"
+        },
+        {
+          "name": "executes_map_gate",
+          "text": "Executa o gate do CONTEXT-MAP: verifica que o PRD é alcançável a partir do mapa (via a pasta registrada em Planejamento to-be) e reporta a validação ao usuário"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "prd-quebra-multi-checkpoint",
+      "prompt": "Quebra esse brief em PRDs: docs/refinamento/ordering/programa-de-indicacao/PRODUCT_BRIEF.md",
+      "expected_output": "A skill lê o PB e o CONTEXT-MAP.md e mede a escala: o PB toca Ordering, Payment e Notification (contextos + afeta, conferido com o grafo) e descreve 3 capacidades — registrar indicação (A), conceder crédito (B, que depende de A) e comunicar (C, que consome o evento de A). Propõe a quebra ANTES de gerar qualquer arquivo, nomeando a cadeia de dependência (ex.: PRD-1 registro em Ordering entrega isolado; PRD-2 crédito em Payment depende do PRD-1; PRD-3 comunicação em Notification depende do PRD-1) e pede o checkpoint humano. Nenhum arquivo de PRD é criado nesta rodada.",
+      "files": [
+        "eval-2-prd-quebra-multi/CONTEXT-MAP.md",
+        "eval-2-prd-quebra-multi/docs/dominio/ordering/CONTEXT.md",
+        "eval-2-prd-quebra-multi/docs/dominio/payment/CONTEXT.md",
+        "eval-2-prd-quebra-multi/docs/dominio/notification/CONTEXT.md",
+        "eval-2-prd-quebra-multi/adr/ADR-20250620-1542-3f0a-fila-assincrona-para-estornos.md",
+        "eval-2-prd-quebra-multi/docs/refinamento/ordering/programa-de-indicacao/PRODUCT_BRIEF.md"
+      ],
+      "assertions": [
+        {
+          "name": "measures_scale_from_map_and_graph",
+          "text": "Mede a escala consultando o CONTEXT-MAP/grafo/front matter do PB (contextos + afeta) e identifica que o PB toca Ordering, Payment e Notification"
+        },
+        {
+          "name": "proposes_split_with_dependency_chain",
+          "text": "Propõe N PRDs nomeando capacidade + contexto de cada um e a cadeia de dependência entre eles (quem entrega isolado e quem depende de quem)"
+        },
+        {
+          "name": "split_grounded_in_fixture",
+          "text": "Fundamenta a quebra nas capacidades e contextos reais do fixture (registro da indicação, crédito, comunicação), não em nomes genéricos"
+        },
+        {
+          "name": "human_checkpoint_before_files",
+          "text": "Pede explicitamente o aceite/ajuste do usuário (checkpoint humano) antes de gerar os PRDs"
+        },
+        {
+          "name": "no_prd_files_yet",
+          "text": "Não cria nenhum arquivo de PRD nesta rodada — a quebra ainda não foi aprovada"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "prd-de-pb-superado",
+      "prompt": "Detalha em PRD o brief docs/refinamento/ordering/agendamento-de-entrega/PRODUCT_BRIEF.md, por favor.",
+      "expected_output": "A skill lê o PB pedido e o CONTEXT-MAP.md e, ao validar contra o grafo (ou travessia manual do front matter), detecta que o PB-20260315-1100-e5f6 (agendamento por janela) está SUPERADO pelo PB-20260610-0940-f7a8 (ponto de retirada), que declara supera: sobre ele — mesmo com o PB antigo ainda marcado como 'aprovado' no próprio arquivo. Em vez de detalhar a aposta abandonada, confronta o usuário: explica a supersessão, aponta o PB vigente como alternativa e pergunta como seguir. Nenhum PRD é gerado nesta rodada.",
+      "files": [
+        "eval-3-pb-superado/CONTEXT-MAP.md",
+        "eval-3-pb-superado/docs/dominio/ordering/CONTEXT.md",
+        "eval-3-pb-superado/docs/refinamento/ordering/agendamento-de-entrega/PRODUCT_BRIEF.md",
+        "eval-3-pb-superado/docs/refinamento/ordering/entrega-em-ponto-de-retirada/PRODUCT_BRIEF.md"
+      ],
+      "assertions": [
+        {
+          "name": "detects_derived_supersession",
+          "text": "Detecta via grafo ou travessia do front matter que o PB pedido está superado pelo PB-20260610-0940-f7a8 (derivado do supera: do PB novo, sem depender do status do arquivo antigo)"
+        },
+        {
+          "name": "confronts_instead_of_detailing",
+          "text": "Confronta o usuário com a supersessão em vez de detalhar o PB superado em PRD"
+        },
+        {
+          "name": "points_to_current_pb",
+          "text": "Aponta o PB vigente (entrega em ponto de retirada) como o candidato correto a detalhamento"
+        },
+        {
+          "name": "no_prd_generated",
+          "text": "Não gera nenhum arquivo de PRD nesta rodada — espera a decisão do usuário"
+        }
+      ]
+    }
+  ]
+}
