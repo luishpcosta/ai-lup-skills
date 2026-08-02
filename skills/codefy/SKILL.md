@@ -1,9 +1,9 @@
 ---
 name: codefy
-description: "Ponto de entrada estável para qualquer solicitação de modelagem de domínio num repositório de aplicação, repassando sempre para o blueprintfy. Antes do CONTEXT-MAP.md existir, prepara o terreno para o bootstrap (Modo 1): lê as convenções que o repositório já usa — idioma dos documentos, formato de ID, onde vivem specs/PRDs/ADRs/planejamento — para que a entrevista de bootstrap não comece de uma folha em branco. Depois que o CONTEXT-MAP.md já existe, continua sendo o ponto de entrada: repassa direto para o Modo 2 do blueprintfy qualquer pedido de modelagem contínua (glossário, ADR, estressar uma decisão), sem repetir a varredura de convenções. Nunca substitui a entrevista do blueprintfy em nenhum dos dois modos. Cobra a instalação da skill blueprintfy no repositório-alvo se ela ainda não estiver presente, e não segue sem ela. Use sempre que o usuário, a partir de um repositório de aplicação, pedir para 'configurar o blueprintfy nesse repo', 'começar a modelagem de domínio aqui', 'criar o CONTEXT-MAP.md', ou fizer qualquer pedido de modelagem de domínio contínua — 'isso é uma Order ou uma Invoice mesmo?', 'vamos estressar essa decisão', 'preciso alinhar a linguagem do domínio' — mesmo sem citar 'blueprintfy', 'CONTEXT-MAP' ou 'bootstrap' explicitamente."
+description: "Ponto de entrada estável para qualquer solicitação de modelagem de domínio num repositório de aplicação, repassando sempre para o blueprintfy. Antes do CONTEXT-MAP.md existir, prepara o terreno para o bootstrap (Modo 1): lê as convenções que o repositório já usa — idioma dos documentos, formato de ID, onde vivem specs/PRDs/ADRs/planejamento — para que a entrevista de bootstrap não comece de uma folha em branco. Depois que o CONTEXT-MAP.md já existe, continua sendo o ponto de entrada: repassa direto para o Modo 2 do blueprintfy qualquer pedido de modelagem contínua (glossário, ADR, estressar uma decisão), sem repetir a varredura de convenções. Nunca substitui a entrevista do blueprintfy em nenhum dos dois modos. Se a skill blueprintfy ainda não estiver presente no repositório-alvo, não se limita a pedir para o usuário instalar por fora: com confirmação, busca-a diretamente do catálogo central via clone raso e temporário com gh CLI, e instala na mesma pasta de skills (.claude/skills ou .agents/skills) onde o próprio codefy está — detectando a plataforma agêntica em uso sem precisar perguntar — e não segue sem ela instalada de verdade. Use sempre que o usuário, a partir de um repositório de aplicação, pedir para 'configurar o blueprintfy nesse repo', 'começar a modelagem de domínio aqui', 'criar o CONTEXT-MAP.md', ou fizer qualquer pedido de modelagem de domínio contínua — 'isso é uma Order ou uma Invoice mesmo?', 'vamos estressar essa decisão', 'preciso alinhar a linguagem do domínio' — mesmo sem citar 'blueprintfy', 'CONTEXT-MAP' ou 'bootstrap' explicitamente."
 metadata:
   language: agnostic
-  tags: [ddd, sdd, bootstrap, domain-modeling, blueprintfy, orchestration, relay]
+  tags: [ddd, sdd, bootstrap, domain-modeling, blueprintfy, orchestration, relay, gh-cli]
 ---
 
 # Codefy
@@ -45,17 +45,47 @@ ele instalado no repositório-alvo. Procure, nesta ordem, a partir da raiz do re
 1. `.claude/skills/blueprintfy/SKILL.md`
 2. `.agents/skills/blueprintfy/SKILL.md`
 
-Se não encontrar nenhum dos dois, **pare aqui** e peça para o usuário instalar antes de
-continuar:
+**A pasta onde você encontrar o `SKILL.md` deste próprio `codefy`** (`.claude/skills` ou
+`.agents/skills`) já diz qual é a plataforma agêntica em uso aqui — não pergunte isso ao
+usuário, é dedutível da própria instalação do Codefy. É nessa mesma pasta que o
+`blueprintfy` deve ser instalado, se faltar.
 
-```
-lup-skills add blueprintfy
-```
+### Se não encontrar nenhum dos dois: instale você mesmo, via `gh`
 
-Explique brevemente por quê: Codefy nunca modela domínio sozinho, seja no bootstrap
-ou depois — sem o `blueprintfy` instalado não há quem faça a entrevista em si. Não
-tente reproduzir o comportamento dele de memória nem prosseguir sem ele — depois de
-instalado, retome do Passo 1 (bootstrap) ou do relay (ver "Relay contínuo" abaixo).
+Não dependa do usuário ter o CLI `lup-skills` instalado e linkado localmente (`npm
+link`) — na maioria dos repositórios-alvo ele não vai ter. Em vez disso, busque a skill
+direto do catálogo central (`ai-lup-skills`) clonando-o via `gh`, do mesmo jeito que o
+`domain-reconcile` busca commits: raso, temporário, sempre removido ao final.
+
+1. **Confirme com o usuário antes de instalar** — mesmo sendo uma ação recomendada, é
+   uma escrita de arquivo fora do escopo da pergunta original. Pergunta única, com
+   resposta recomendada: "o `blueprintfy` não está instalado aqui; posso buscar a
+   skill do catálogo `luishpcosta/ai-lup-skills` (via `gh`) e instalar em `<pasta de
+   skills detectada>/blueprintfy` agora?" Se o usuário indicar que o catálogo usado
+   pela organização é outro fork/mirror, use o `owner/repo` que ele der em vez do
+   default.
+2. **Confirme `gh` autenticado**: `gh auth status`. Se falhar, não trave silenciosamente
+   — explique que a instalação automática depende disso, ofereça `gh auth login`, e
+   como alternativa aponte o caminho manual (`lup-skills add blueprintfy`, se o usuário
+   tiver o CLI, ou clonar o catálogo à mão e copiar `skills/blueprintfy`).
+3. **Rode o instalador** a partir da raiz do repositório-alvo:
+
+   ```
+   scripts/install-blueprintfy.sh <owner/repo-do-catalogo> <pasta-de-skills-detectada>
+   ```
+
+   (o caminho do script é relativo à pasta onde o próprio `codefy` está instalado, ex.:
+   `.claude/skills/codefy/scripts/install-blueprintfy.sh`). O script clona o catálogo
+   raso e temporário, copia só `skills/blueprintfy` para `<pasta-de-skills>/blueprintfy`
+   e remove o clone — nunca deixa nada para trás além da skill instalada. Se o destino
+   já existir, ele para e avisa em vez de sobrescrever.
+4. **Valide**: confirme que `<pasta-de-skills>/blueprintfy/SKILL.md` existe depois do
+   script rodar, e reporte ao usuário o que foi instalado e de onde. Só então retome o
+   Passo 1 (bootstrap) ou o relay (ver "Relay contínuo" abaixo).
+
+Não tente reproduzir o comportamento do `blueprintfy` de memória em nenhuma hipótese —
+nem enquanto a instalação não termina, nem se o usuário recusar a instalação
+automática. Sem o `blueprintfy` de verdade instalado, Codefy não segue adiante.
 
 ## Passo 1 — Leia como o repo já organiza planejamento, antes de perguntar
 
@@ -92,9 +122,12 @@ como o `blueprintfy` já pede. A diferença é só a qualidade da hipótese que 
 oferece antes de cada uma:
 
 - Se o Passo 1 encontrou documentos de negócio/specs/PRDs, chegue na pergunta sobre
-  documentos de negócio já com o caminho em mãos ("achei `specs/` com specs, PRDs e
-  ADRs — é isso que você quer dizer com documentos de negócio, ou tem outra coisa?") em
-  vez de perguntar às cegas.
+  documentos de negócio (a primeira do checklist) já com o caminho em mãos ("achei
+  `specs/` com specs e PRDs — é isso que você quer dizer com documentos de negócio, ou
+  tem outra coisa?") em vez de perguntar às cegas. Não misture ADRs nessa mesma
+  pergunta — elas são o assunto da pergunta seguinte do checklist, tratada no bullet
+  abaixo; o `blueprintfy` pergunta uma coisa de cada vez, e Codefy segue a mesma
+  separação ao preparar a hipótese de cada uma.
 - Se encontrou ADRs com uma convenção própria (pasta e formato diferentes do padrão
   default do catálogo), leve isso para a pergunta sobre ADRs e proponha manter a
   convenção existente — é a própria regra do `blueprintfy` ("respeite a convenção
@@ -141,3 +174,7 @@ de domínio nesse repositório, bootstrap ou não.
 - `references/sinais-de-convencao.md` — onde procurar sinais de convenção de
   planejamento existente (pastas, idioma, formato de ID, arquivos-âncora) e como
   transformar isso numa hipótese concreta para as perguntas do `blueprintfy`.
+- `scripts/install-blueprintfy.sh` — clona o catálogo central (`ai-lup-skills`) via
+  `gh` de forma rasa e temporária e copia `skills/blueprintfy` para a pasta de skills
+  do agente em uso, sem depender do CLI `lup-skills` estar instalado localmente. Usado
+  no Passo 0 quando o `blueprintfy` não está presente no repositório-alvo.
