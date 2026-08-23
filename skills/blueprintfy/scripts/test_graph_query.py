@@ -350,5 +350,123 @@ class CliTest(unittest.TestCase):
         self.assertEqual(rc, 0)
 
 
+# --------------------------------------------------------------------------- #
+# Eixo de componente (context-repo)
+# --------------------------------------------------------------------------- #
+
+class ComponenteFixture(unittest.TestCase):
+    """Repo que correlaciona domínio com código: contextos aninhados + componentes."""
+
+    def setUp(self):
+        self.tmp = tempfile.mkdtemp()
+        _write(
+            os.path.join(self.tmp, "CONTEXT-MAP.md"),
+            "---\nproduct: Loja\ncomponent_docs: docs/componentes\n---\n"
+            "# Context Map\n\n## Contextos\n"
+            "- [Vendas](./docs/dominio/vendas/CONTEXT.md) — guarda-chuva\n"
+            "- [Checkout](./docs/dominio/checkout/CONTEXT.md) — subdomínio de Vendas\n\n"
+            "## Componentes técnicos\n"
+            "- [api](./docs/componentes/api.md) — backend\n"
+            "- [web](./docs/componentes/web.md) — front\n",
+        )
+        _write(
+            os.path.join(self.tmp, "docs/dominio/vendas/CONTEXT.md"),
+            "---\ncontexto: Vendas\nrealizado_por:\n  - componente: web\n---\n# Vendas\n",
+        )
+        _write(
+            os.path.join(self.tmp, "docs/dominio/checkout/CONTEXT.md"),
+            "---\ncontexto: Checkout\ndominio_pai: Vendas\n"
+            "realizado_por:\n  - componente: api\n    caminho: src/checkout\n"
+            "  - componente: api\n    caminho: src/pagamento\n---\n# Checkout\n",
+        )
+        _write(
+            os.path.join(self.tmp, "docs/componentes/api.md"),
+            "---\ncomponente: api\ntitulo: Backend\nremote: https://x/api.git\n"
+            "local: ../api\nref: v1\ncommit: aaaaaaaaaaaa\nultimo_visto: bbbbbbbbbbbb\n"
+            "---\n# api\n",
+        )
+        _write(
+            os.path.join(self.tmp, "docs/componentes/web.md"),
+            "---\ncomponente: web\ntitulo: Front\nremote: https://x/web.git\n"
+            "commit: cccccccccccc\nultimo_visto: cccccccccccc\n---\n# web\n",
+        )
+        self.g = gq.build_graph(os.path.join(self.tmp, "CONTEXT-MAP.md"))
+
+    def test_doc_de_componente_vira_no(self):
+        self.assertIn("componente:api", self.g.nodes)
+        self.assertEqual(self.g.nodes["componente:api"]["titulo"], "Backend")
+
+    def test_realizado_por_carrega_o_caminho_na_aresta(self):
+        arestas = [(k, t, e) for k, t, e in self.g.out["contexto:Checkout"]
+                   if k == "realizado_por"]
+        self.assertEqual(
+            sorted(arestas),
+            [("realizado_por", "componente:api", "src/checkout"),
+             ("realizado_por", "componente:api", "src/pagamento")],
+        )
+
+    def test_dominio_pai_vira_aresta(self):
+        self.assertIn(("dominio_pai", "contexto:Vendas", None),
+                      self.g.out["contexto:Checkout"])
+
+    def test_realiza_lista_caminhos_e_pin(self):
+        saida = gq.cmd_realiza(self.g, "contexto:Checkout")
+        self.assertIn("src/checkout", saida)
+        self.assertIn("src/pagamento", saida)
+        self.assertIn("aaaaaaaaaaaa", saida)
+
+    def test_realiza_avisa_quando_o_componente_esta_descasado(self):
+        saida = gq.cmd_realiza(self.g, "contexto:Checkout")
+        self.assertIn("DESCASADO", saida)
+
+    def test_realiza_no_pai_desce_para_os_subcontextos(self):
+        saida = gq.cmd_realiza(self.g, "contexto:Vendas")
+        self.assertIn("Checkout", saida)      # subcontexto incluído
+        self.assertIn("src/checkout", saida)  # código do filho alcançado
+        self.assertIn("web", saida)           # e o do próprio pai
+
+    def test_realiza_sem_realizado_por_diz_que_nao_chega_ao_codigo(self):
+        tmp = tempfile.mkdtemp()
+        _write(os.path.join(tmp, "CONTEXT-MAP.md"),
+               "# M\n\n## Contextos\n- [Solto](./c/CONTEXT.md) — x\n")
+        _write(os.path.join(tmp, "c/CONTEXT.md"), "---\ncontexto: Solto\n---\n# Solto\n")
+        g = gq.build_graph(os.path.join(tmp, "CONTEXT-MAP.md"))
+        self.assertIn("Nenhum componente declarado", gq.cmd_realiza(g, "contexto:Solto"))
+
+    def test_cli_aceita_prefixo_componente(self):
+        self.assertEqual(gq.normalize_node_arg("componente:api"), "componente:api")
+
+
+class InerciaTest(unittest.TestCase):
+    """Sem o dado, o eixo de componente não existe — é o que mantém pm-create-pb
+    e pm-create-prd com comportamento idêntico em repos que não o usam."""
+
+    def setUp(self):
+        self.tmp = tempfile.mkdtemp()
+        _write(os.path.join(self.tmp, "CONTEXT-MAP.md"),
+               "# M\n\n## Contextos\n"
+               "- [A](./a/CONTEXT.md) — a\n- [B](./b/CONTEXT.md) — b\n")
+        _write(os.path.join(self.tmp, "a/CONTEXT.md"),
+               "---\ncontexto: A\ndepende_de: [B]\n---\n# A\n")
+        _write(os.path.join(self.tmp, "b/CONTEXT.md"),
+               "---\ncontexto: B\ndepende_de: []\n---\n# B\n")
+        self.g = gq.build_graph(os.path.join(self.tmp, "CONTEXT-MAP.md"))
+
+    def test_nenhum_no_de_componente_nasce(self):
+        self.assertEqual([n for n in self.g.nodes if n.startswith("componente:")], [])
+
+    def test_nenhuma_aresta_nova_nasce(self):
+        tipos = {k for edges in self.g.out.values() for k, _t, _e in edges}
+        self.assertNotIn("realizado_por", tipos)
+        self.assertNotIn("dominio_pai", tipos)
+
+    def test_impacto_so_ve_as_arestas_de_sempre(self):
+        saida = gq.cmd_impacto(self.g, "contexto:A", 4)
+        self.assertIn("depende_de", saida)
+        self.assertNotIn("realizado_por", saida)
+        self.assertNotIn("componente", saida)
+
+
 if __name__ == "__main__":
+
     unittest.main()
