@@ -62,4 +62,7 @@ ser lido inteiro com qualidade.
 
 ## Planejamento (to-be)
 
-<!-- Product Briefs e PRDs em refinamento (`docs/refinamento/`), quando existirem. -->
+<!-- Product Briefs, PRDs e ADRs em discovery vivem em `docs/discovery/<assunto>/`, um
+     diretório por assunto (não por contexto — um assunto que vale a pena refinar
+     quase sempre atravessa mais de um contexto; a qual pertence cada documento é
+     o front matter, não o caminho). Referencie cada um aqui quando existir. -->
