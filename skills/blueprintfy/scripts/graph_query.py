@@ -7,8 +7,9 @@ partir do front matter dos documentos alcançáveis pelo `CONTEXT-MAP.md` da rai
 consumir — o agente delega a travessia a esta ferramenta em vez de reler todas as
 ADRs à mão.
 
-Nós:   `contexto:<Nome>`, `adr:<ID>`, `pb:<ID>`, `prd:<ID>`, `contrato:<Nome>`
-Arestas: depende_de, supera, afeta, compartilha_contrato
+Nós:   `contexto:<Nome>`, `adr:<ID>`, `pb:<ID>`, `prd:<ID>`, `contrato:<Nome>`,
+       `componente:<nome>`
+Arestas: depende_de, supera, afeta, compartilha_contrato, dominio_pai, realizado_por
 
 Uso:
     graph_query.py impacto <no> [--saltos N] [--map CAMINHO]
@@ -19,9 +20,25 @@ Uso:
         Verifica se a aresta proposta existe na topologia declarada (query "viola").
     graph_query.py ciclos [--map CAMINHO]
         Detecta ciclos em `depende_de` entre contextos.
+    graph_query.py realiza <contexto> [--map CAMINHO]
+        Qual código realiza um contexto: componentes, caminhos e revisões.
 
-`<no>` aceita `contexto:Ordering`, `adr:ADR-...`, `pb:PB-...`, `prd:PRD-...`, ou o
-nome curto — IDs `ADR-`/`PB-`/`PRD-` têm o tipo inferido; o resto assume contexto.
+`<no>` aceita `contexto:Ordering`, `adr:ADR-...`, `pb:PB-...`, `prd:PRD-...`,
+`componente:core`, ou o nome curto — IDs `ADR-`/`PB-`/`PRD-` têm o tipo inferido; o
+resto assume contexto.
+
+## O eixo de componente
+
+`componente:` e as arestas `realizado_por`/`dominio_pai` existem para repositórios que
+correlacionam domínio com código (um "context-repo"). Eles nascem **da presença do
+dado**, não de uma flag: sem doc de componente e sem `realizado_por` no front matter,
+nenhum nó ou aresta desses é construído, e toda consulta devolve exatamente o que
+devolvia antes. É isso que mantém `pm-create-pb`/`pm-create-prd` com comportamento
+idêntico nos repositórios que não usam esse eixo.
+
+Este módulo não toca a rede: `realiza` devolve o que está **declarado** (caminho,
+remote, pin). Resolver isso para um diretório no disco é trabalho do `repo_cache.py`.
+
 Stdlib-only: nenhuma dependência externa. Sem Python, o agente navega à mão (fallback).
 """
 import argparse
@@ -283,6 +300,8 @@ def _node_id(fm):
         return _id_type(raw) + ":" + raw
     if fm.get("contexto"):
         return "contexto:" + _as_scalar(fm["contexto"])
+    if fm.get("componente"):
+        return "componente:" + _as_scalar(fm["componente"])
     return None
 
 
@@ -315,6 +334,12 @@ def build_graph(map_path):
         for c in _as_list(fm.get("compartilha_contrato_com")):
             if isinstance(c, dict) and c.get("contexto"):
                 g.add_edge(nid, "compartilha_contrato", "contexto:" + c["contexto"], c.get("contrato"))
+        # Eixo de componente — só existe onde o dado existe (ver docstring do módulo).
+        if fm.get("dominio_pai"):
+            g.add_edge(nid, "dominio_pai", "contexto:" + _as_scalar(fm["dominio_pai"]))
+        for r in _as_list(fm.get("realizado_por")):
+            if isinstance(r, dict) and r.get("componente"):
+                g.add_edge(nid, "realizado_por", "componente:" + r["componente"], r.get("caminho"))
     derive_supersession(g)
     return g
 
@@ -450,6 +475,82 @@ def cmd_valida_aresta(g, de, para, contrato=None):
     )
 
 
+def cmd_realiza(g, contexto):
+    """Qual código realiza um contexto — incluindo o dos seus subcontextos.
+
+    Desce por `dominio_pai` (os filhos apontam para o pai) porque um domínio é
+    realizado por aquilo que realiza os seus subdomínios: perguntar pelo pai tem que
+    alcançar o código dos filhos, senão a hierarquia não serve para nada.
+    """
+    if contexto not in g.nodes:
+        return f"Contexto '{_short(contexto)}' não encontrado no grafo."
+
+    # BFS descendo a hierarquia de contextos.
+    ordem, vistos = [], {contexto}
+    fila = [contexto]
+    while fila:
+        atual = fila.pop(0)
+        ordem.append(atual)
+        for kind, filho, _e in g.inb.get(atual, []):
+            if kind == "dominio_pai" and filho not in vistos:
+                vistos.add(filho)
+                fila.append(filho)
+
+    # componente -> {caminhos, contextos que o citam}
+    por_componente = {}
+    for ctx in ordem:
+        for kind, tgt, caminho in g.out.get(ctx, []):
+            if kind != "realizado_por":
+                continue
+            info = por_componente.setdefault(tgt, {"caminhos": [], "vindo_de": []})
+            if caminho and caminho not in info["caminhos"]:
+                info["caminhos"].append(caminho)
+            if ctx not in info["vindo_de"]:
+                info["vindo_de"].append(ctx)
+
+    lines = [f"Código que realiza {_short(contexto)}:", ""]
+    if len(ordem) > 1:
+        lines.append("Subcontextos incluídos: "
+                     + ", ".join(_short(c) for c in ordem[1:]) + "\n")
+    if not por_componente:
+        lines.append("- Nenhum componente declarado em `realizado_por`.")
+        lines.append("")
+        lines.append("Sem esse elo, nenhuma pergunta sobre este contexto chega ao código.")
+        return "\n".join(lines)
+
+    for comp, info in por_componente.items():
+        fm = g.nodes.get(comp, {}).get("fm", {})
+        lines.append(f"## {_label(g, comp)}")
+        if len(ordem) > 1:
+            lines.append(f"via: {', '.join(_short(c) for c in info['vindo_de'])}")
+        if info["caminhos"]:
+            lines.append("caminhos:")
+            for c in info["caminhos"]:
+                lines.append(f"  - {c}")
+        else:
+            lines.append("caminhos: (nenhum — vale o repositório inteiro)")
+
+        if not fm:
+            lines.append("⚠ sem doc de componente alcançável pelo mapa — "
+                         "remote/pin desconhecidos.")
+            lines.append("")
+            continue
+
+        for chave in ("local", "remote", "ref"):
+            if fm.get(chave):
+                lines.append(f"{chave}: {fm[chave]}")
+        pin, visto = fm.get("commit"), fm.get("ultimo_visto")
+        lines.append(f"pin: {str(pin)[:12] if pin else '(nenhum)'}")
+        if visto and pin and visto != pin:
+            lines.append(f"⚠ DESCASADO: último visto em {str(visto)[:12]} — o código "
+                         "andou desde o commit que a documentação descreve.")
+        lines.append("")
+
+    lines.append("Resolver isto para um diretório no disco é trabalho do repo_cache.py "
+                 "(este comando não toca a rede).")
+    return "\n".join(lines)
+
+
 def cmd_ciclos(g):
     adj = defaultdict(list)
     for src, edges in g.out.items():
@@ -487,7 +588,7 @@ def cmd_ciclos(g):
 # --------------------------------------------------------------------------- #
 
 def normalize_node_arg(s):
-    if ":" in s and s.split(":", 1)[0] in ("contexto", "adr", "pb", "prd", "contrato"):
+    if ":" in s and s.split(":", 1)[0] in ("contexto", "adr", "pb", "prd", "contrato", "componente"):
         return s
     if s.startswith(("ADR-", "PB-", "PRD-")):
         return _id_type(s) + ":" + s
@@ -517,6 +618,9 @@ def main(argv=None):
 
     sub.add_parser("ciclos")
 
+    p_real = sub.add_parser("realiza")
+    p_real.add_argument("contexto")
+
     args = parser.parse_args(argv)
     map_path = _default_map(args.map)
     if not os.path.isfile(map_path):
@@ -531,6 +635,8 @@ def main(argv=None):
         body = cmd_vigentes(g, normalize_node_arg(args.contexto))
     elif args.cmd == "valida-aresta":
         body = cmd_valida_aresta(g, normalize_node_arg(args.de), normalize_node_arg(args.para), args.contrato)
+    elif args.cmd == "realiza":
+        body = cmd_realiza(g, normalize_node_arg(args.contexto))
     else:  # ciclos
         body = cmd_ciclos(g)
     print(_with_banner(g, body))
