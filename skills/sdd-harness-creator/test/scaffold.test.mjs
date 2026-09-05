@@ -55,7 +55,7 @@ test('reverse-engineer adds a documented feature with phase/origin in the markdo
       "import { it } from 'node:test';\nit('logs the user in', () => {});\n"
     );
 
-    const { stdout } = await run('node', [path.join(SCRIPTS, 'reverse-engineer.mjs'), '--target', dir]);
+    const { stdout } = await run('node', [path.join(SCRIPTS, 'reverse-engineer.mjs'), '--target', dir, '--all']);
     assert.match(stdout, /002-auth/);
 
     const spec = await readFile(path.join(dir, 'specs', '002-auth', 'spec.md'), 'utf8');
@@ -75,7 +75,7 @@ test('reverse-engineer --dry-run writes nothing', async () => {
     await mkdir(path.join(dir, 'src', 'billing'), { recursive: true });
     await writeFile(path.join(dir, 'src', 'billing', 'charge.ts'), 'export function charge() {}\n');
 
-    const { stdout } = await run('node', [path.join(SCRIPTS, 'reverse-engineer.mjs'), '--target', dir, '--dry-run']);
+    const { stdout } = await run('node', [path.join(SCRIPTS, 'reverse-engineer.mjs'), '--target', dir, '--all', '--dry-run']);
     assert.match(stdout, /Dry run/);
 
     await assert.rejects(readFile(path.join(dir, 'specs', '003-billing', 'spec.md')));
@@ -88,7 +88,7 @@ test('reverse-engineer skips a module that already has a specs/ entry', async ()
     await mkdir(path.join(dir, 'src', 'example'), { recursive: true });
     await writeFile(path.join(dir, 'src', 'example', 'thing.ts'), 'export function thing() {}\n');
 
-    const { stdout } = await run('node', [path.join(SCRIPTS, 'reverse-engineer.mjs'), '--target', dir]);
+    const { stdout } = await run('node', [path.join(SCRIPTS, 'reverse-engineer.mjs'), '--target', dir, '--all']);
     assert.doesNotMatch(stdout, /001-example/);
   });
 });
@@ -157,5 +157,140 @@ test('migrate-from-registry does not overwrite an existing backup', async () => 
     assert.equal(JSON.parse(original).features.length, 0);
     const backup = await readFile(path.join(dir, 'spec-registry.json.bak'), 'utf8');
     assert.equal(backup, 'previous backup');
+  });
+});
+
+// --- brownfield: recon + one-module-at-a-time approval -----------------------
+
+async function brownfieldFixture(dir) {
+  await mkdir(path.join(dir, 'src', 'auth'), { recursive: true });
+  await mkdir(path.join(dir, 'src', 'util'), { recursive: true });
+  await mkdir(path.join(dir, 'test'), { recursive: true });
+  await writeFile(
+    path.join(dir, 'src', 'auth', 'login.js'),
+    '// Authentication for the public API.\nexport function login(user, password) {\n  const BODY_ONLY_MARKER = 1;\n  return BODY_ONLY_MARKER;\n}\n'
+  );
+  await writeFile(path.join(dir, 'src', 'util', 'format.js'), 'export function format(value) { return String(value); }\n');
+  await writeFile(
+    path.join(dir, 'test', 'login.test.js'),
+    "import { test } from 'node:test';\ntest('rejects an expired token', () => {});\n"
+  );
+}
+
+test('recon writes a bounded digest and never emits a function body', async () => {
+  await withTempProject(async (dir) => {
+    await brownfieldFixture(dir);
+    const { stdout } = await run('node', [path.join(SCRIPTS, 'recon.mjs'), '--target', dir, '--budget', '3']);
+    assert.match(stdout, /MODULE auth/);
+    assert.match(stdout, /rejects an expired token/);
+    assert.ok(!stdout.includes('BODY_ONLY_MARKER'), 'a function body reached the digest');
+    assert.match(stdout.trim().split('\n').at(-1), /^NEXT:/);
+
+    const recon = JSON.parse(await readFile(path.join(dir, '.sdd', 'recon.json'), 'utf8'));
+    assert.equal(recon.budget, 3);
+    for (const module of recon.modules) {
+      const lines = Object.values(module.evidence).reduce((total, items) => total + items.length, 0);
+      assert.ok(lines <= 3, `${module.name} exceeded the evidence budget`);
+    }
+  });
+});
+
+test('--list ranks a tested module above an untested one', async () => {
+  await withTempProject(async (dir) => {
+    await brownfieldFixture(dir);
+    const { stdout } = await run('node', [path.join(SCRIPTS, 'reverse-engineer.mjs'), '--target', dir, '--list']);
+    assert.ok(stdout.indexOf('auth') < stdout.indexOf('util'), 'the tested module should be offered first');
+    assert.match(stdout, /\[pending\] auth/);
+    assert.match(stdout.trim().split('\n').at(-1), /^NEXT:/);
+  });
+});
+
+test('--propose writes nothing outside .sdd/', async () => {
+  await withTempProject(async (dir) => {
+    await brownfieldFixture(dir);
+    const { stdout } = await run('node', [
+      path.join(SCRIPTS, 'reverse-engineer.mjs'), '--target', dir, '--module', 'auth', '--propose'
+    ]);
+    assert.match(stdout, /NOTHING WAS WRITTEN/);
+    assert.match(stdout, /approve\s+->/);
+    assert.match(stdout, /more evidence\s+->/);
+    await assert.rejects(readFile(path.join(dir, 'specs', '001-auth', 'spec.md')));
+  });
+});
+
+test('--write stamps the confirmation and records the user correction', async () => {
+  await withTempProject(async (dir) => {
+    await brownfieldFixture(dir);
+    await run('node', [
+      path.join(SCRIPTS, 'reverse-engineer.mjs'), '--target', dir,
+      '--module', 'auth', '--write', '--notes', 'Tokens expire after one hour, not one day'
+    ]);
+    const spec = await readFile(path.join(dir, 'specs', '001-auth', 'spec.md'), 'utf8');
+    assert.match(spec, /\*\*Confirmed-by:\*\* user/);
+    assert.match(spec, /\*\*Confirmed-on:\*\* \d{4}-\d{2}-\d{2}/);
+    assert.match(spec, /## Corrections from review/);
+    assert.match(spec, /Tokens expire after one hour, not one day/);
+    assert.ok(!spec.includes('BODY_ONLY_MARKER'));
+
+    const recon = JSON.parse(await readFile(path.join(dir, '.sdd', 'recon.json'), 'utf8'));
+    assert.equal(recon.approvals.auth.status, 'corrected');
+
+    // Writing an untouched module must not disturb the one already written.
+    await assert.rejects(readFile(path.join(dir, 'specs', '002-util', 'spec.md')));
+  });
+});
+
+test('--more-evidence escalates one rung and keeps the budget', async () => {
+  await withTempProject(async (dir) => {
+    await brownfieldFixture(dir);
+    const before = await run('node', [
+      path.join(SCRIPTS, 'reverse-engineer.mjs'), '--target', dir, '--module', 'auth', '--propose'
+    ]);
+    assert.doesNotMatch(before.stdout, /declared intent \(head doc comments\)/);
+
+    const after = await run('node', [
+      path.join(SCRIPTS, 'reverse-engineer.mjs'), '--target', dir, '--module', 'auth', '--more-evidence'
+    ]);
+    assert.match(after.stdout, /Escalated auth to rung 2/);
+    assert.match(after.stdout, /declared intent \(head doc comments\)/);
+    assert.match(after.stdout, /Authentication for the public API/);
+    assert.ok(!after.stdout.includes('BODY_ONLY_MARKER'));
+
+    const recon = JSON.parse(await readFile(path.join(dir, '.sdd', 'recon.json'), 'utf8'));
+    assert.equal(recon.rungs.auth, 2);
+  });
+});
+
+test('a skipped module is not offered again', async () => {
+  await withTempProject(async (dir) => {
+    await brownfieldFixture(dir);
+    await run('node', [path.join(SCRIPTS, 'reverse-engineer.mjs'), '--target', dir, '--module', 'util', '--skip']);
+    const { stdout } = await run('node', [path.join(SCRIPTS, 'reverse-engineer.mjs'), '--target', dir, '--list']);
+    assert.match(stdout, /\[skipped\] util/);
+    assert.match(stdout, /pending: 1/);
+    assert.match(stdout.trim().split('\n').at(-1), /--module auth --propose/);
+  });
+});
+
+test('--write refuses a module that already has a specs/ entry', async () => {
+  await withTempProject(async (dir) => {
+    await brownfieldFixture(dir);
+    await run('node', [path.join(SCRIPTS, 'reverse-engineer.mjs'), '--target', dir, '--module', 'auth', '--write']);
+    await assert.rejects(
+      run('node', [path.join(SCRIPTS, 'reverse-engineer.mjs'), '--target', dir, '--module', 'auth', '--write']),
+      (error) => {
+        assert.match(error.stderr, /REJECTED: specs\/ already has an entry/);
+        return true;
+      }
+    );
+  });
+});
+
+test('reverse-engineer with no mode flag lists instead of writing', async () => {
+  await withTempProject(async (dir) => {
+    await brownfieldFixture(dir);
+    const { stdout } = await run('node', [path.join(SCRIPTS, 'reverse-engineer.mjs'), '--target', dir]);
+    assert.match(stdout, /Reverse-engineering candidates/);
+    await assert.rejects(readFile(path.join(dir, 'specs', '001-auth', 'spec.md')));
   });
 });
