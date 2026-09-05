@@ -125,7 +125,6 @@ export function buildReverseFeature({
   const allExports = evidence?.exports?.length ? evidence.exports : Object.values(exportsByFile).flat();
   const names = testNames.length > 0 ? testNames : (evidence?.testNames ?? []);
   const signatures = evidence?.signatures ?? [];
-  const taskId = 'T-1';
 
   let criteria;
   let acSource;
@@ -167,7 +166,7 @@ export function buildReverseFeature({
     criteria,
     specMarkdown: renderSpec(module, id, criteria, allExports, acSource, date, meta),
     planMarkdown: renderPlan(module, id, date, meta),
-    tasksMarkdown: renderTasks(module, id, criteria, taskId, date)
+    tasksMarkdown: renderTasks(module, id, criteria, date)
   };
 }
 
@@ -262,8 +261,8 @@ ${renderList(module.sourceFiles)}
 `;
 }
 
-function renderTasks(module, id, criteria, taskId, date) {
-  const rows = criteria.map((ac) => `| ${taskId} | Existing implementation (reverse-engineered) | ${ac.id} | done | code present |`).join('\n');
+function renderTasks(module, id, criteria, date) {
+  const rows = criteria.map((ac, i) => `| T-${i + 1} | Existing implementation (reverse-engineered) | ${ac.id} | done | code present |`).join('\n');
   return `# Tasks (reverse-engineered): ${module.name}
 
 **Feature ID:** ${id}
@@ -271,8 +270,9 @@ function renderTasks(module, id, criteria, taskId, date) {
 **Plan:** ./plan.md
 **Last updated:** ${date}
 
-> The implementation already exists, so ${taskId} is marked done. Add new tasks here
-> for forward work, each linked to an acceptance criterion in spec.md.
+> The implementation already exists, so each task below is marked done — one per
+> acceptance criterion. Add new tasks here for forward work, each linked to an
+> acceptance criterion in spec.md.
 
 | ID | Task | Satisfies | Status | Evidence |
 |---|---|---|---|---|

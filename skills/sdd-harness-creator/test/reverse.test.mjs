@@ -78,6 +78,13 @@ test('buildReverseFeature derives ACs from tests and stays traceability-clean', 
   assert.equal(feature.id, '002-auth');
   assert.equal(feature.acSource, 'tests');
   assert.equal(feature.criteria.length, 2);
+
+  // Regression: every AC needs its own task ID, not all pinned to T-1 —
+  // otherwise the Tasks gate's "every task references an AC" check is
+  // vacuously true for the wrong reason (three rows, one fake ID).
+  const taskIds = [...feature.tasksMarkdown.matchAll(/\| (T-\d+) \|/g)].map((m) => m[1]);
+  assert.deepEqual(taskIds, ['T-1', 'T-2']);
+  assert.equal(new Set(taskIds).size, taskIds.length, 'task IDs must be unique');
 });
 
 test('buildReverseFeature falls back to exports, then to module-level AC', () => {
