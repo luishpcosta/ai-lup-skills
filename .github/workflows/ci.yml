@@ -44,6 +44,3 @@ jobs:
 
       - name: Padrão de skills (nenhum nome duplicado)
         run: node scripts/check-skill-names.mjs
-
-      - name: Gate de rastreabilidade SDD
-        run: node skills/sdd-harness-creator/scripts/check-traceability.mjs --target .

@@ -54,14 +54,24 @@ export async function writeText(filePath, contents) {
   await writeFile(filePath, contents, 'utf8');
 }
 
-export async function copyTemplate(templateName, targetPath, replacements = {}, { force = false } = {}) {
+/**
+ * Render a template into targetPath.
+ *
+ * `replacements` wins; anything still unfilled falls back to `defaults` (the
+ * guidance text the templates used to carry inline), so a plain scaffold with
+ * no interview answers keeps working. Any placeholder left after both passes
+ * is replaced with `<fill in>` — a rendered artifact never ships `{{...}}`.
+ */
+export async function copyTemplate(templateName, targetPath, replacements = {}, { force = false, defaults = {} } = {}) {
   if (!force && await exists(targetPath)) {
     return { path: targetPath, status: 'skipped', reason: 'exists' };
   }
   let contents = await readText(path.join(TEMPLATE_DIR, templateName));
-  for (const [key, value] of Object.entries(replacements)) {
+  for (const [key, value] of Object.entries({ ...defaults, ...replacements })) {
+    if (value === undefined || value === null) continue;
     contents = contents.split(`{{${key}}}`).join(value);
   }
+  contents = contents.replace(/\{\{[A-Z0-9_]+\}\}/g, '<fill in>');
   await writeText(targetPath, contents);
   if (templateName.endsWith('.sh')) {
     await chmod(targetPath, 0o755);

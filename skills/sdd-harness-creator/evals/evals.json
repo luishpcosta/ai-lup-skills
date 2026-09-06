@@ -14,6 +14,18 @@
       "should_trigger": true
     },
     {
+      "id": "trigger-greenfield-interview",
+      "kind": "trigger",
+      "prompt": "This repo is empty. Interview me until the spec and the constitution are actually filled in, don't hand me a template full of placeholders.",
+      "should_trigger": true
+    },
+    {
+      "id": "trigger-brownfield-approval",
+      "kind": "trigger",
+      "prompt": "We have a large existing codebase. Reconstruct specs from it without reading every file, and let me approve each one before you write it.",
+      "should_trigger": true
+    },
+    {
       "id": "trigger-migrate",
       "kind": "trigger",
       "prompt": "We have an old spec-registry.json from this harness lying around — help us migrate off it.",
@@ -41,7 +53,31 @@
       "id": "behavior-clean-scaffold",
       "kind": "behavior",
       "prompt": "A freshly scaffolded harness should have no separate state file — each feature's phase lives in its own markdown.",
-      "expect": "create-sdd-harness.mjs writes no spec-registry.json; spec.md/plan.md/tasks.md each carry a **Phase:** line"
+      "expect": "create-sdd-harness.mjs writes no spec-registry.json; spec.md/plan.md/tasks.md each carry a **Phase:** line and no unfilled {{PLACEHOLDER}}"
+    },
+    {
+      "id": "behavior-one-question-per-turn",
+      "kind": "behavior",
+      "prompt": "During a greenfield interview the agent should ask one question per turn and never invent the next one.",
+      "expect": "each turn runs interview.mjs next, reads the ASK: line verbatim, and records the answer via interview.mjs answer before asking anything else"
+    },
+    {
+      "id": "behavior-vague-answer-rejected",
+      "kind": "behavior",
+      "prompt": "The user answers 'it should just work well' to the quality-bar question.",
+      "expect": "interview.mjs answer exits non-zero with REJECTED and RE-ASK; the agent shows the reason to the user and asks again instead of recording it"
+    },
+    {
+      "id": "behavior-brownfield-no-source-reading",
+      "kind": "behavior",
+      "prompt": "Adopting SDD on an existing repo, the agent must not read the source files itself.",
+      "expect": "recon.mjs produces the digest and the agent works from it; no Read of target source files, and no function body appears in any spec"
+    },
+    {
+      "id": "behavior-propose-before-write",
+      "kind": "behavior",
+      "prompt": "A reconstructed spec must not land in specs/ before the user has seen it.",
+      "expect": "--propose writes nothing outside .sdd/; only --write creates specs/NNN-slug/, stamped with Confirmed-by/Confirmed-on"
     },
     {
       "id": "behavior-deprecated-scripts-noop",

@@ -2,8 +2,8 @@
 
 ## Current State
 
-**Last Updated:** 2026-06-14
-**Active Feature:** 003-cli-update — CLI — Comando update
+**Last Updated:** 2026-09-05
+**Active Feature:** 004-sdd-elicitation — sdd-harness-creator: elicitação guiada e reverse aprovado
 **Active SDD Phase:** Verify (concluída)
 **Pending Gate:** nenhum — feature verificada
 
@@ -11,12 +11,23 @@
 
 ### What's Done
 
-- [x] Spec/plan/tasks de `003-cli-update` criados e passando nos gates.
-- [x] `cli/src/commands/update.js` implementado e registrado em `cli/index.js`.
-- [x] `cli/test/update.test.js` cobrindo AC-1..AC-5 (cobertura 100% em `src/**`).
-- [x] `spec-registry.json` atualizado (feature 003, ACs `verified`).
-- [x] README documentando `lup-skills update`.
-- [x] `./init.sh` verde: 36 testes, 36 ACs, sem lacunas de rastreabilidade.
+- [x] Spec/plan/tasks de `004-sdd-elicitation` criados e passando nos gates (13 ACs, 22 tasks).
+- [x] **Greenfield**: `scripts/interview.mjs` + `scripts/lib/questions.mjs` — entrevista conduzida
+      por script, estado em `.sdd/interview.json`, validação mecânica das respostas, reescrita da
+      resposta pela LLM com aceite do usuário, `render` preenchendo os templates.
+- [x] **Brownfield**: `scripts/recon.mjs` + `scripts/lib/{recon,recon-scan}.mjs` — escada de
+      evidência (nomes de teste → superfície pública → assinaturas + doc-comments → commits),
+      orçamento por módulo, ranking; corpo de função nunca entra no digest.
+- [x] `reverse-engineer.mjs` interativo: `--list`, `--propose` (não grava), `--write` com
+      `Confirmed-by`/`Confirmed-on` e `Corrections from review`, `--skip`, `--more-evidence`;
+      lote preservado atrás de `--all`.
+- [x] `scripts/lib/scaffold.mjs` compartilhado; `copyTemplate` com defaults; templates
+      parametrizados (`{{PLACEHOLDER}}`) sem regressão no scaffold puro.
+- [x] `SKILL.md` com branch explícito Mode 1/Mode 2 + `references/{elicitation,brownfield-recon}.md`;
+      README, `spec-driven-pattern.md` (vocabulário canônico de fases) e `evals.json` atualizados.
+- [x] Testes: `test/{questions,interview,recon}.test.mjs` novos + `scaffold.test.mjs` estendido —
+      63/63 passando; cobertura do `cli` intacta em 100%.
+- [x] `./init.sh` verde.
 
 ### What's In Progress
 
@@ -25,6 +36,8 @@
 ### What's Next
 
 1. Commit (Conventional Commits) com o repo limpo.
+2. Considerar rodar a própria skill revisada contra este repo (`interview.mjs --artifact constitution`)
+   para validar o fluxo em uso real.
 
 ## Open Clarifications
 
@@ -36,41 +49,35 @@
 
 ## Decisions Made
 
-- **Remoção do mecanismo de `platform-memory.yaml` em `prd-to-adr`/`issue-to-adr`**
-  (2026-06-21): as duas skills passam a ser stateless — cada PRD/demanda é
-  tratado isoladamente, sem carregar/escrever nenhum arquivo de memória entre
-  execuções. Removidas as fases que dependiam dele (carregar memória,
-  classificação ✅/🔶/🆕, diagrama Mermaid de existente-vs-novo, atualização da
-  memória) e os arquivos `references/memoria-schema.md` e
-  `references/grafo-visual.md` em ambas as skills. A busca de consumidores de
-  um tópico/evento (Fase 3.5, mensageria) passa a ser perguntada diretamente
-  ao usuário em vez de cruzada com a memória.
-  - Numeração de ADR trocada de sequencial (lida de `ultimo_adr` na memória)
-    para `ADR-<data:YYYYMMDD>-<hora:HHMM>-<sufixo aleatório de 4 caracteres>`
-    (ex.: `ADR-20260620-1542-3f0a`), gerada via Bash (`date` + `$RANDOM`), com
-    checagem de colisão contra `adr/ADR-<id>-*.md` antes de usar — não depende
-    de nenhum arquivo nem de perguntar ao usuário.
-  - Context: pedido do usuário para simplificar as skills, removendo a
-    persistência entre execuções.
-  - Constitution impact: nenhum (mudança não tocou `cli/`, `constitution.md`
-    nem `spec-registry.json` — essas skills nunca foram código executável
-    nem features rastreadas no harness SDD deste repo).
-- **`update` oferece todos os agentes e instala onde faltar**: por agente selecionado,
-  substitui a versão antiga ou instala do zero se ainda não existir. Mensagem distingue
-  "atualizada" de "instalada".
-  - Context: pedido "também faça a instalação caso não exista se o agente selecionado".
+- **Entrevista conduzida por script, não por prosa** (2026-09-05): o banco de perguntas e os
+  validadores vivem em `scripts/lib/questions.mjs`; o estado em `.sdd/interview.json`. A LLM só
+  lê a pergunta, reescreve a resposta na forma canônica e pede o aceite do usuário.
+  - Context: a skill precisa funcionar em modelos mais leves que o Opus, que perdem o estado da
+    entrevista e decidem sozinhos que já perguntaram o bastante.
   - Constitution impact: nenhum.
-- **Troca incondicional (sem comparar versões)**: sempre apaga e recopia, removendo
-  arquivos obsoletos da versão antiga.
+- **Regra das duas rodadas**: após duas rejeições, a terceira resposta é registrada como
+  `[NEEDS CLARIFICATION]` em vez de travar a sessão — o gate de Clarify a captura depois.
+- **Brownfield sem ler o código**: a economia é estrutural, não instrução de prompt — os
+  extratores só emitem declarações, doc-comments, nomes de teste e assuntos de commit, e
+  `applyBudget` limita quantas linhas chegam ao digest.
+- **Aprovação módulo a módulo**: `--propose` não grava nada; `--write` carimba
+  `Confirmed-by`/`Confirmed-on`. Uma spec reconstruída nunca é confundida com uma revisada.
+- **Default do `reverse-engineer.mjs` passou a ser `--list`** (não-destrutivo). O lote antigo
+  continua disponível em `--all`; os testes existentes foram ajustados para essa flag.
+- **Passo de CI "Gate de rastreabilidade SDD" removido** (2026-09-05): chamava
+  `check-traceability.mjs`, um shim que sempre sai 0 — gate de fachada, e exatamente a referência
+  obsoleta que `references/upgrading.md` manda remover.
+  - Constitution impact: nenhum (a rastreabilidade sempre foi manual, via Coverage Check).
 
 ## Evidence of Completion
 
-- [x] AC-1..AC-5 verificados: `cli/test/update.test.js` (npm test) — 36/36 passam.
-- [x] Cobertura: `npm run test:coverage` — 100% statements/branches/functions/lines em `src/**`.
-- [x] Traceability gate limpo: `./init.sh` — "OK — no traceability gaps."
+- [x] AC-1..AC-13 verificados: `node --test skills/sdd-harness-creator/test/*.test.mjs` — 63/63.
+- [x] Cobertura do CLI: `npm run test:coverage` — 100% statements/branches/functions/lines em `src/**`.
+- [x] `./init.sh` verde (testes do `cli` + testes da skill).
+- [x] Coverage Check de `specs/004-sdd-elicitation/tasks.md`: cobertura bidirecional AC↔task confirmada.
 
 ## Notes for Next Session
 
-Padrão de comando estável: validação de origem (`findSkill`) + detecção de instalação
-(`AGENT_TARGETS` + `getSkillTargetPath`) + seleção via `prompt` injetável. Próximas
-features do CLI podem reaproveitar essa estrutura.
+Padrão reaproveitável para qualquer script novo da skill: estado em `.sdd/`, toda saída de sucesso
+terminando em `NEXT:` ou `DONE`, validação mecânica separada em lib pura e testada por unidade,
+e o efeito destrutivo sempre atrás de uma flag explícita.

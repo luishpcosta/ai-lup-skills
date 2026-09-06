@@ -102,20 +102,35 @@ export function extractTestNames(content) {
 }
 
 /**
- * Build a reverse-engineered feature: registry entry + reconstructed markdown.
- * AC derivation prefers existing tests; falls back to exported symbols.
+ * Build a reverse-engineered feature: reconstructed spec/plan/tasks markdown.
+ *
+ * AC derivation prefers existing tests (they state intent), then declaration
+ * lines, then exported symbols. `confirmedBy`/`corrections` record that a human
+ * reviewed the draft before it was written.
  */
-export function buildReverseFeature({ module, index, exportsByFile = {}, testNames = [], maxCriteria = 15, date = todayISO() }) {
+export function buildReverseFeature({
+  module,
+  index,
+  exportsByFile = {},
+  testNames = [],
+  evidence = null,
+  maxCriteria = 15,
+  date = todayISO(),
+  confirmedBy = '',
+  confirmedOn = '',
+  corrections = []
+}) {
   const slug = slugify(module.name);
   const id = `${String(index).padStart(3, '0')}-${slug}`;
-  const allExports = Object.values(exportsByFile).flat();
-  const taskId = 'T-1';
+  const allExports = evidence?.exports?.length ? evidence.exports : Object.values(exportsByFile).flat();
+  const names = testNames.length > 0 ? testNames : (evidence?.testNames ?? []);
+  const signatures = evidence?.signatures ?? [];
 
   let criteria;
   let acSource;
-  if (testNames.length > 0) {
+  if (names.length > 0) {
     acSource = 'tests';
-    criteria = testNames.slice(0, maxCriteria).map((name, i) => ({
+    criteria = names.slice(0, maxCriteria).map((name, i) => ({
       id: `AC-${i + 1}`,
       description: name,
       evidence: module.testFiles[0] ? `existing test: ${module.testFiles[0]}` : ''
@@ -127,6 +142,13 @@ export function buildReverseFeature({ module, index, exportsByFile = {}, testNam
       description: `\`${name}\` behaves as currently implemented`,
       evidence: ''
     }));
+  } else if (signatures.length > 0) {
+    acSource = 'signatures';
+    criteria = signatures.slice(0, maxCriteria).map((signature, i) => ({
+      id: `AC-${i + 1}`,
+      description: `\`${signature}\` behaves as currently implemented`,
+      evidence: ''
+    }));
   } else {
     acSource = 'module';
     criteria = [{
@@ -136,31 +158,57 @@ export function buildReverseFeature({ module, index, exportsByFile = {}, testNam
     }];
   }
 
+  const meta = { confirmedBy, confirmedOn: confirmedOn || (confirmedBy ? date : ''), corrections, evidence };
+
   return {
     id,
     acSource,
     criteria,
-    specMarkdown: renderSpec(module, id, criteria, allExports, acSource, date),
-    planMarkdown: renderPlan(module, id, date),
-    tasksMarkdown: renderTasks(module, id, criteria, taskId, date)
+    specMarkdown: renderSpec(module, id, criteria, allExports, acSource, date, meta),
+    planMarkdown: renderPlan(module, id, date, meta),
+    tasksMarkdown: renderTasks(module, id, criteria, date)
   };
 }
 
 function renderList(items, empty = '_(none detected)_') {
-  if (!items.length) return empty;
+  if (!items || items.length === 0) return empty;
   return items.map((item) => `- ${item}`).join('\n');
 }
 
-function renderSpec(module, id, criteria, allExports, acSource, date) {
+function confirmationLines(meta) {
+  if (!meta.confirmedBy) return '';
+  return `**Confirmed-by:** ${meta.confirmedBy}\n**Confirmed-on:** ${meta.confirmedOn}\n`;
+}
+
+function correctionsSection(meta) {
+  if (!meta.corrections || meta.corrections.length === 0) return '';
+  return `\n## Corrections from review\n\n${renderList(meta.corrections)}\n`;
+}
+
+function evidenceSection(meta) {
+  const evidence = meta.evidence;
+  if (!evidence) return '';
+  const blocks = [];
+  if (evidence.headDocs?.length) blocks.push(`Declared intent (head doc comments):\n${renderList(evidence.headDocs)}`);
+  if (evidence.signatures?.length) blocks.push(`Declarations (signature lines only):\n${renderList(evidence.signatures)}`);
+  if (evidence.gitSubjects?.length) blocks.push(`Commit subjects:\n${renderList(evidence.gitSubjects)}`);
+  return blocks.length ? `\n${blocks.join('\n\n')}\n` : '';
+}
+
+function renderSpec(module, id, criteria, allExports, acSource, date, meta = { corrections: [] }) {
   const acLines = criteria.map((ac) => `- **${ac.id}** — ${ac.description}${ac.evidence ? ` _(${ac.evidence})_` : ''}`).join('\n');
+  const reviewed = meta.confirmedBy
+    ? '> Reviewed and confirmed by a human before being written.'
+    : '> Not yet reviewed by a human — confirm the criteria before advancing this feature.';
   return `# Spec (reverse-engineered): ${module.name}
 
 **Feature ID:** ${id}
 **Phase:** documented
 **Origin:** reverse-engineered from existing code
-**Last updated:** ${date}
+${confirmationLines(meta)}**Last updated:** ${date}
 
 > Reconstructed from the current implementation. Acceptance criteria were derived from ${acSource}.
+${reviewed}
 > Review and correct these against intended behavior, then advance the feature toward \`verified\`/\`done\`.
 
 ## Current Behavior (as observed in code)
@@ -173,11 +221,11 @@ ${renderList(allExports)}
 
 Tests covering this module:
 ${renderList(module.testFiles)}
-
+${evidenceSection(meta)}
 ## Acceptance Criteria (reconstructed)
 
 ${acLines}
-
+${correctionsSection(meta)}
 ## Assumptions / To Confirm
 
 - [ ] Confirm each AC matches *intended* behavior, not just current behavior.
@@ -190,13 +238,13 @@ ${acLines}
 `;
 }
 
-function renderPlan(module, id, date) {
+function renderPlan(module, id, date, meta = { corrections: [] }) {
   return `# Plan (as-built): ${module.name}
 
 **Feature ID:** ${id}
 **Phase:** documented
 **Spec:** ./spec.md
-**Last updated:** ${date}
+${confirmationLines(meta)}**Last updated:** ${date}
 
 > As-built notes reconstructed from existing code. Update before planning *new* work on this module.
 
@@ -213,8 +261,8 @@ ${renderList(module.sourceFiles)}
 `;
 }
 
-function renderTasks(module, id, criteria, taskId, date) {
-  const rows = criteria.map((ac) => `| ${taskId} | Existing implementation (reverse-engineered) | ${ac.id} | done | code present |`).join('\n');
+function renderTasks(module, id, criteria, date) {
+  const rows = criteria.map((ac, i) => `| T-${i + 1} | Existing implementation (reverse-engineered) | ${ac.id} | done | code present |`).join('\n');
   return `# Tasks (reverse-engineered): ${module.name}
 
 **Feature ID:** ${id}
@@ -222,8 +270,9 @@ function renderTasks(module, id, criteria, taskId, date) {
 **Plan:** ./plan.md
 **Last updated:** ${date}
 
-> The implementation already exists, so ${taskId} is marked done. Add new tasks here
-> for forward work, each linked to an acceptance criterion in spec.md.
+> The implementation already exists, so each task below is marked done — one per
+> acceptance criterion. Add new tasks here for forward work, each linked to an
+> acceptance criterion in spec.md.
 
 | ID | Task | Satisfies | Status | Evidence |
 |---|---|---|---|---|

@@ -30,7 +30,8 @@ Advance exactly **one feature at a time** through these phases. Each phase has a
 | **Implement** | code + tests | One task at a time; never start before the Tasks gate passes |
 | **Verify** | evidence in `tasks.md`'s Evidence column and `progress.md` | Every AC has recorded passing evidence |
 
-Update the `**Phase:**` line at the top of the feature's `spec.md`/`plan.md`/`tasks.md` as you advance.
+Update the `**Phase:**` line at the top of the feature's `spec.md`/`plan.md`/`tasks.md` as you advance. Allowed values, in order:
+`draft` → `clarified` → `planned` → `tasked` → `implementing` → `verified` → `done`, plus `documented` for a feature reconstructed from existing code (spec written, intended behavior not yet confirmed). `progress.md` records the *active* phase by its flow name (`Specify | Clarify | Plan | Tasks | Implement | Verify`).
 
 ## Authoring Guidance (per phase)
 

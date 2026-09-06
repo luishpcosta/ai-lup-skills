@@ -12,9 +12,7 @@
 
 | ID | Task | Satisfies | Status | Evidence |
 |---|---|---|---|---|
-| T-1 | <atomic task> | AC-1 | todo | |
-| T-2 | <atomic task> | AC-1, AC-2 | todo | |
-| T-3 | <write test proving AC-2> | AC-2 | todo | |
+{{TASKS_TABLE}}
 
 Status values: `todo` → `doing` → `done`.
 

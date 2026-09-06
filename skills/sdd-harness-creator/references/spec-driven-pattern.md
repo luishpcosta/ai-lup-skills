@@ -25,6 +25,18 @@ Each arrow is a **gate**. You cannot enter the next phase until the current gate
 | Implement | code + tests | One task at a time; AC proven by a test |
 | Verify | evidence | Every AC `verified` with recorded evidence |
 
+## Canonical phase vocabulary
+
+Two different things get called a "phase", and mixing them is how a harness drifts:
+
+- **Artifact state** — the `**Phase:**` line at the top of a `spec.md`/`plan.md`/`tasks.md`. Allowed values, in order:
+  `draft` → `clarified` → `planned` → `tasked` → `implementing` → `verified` → `done`.
+  Plus `documented`, the entry point for a reverse-engineered feature: code exists, spec reconstructed, not yet re-verified against intended behavior.
+- **Active phase** — the step of the flow currently being worked, recorded in `progress.md` as
+  `Specify | Clarify | Plan | Tasks | Implement | Verify`.
+
+Use no other names. A feature whose `spec.md` says `documented` has not passed any gate yet.
+
 ## Single source: markdown
 
 There is no separate machine-readable registry. Each `spec.md`/`plan.md`/`tasks.md` carries its own `**Phase:**` line, and `tasks.md` carries a Status/Evidence column per task plus a Coverage Check section. The same AC IDs appear in `spec.md` and `tasks.md` so the two stay in sync by construction.
@@ -55,11 +67,25 @@ The sibling `harness-creator` uses a feature list and a single "definition of do
 
 ## Brownfield adoption (reverse-engineering)
 
-Most repos already have code. To adopt SDD without rewriting, run `reverse-engineer.mjs`: it scans source modules and reconstructs **retro-specs** so future work builds on documented behavior instead of guesses.
+Most repos already have code. Adopting SDD there is a reconstruction problem with two traps: reading the whole codebase (which does not fit, and mostly yields nothing), and trusting the reconstruction (current behavior includes every bug nobody noticed).
 
-- Acceptance criteria are derived from **existing test names** when present (tests are de-facto specs), else from **exported/public symbols**.
-- Features land with `**Phase:** documented` and `**Origin:** reverse-engineered` in the generated `spec.md` — meaning "code exists, spec reconstructed, pending re-verification." Advance them toward `verified`/`done` by confirming the criteria reflect *intended* behavior and recording evidence.
-- Generated criteria describe *current* behavior. Always review them: current behavior is not necessarily correct behavior. Uncertainties go under "Assumptions / To Confirm" (not as gate-blocking `[NEEDS CLARIFICATION]` markers), so the Coverage Check stays clean while you triage.
+Both are handled structurally rather than by instruction:
+
+- **The script reads, the model does not.** `recon.mjs` climbs an evidence ladder — test names and public surface, then declaration lines and head doc comments, then commit subjects — and emits a bounded digest. Function bodies never enter it. Modules are ranked by evidence strength, because a tested module reconstructs far better than an untested one.
+- **Nothing is written without approval.** `reverse-engineer.mjs --module X --propose` prints the draft and writes nothing; the user approves, corrects, skips, or asks for one more rung of evidence. Written specs carry `**Confirmed-by:**` and `**Confirmed-on:**` alongside `**Origin:** reverse-engineered`, so a draft is never mistaken for a reviewed spec.
+- Acceptance criteria are derived from **existing test names** when present (tests are de-facto specs), else from **exported symbols or declarations**.
+- Uncertainties go under "Assumptions / To Confirm" (not as gate-blocking `[NEEDS CLARIFICATION]` markers), so the Coverage Check stays clean while you triage.
+- The **constitution cannot be reverse-engineered** — principles constrain the code rather than follow from it. Elicit it with `interview.mjs init --artifact constitution`.
+
+Full protocol: [Brownfield Recon](brownfield-recon.md).
+
+## Greenfield adoption (elicitation)
+
+A greenfield harness scaffolded from placeholders is a harness of appearances: the structure is there, the constraints are not, and the agent then invents the requirements it was supposed to be bound by.
+
+So the artifacts are elicited by a scripted interview (`interview.mjs`) that keeps its state on disk and hands out one question at a time. The user answers freely; the model rewrites the answer into the canonical form and the user accepts it; a mechanical validator rejects vague terms, non-commands, criteria missing Given/When/Then, and implementation leaking into the spec. After two rejections the third answer is recorded as `[NEEDS CLARIFICATION]` so the session can end.
+
+Full protocol: [Elicitation](elicitation.md).
 
 ## Authoring lives in the target repo
 
