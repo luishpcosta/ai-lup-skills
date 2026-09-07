@@ -1,0 +1,76 @@
+#!/usr/bin/env bash
+# Entrypoint do hook PostToolUse (Bash/exec) que reage a "git push". Rápido de
+# propósito: só faz o gate (comando é git push? branch feature/*? automação
+# habilitada?) e dispara o poller pesado em background. Nunca bloqueia a
+# sessão do agente. Compatível com Claude Code e Devin CLI (ver README.md >
+# "Compatibilidade com outras plataformas agênticas") — nenhuma das duas
+# lógicas de gate depende de sintaxe específica de uma plataforma.
+set -uo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/lib.sh"
+
+# O hook recebe o payload do evento via stdin (JSON) — formato compartilhado
+# por Claude Code e Devin CLI (hook_event_name, tool_name, tool_input.command,
+# cwd/session_id). branch/sha/remoto são resolvidos via git, não via parsing
+# do JSON — mais robusto a variações de sintaxe do comando interceptado.
+payload="$(cat)"
+# jq -> python3 -> regex (jq não vem por padrão no Git for Windows/MSYS2).
+# Ver _read_payload_field em lib.sh.
+command_text="$(read_tool_command "$payload")"
+cwd="$(read_payload_cwd "$payload")"
+cwd="${cwd:-$PWD}"
+
+# Defesa extra: alguns filtros de hook de plataforma só permitem filtrar por
+# NOME da ferramenta (ex.: matcher "exec" no Devin CLI), não pelo conteúdo do
+# comando (o "if": "Bash(git push *)" é um recurso específico do Claude Code).
+# Sem essa checagem aqui, um hook registrado sem filtro de conteúdo dispararia
+# este script a cada comando de shell, não só em pushes.
+if [ -n "$command_text" ] && ! is_git_push_command "$command_text"; then
+  exit 0
+fi
+
+branch="$(git -C "$cwd" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")"
+
+if [ -z "$branch" ] || ! is_feature_branch "$branch"; then
+  # Não é push numa branch feature/* — não reage de forma alguma (nem log,
+  # nem cria diretórios).
+  exit 0
+fi
+
+feature_name="${branch#feature/}"
+# Sanitiza para uso em nome de arquivo (branches feature/foo/bar têm "/" no meio).
+feature_name_safe="${feature_name//\//-}"
+log_dir="$cwd/.claude/logs"
+mkdir -p "$log_dir" 2>/dev/null || true
+discreet_log="$log_dir/pr-review-${feature_name_safe}.log"
+
+# "repo" (owner/repo) ainda não foi resolvido de forma autoritativa aqui —
+# isso só acontece via "gh repo view" dentro de poll-and-review.sh. Fica em
+# branco nos dois eventos deste script (não vale adicionar mais uma fonte de
+# parsing do remote só pra rotular esses dois eventos iniciais).
+trace_log "" "$branch" "push_detected" "cwd=$cwd"
+
+if ! is_automation_enabled; then
+  # Desligado por padrão: log discreto em arquivo, nada visível na sessão.
+  printf '[%s] push detectado em %s — automação desligada (AGENT_PR_REVIEW_ENABLED != true)\n' \
+    "$(date -Iseconds)" "$branch" >> "$discreet_log" 2>/dev/null || true
+  trace_log "" "$branch" "automation_disabled"
+  exit 0
+fi
+
+# Dispara o poller pesado em background e devolve o controle imediatamente.
+# setsid dá sessão/grupo de processo próprios ao poller, então ele sobrevive
+# mesmo que a plataforma mate o grupo do hook ao encerrá-lo (plataforma com
+# hook síncrono, como o Devin CLI). Sem setsid disponível, nohup + disown já
+# cobre o caso comum.
+if command -v setsid >/dev/null 2>&1; then
+  setsid "$SCRIPT_DIR/poll-and-review.sh" "$cwd" "$branch" "$feature_name" "$discreet_log" \
+    >> "$discreet_log" 2>&1 < /dev/null &
+else
+  nohup "$SCRIPT_DIR/poll-and-review.sh" "$cwd" "$branch" "$feature_name" "$discreet_log" \
+    >> "$discreet_log" 2>&1 < /dev/null &
+fi
+disown
+
+exit 0

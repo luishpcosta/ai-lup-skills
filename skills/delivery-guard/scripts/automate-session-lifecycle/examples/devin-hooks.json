@@ -1,0 +1,22 @@
+{
+  "PostCompaction": [
+    {
+      "hooks": [
+        {
+          "type": "command",
+          "command": "{{HOOKS_DIR}}/hooks/scripts/compact-checkpoint.sh"
+        }
+      ]
+    }
+  ],
+  "SessionStart": [
+    {
+      "hooks": [
+        {
+          "type": "command",
+          "command": "{{HOOKS_DIR}}/hooks/scripts/mcp-warmup-wait.sh"
+        }
+      ]
+    }
+  ]
+}

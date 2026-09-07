@@ -1,0 +1,14 @@
+{
+  "PostToolUse": [
+    {
+      "matcher": "exec",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "{{HOOKS_DIR}}/hooks/post-push-review.sh",
+          "timeout": 15
+        }
+      ]
+    }
+  ]
+}
