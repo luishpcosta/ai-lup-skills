@@ -1,0 +1,5 @@
+# Runtime gerado ao rodar hooks/tests/run-tests.sh (ou os próprios hooks)
+# localmente contra os scripts vendorizados em scripts/<tool>/ — nunca deve
+# ser commitado nesta skill.
+scripts/*/data/
+scripts/*/hooks/**/__pycache__/

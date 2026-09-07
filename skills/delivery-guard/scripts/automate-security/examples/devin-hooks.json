@@ -1,0 +1,17 @@
+{
+  "PreToolUse": [
+    {
+      "matcher": "exec",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "{{HOOKS_DIR}}/hooks/guards/credential-exfil-guard.sh"
+        },
+        {
+          "type": "command",
+          "command": "{{HOOKS_DIR}}/hooks/guards/db-connect-guard.sh"
+        }
+      ]
+    }
+  ]
+}

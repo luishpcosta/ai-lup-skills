@@ -1,0 +1,24 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash|PowerShell",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "{{HOOKS_DIR}}/hooks/guards/credential-exfil-guard.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash|PowerShell",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "{{HOOKS_DIR}}/hooks/guards/db-connect-guard.sh"
+          }
+        ]
+      }
+    ]
+  }
+}
