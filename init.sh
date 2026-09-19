@@ -6,8 +6,12 @@ echo "=== SDD Harness Initialization ==="
 echo "=== (cd cli && npm install && npm test) ==="
 (cd cli && npm install && npm test)
 
-echo "=== node --test skills/sdd-harness-creator/test/*.test.mjs ==="
-node --test skills/sdd-harness-creator/test/*.test.mjs
+for dir in skills/*/test; do
+  if [ -d "$dir" ]; then
+    echo "=== node --test $dir/*.test.mjs ==="
+    node --test "$dir"/*.test.mjs
+  fi
+done
 
 echo "=== Verification Complete ==="
 echo ""
