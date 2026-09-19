@@ -1,47 +1,57 @@
 # soar-case-builder
 
-Entrevista (grilling) o usuário sobre um caso real da squad, no estilo direto do
-Mat Pocock, para montar um case no método **SOAR** (Situation, Obstacle, Action,
-Result) pronto para um dossiê de avaliação/promoção.
+Conduz uma entrevista questionadora sobre um caso real da squad e gera um case no
+método **SOAR** (Situation, Obstacle, Action, Result) para um dossiê de
+avaliação/promoção.
 
-A validação é mecânica: um banco de validadores em `scripts/lib/validators.mjs`
-recusa resposta vaga, sem métrica, sem dono em 1ª pessoa ou sem data verificável,
-com o motivo — não depende do modelo "lembrar" de ser rigoroso no meio da conversa.
+```
+1. Entrevista (a LLM pergunta)  →  2. Gera o arquivo  →  3. Valida estrutura (script)
+                                                              ↓
+                            4. Revisão: fortes/fracos  →  nova rodada? (usuário decide)
+```
+
+## A divisão de responsabilidade
+
+É o ponto central do desenho, e vale explicar porque a primeira versão desta skill
+errou exatamente aqui:
+
+| Camada | Quem decide | Por quê |
+|---|---|---|
+| Qualidade do que o usuário respondeu | **a LLM** | texto livre em português não cabe em regex — uma lista de frases vagas tem recall perto de zero, e o falso positivo ensina a pessoa a escrever pro validador em vez de pra verdade |
+| Estrutura do arquivo gerado | **o script** | seção faltando, placeholder esquecido, carimbo contradizendo o corpo: decidível, e um falso positivo custa só a LLM corrigir o próprio output |
+| Se o case é bom | **revisão independente** | lida como quem nunca ouviu a entrevista, que é a situação de quem vai ler o dossiê |
+
+Medição que motivou isso: validando texto livre com banco de palavras-chave,
+4 de 6 respostas legítimas eram rejeitadas e 7 de 8 respostas vagas passavam.
+"Reduzi em 200% os problemas" passava; "Coube a mim desenhar o plano de rollback"
+era rejeitado.
 
 ## Uso
 
-Do zero:
+A entrevista e a revisão são conduzidas pela LLM seguindo o `SKILL.md`. O único
+script valida a estrutura do arquivo gerado:
 
 ```bash
-node skills/soar-case-builder/scripts/case.mjs init   --case "<título>" [--target DIR]
-node skills/soar-case-builder/scripts/case.mjs next   --case <slug>
-node skills/soar-case-builder/scripts/case.mjs answer --case <slug> --id Q-ID --raw "..." --restated "..."
-node skills/soar-case-builder/scripts/case.mjs status --case <slug>
-node skills/soar-case-builder/scripts/case.mjs render --case <slug>
+node skills/soar-case-builder/scripts/validate-case.mjs cases/<slug>.md [--json]
 ```
 
-A partir de notas cruas (Slack, ticket, rascunho):
+Ele checa: título e campos de cabeçalho, as cinco seções obrigatórias preenchidas,
+nenhum placeholder/TODO esquecido, `Result` com número ou `[sem métrica: ...]`
+explícito, `Evidência` com referência ou `sem evidência disponível`, e o carimbo
+`**Verificação:**` batendo com as ressalvas do corpo. Sai ≠0 listando o que corrigir.
 
-```bash
-node skills/soar-case-builder/scripts/extract.mjs --file notas.txt
-```
+Ele **não** avalia se o conteúdo é bom — isso é a etapa 4.
 
-Classifica cada linha por campo SOAR e roda o mesmo grilling da entrevista — toda
-candidata sai `OK` ou `DESCARTADO <motivo>`, nada é filtrado em silêncio.
+## Arquivos
 
-## O que gera
-
-- `.soar/<slug>.json` — estado da entrevista (retomável entre sessões)
-- `cases/<slug>.md` — o case final, com cabeçalho `Verificação:` indicando se alguma
-  resposta ficou marcada `[NÃO VERIFICADO]` após esgotar as tentativas
+- `SKILL.md` — o fluxo das quatro etapas e as regras de turno da entrevista
+- `references/entrevista.md` — os 9 campos: o que perguntar, o que aceita/rejeita, exemplos
+- `references/revisao.md` — rubrica de revisão: fortes, fracos, e o laço de nova rodada
+- `templates/case.md` — o template do artefato
+- `scripts/validate-case.mjs` + `scripts/lib/case-schema.mjs` — validação estrutural
 
 ## Tests
 
 ```bash
 node --test skills/soar-case-builder/test/*.test.mjs
 ```
-
-## Método
-
-Ver [references/grilling-method.md](references/grilling-method.md) para a rubrica
-completa (por quê cada campo existe, exemplos bons/ruins, a regra das duas rodadas).

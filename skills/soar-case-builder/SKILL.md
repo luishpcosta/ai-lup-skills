@@ -1,15 +1,16 @@
 ---
 name: soar-case-builder
 description: >-
-  Entrevista (grilling) o usuário sobre um caso real que aconteceu na squad —
-  no estilo direto e sem paninho quente do Mat Pocock — para montar um
-  arquivo de case no método SOAR (Situation, Obstacle, Action, Result) pronto
-  para entrar num dossiê de avaliação/promoção. Rejeita mecanicamente
-  respostas vagas ("melhorei a performance"), sem métrica, sem dono claro
-  ("o time decidiu" em vez de "eu decidi") ou sem data verificável, pedindo de
-  novo até o case ficar concreto. Também aceita anotações cruas (Slack,
-  ticket, notas soltas) e extrai candidatos por campo, descartando trechos
-  dúbios ou mal formatados com o motivo explícito em vez de aceitá-los calado.
+  Conduz uma entrevista questionadora (grilling) sobre um caso real que
+  aconteceu na squad e gera um arquivo de case no método SOAR (Situation,
+  Obstacle, Action, Result) pronto para um dossiê de avaliação/promoção.
+  Você faz as perguntas duras — cobra especificidade, contribuição individual
+  em vez de "o time fez", métrica de verdade e evidência verificável — e
+  reescreve cada resposta na forma canônica para o usuário confirmar. Depois
+  de gerar o arquivo, um script valida a estrutura e uma revisão independente
+  aponta pontos fortes e fracos, oferecendo uma nova rodada em cima dos
+  fracos. Também aceita anotações cruas (Slack, ticket, notas soltas) como
+  ponto de partida, separando o que é fato citável do que é memória.
   Use quando o usuário quiser "montar um case", "documentar uma conquista pro
   dossiê", "escrever isso em SOAR/STAR", ou colar notas bagunçadas pra virar
   um case revisado.
@@ -20,112 +21,126 @@ metadata:
 
 # SOAR Case Builder
 
-Monta um case no método **SOAR** (Situation, Obstacle, Action, Result) a partir de um
-caso real da squad, via entrevista mecânica: o script guarda o estado e diz a próxima
-pergunta, o modelo só lê em voz alta, reescreve a resposta do usuário na forma que a
-rubrica pede, e pede confirmação — igual ao `sdd-harness-creator`, mas para um único
-artefato de 9 campos em vez de quatro artefatos inteiros.
+Monta um case no método **SOAR** a partir de um caso real da squad. O fluxo tem quatro
+etapas e você conduz todas:
 
-**O grilling é mecânico, não uma questão de o modelo "ser rigoroso".** Uma resposta
-vaga, sem métrica, sem dono em 1ª pessoa ou sem data verificável é recusada por um
-validador em `scripts/lib/validators.mjs`, com o motivo — não depende do modelo lembrar
-disso no meio da conversa.
+```
+1. Entrevista (você pergunta)  →  2. Gera o arquivo  →  3. Valida estrutura (script)
+                                                            ↓
+                          4. Revisão: fortes/fracos  →  nova rodada? (usuário decide)
+```
 
-## Regras de turno
+**A divisão de responsabilidade importa.** Julgamento sobre o texto do usuário é seu —
+ele chega em linguagem natural e nenhum regex dá conta da variedade. O script só confere
+a **forma do arquivo que você escreveu** (seção faltando, placeholder esquecido, carimbo
+contradizendo o corpo), porque isso é decidível e um erro ali custa só você corrigir.
 
-1. **Uma pergunta por turno.** Nunca invente a próxima — rode o comando que o
-   `NEXT:` do último comando imprimiu.
-2. **Leia a pergunta (`PERGUNTE:`) ao usuário, literalmente.** Traduza só se ele
-   escrever em outro idioma; não parafraseie pra ficar "mais fácil" — a rubrica foi
-   calibrada junto com o texto exato.
-3. **Reescreva a resposta dele na forma que `ACEITA SE` pede, mostre as duas, peça
-   confirmação explícita** antes de registrar:
+## Etapa 1 — Entrevista
+
+Leia [references/entrevista.md](references/entrevista.md): tem os 9 campos na ordem, o que
+cada um aceita e rejeita, e exemplos bons e ruins.
+
+Regras do turno:
+
+1. **Uma pergunta por vez.** Não despeje a lista inteira — a segunda resposta em diante
+   vira monossílabo.
+2. **Nunca invente.** Métrica, data, evidência e nome de sistema saem da boca do usuário.
+   Se ele não sabe, o campo tem saída honesta (`[sem métrica: <motivo>]`,
+   `sem evidência disponível`) — use a saída, não arredonde a realidade.
+3. **Reescreva e confirme.** Traduza a resposta para a forma que o campo pede, mostre as
+   duas e peça confirmação explícita:
    ```
    Você disse:    "ajudei a resolver o problema de timeout"
    Vou registrar: Eu identifiquei que o lock otimista causava o timeout e implementei
                   um feature flag pra trocar a estratégia sob demanda.
    Confere, ou quer corrigir?
    ```
-4. Registre com `case.mjs answer`. Se vier `REJECTED:`, mostre o motivo ao usuário e
-   pergunte de novo — não amoleça a pergunta pra "passar". Depois de 2 recusas, a 3ª
-   resposta é aceita mesmo assim, marcada `[NÃO VERIFICADO]` — isso não é falha sua,
-   é o jeito de a entrevista nunca travar.
-5. Repita até `DONE`, então rode `render`.
+   A reescrita **não pode adicionar fato que ele não disse**. Se falta uma peça que a
+   forma exige, isso é pergunta, não lacuna pra preencher.
+4. **Quando cobrar de novo, traga uma contraproposta.** "Isso está vago" joga o trabalho
+   de volta pro usuário e ensina ele a te contornar. Pergunte o que falta:
+   > "'Melhorou a performance' não sobrevive a um 'melhorou quanto?' na banca. Você
+   > lembra de algum número — tempo de resposta, taxa de erro, fila? Se não tiver número
+   > nenhum, a gente registra isso explicitamente, o que é melhor que um número inventado."
+5. **Duas rodadas por campo, no máximo.** Se depois de duas tentativas o campo continua
+   sem o que precisa, registre o que tem com a ressalva
+   `_[NÃO VERIFICADO: <o que falta>]_` e siga. Entrevista que trava é pior que case com
+   lacuna declarada — e a ressalva é o que impede o arquivo de mentir.
 
-## Passo 0 — Tem anotações cruas, ou começa do zero?
+### Partindo de anotações cruas
 
-**Do zero** → vá direto para "Iniciar um case".
+Se o usuário colar notas (Slack, ticket, rascunho): **leia você mesmo** — é um punhado de
+linhas, cabe no contexto. Extraia os candidatos por campo e mostre a separação antes de
+seguir:
 
-**Tem notas soltas** (Slack, ticket, rascunho) → rode a extração primeiro:
+- **Fato citável** — está escrito nas notas. Cite o trecho.
+- **Memória** — o usuário vai afirmar agora, sem estar nas notas. Vale igual, mas não
+  confunda um com o outro na hora de pedir evidência.
+- **Descartado** — vago ou contraditório. Mostre o que você descartou **e por quê**;
+  deixe ele resgatar se você entendeu errado.
 
-```bash
-node skills/soar-case-builder/scripts/extract.mjs --file notas.txt
-```
+Depois disso, entreviste normalmente: a extração adianta campos, não substitui a
+entrevista (data e evidência quase nunca estão nas notas).
 
-Ela quebra o texto em candidatas, classifica cada uma por campo SOAR e roda o mesmo
-grilling mecânico da entrevista — cada linha sai `OK` ou `DESCARTADO <motivo>`. Nada
-some silenciosamente: mostre a lista completa ao usuário, incluindo as descartadas, e
-deixe ele decidir aproveitar (reescrevendo pra passar no grilling), corrigir, ou
-descartar de verdade. **Não pule esse passo de confirmação** — o extrator é heurístico
-(palavras-chave), não confiável o bastante pra decidir sozinho o que entra no case.
+## Etapa 2 — Gerar o arquivo
 
-Use as candidatas aprovadas como ponto de partida das respostas na entrevista — ainda
-assim, rode a entrevista normalmente; ela é o que garante que todo campo (inclusive os
-que a extração não achou, como data e evidência) fique preenchido e validado.
+Preencha [templates/case.md](templates/case.md) e grave em `cases/<slug>.md`
+(slug = título em minúsculas, sem acento, separado por hífen).
 
-## Iniciar um case
+O campo `**Verificação:**` do cabeçalho aceita exatamente um de:
 
-```bash
-node skills/soar-case-builder/scripts/case.mjs init --case "<título curto>" [--target DIR]
-```
-
-`--target` é o repositório/pasta onde o dossiê vive (default: diretório atual). O
-estado da entrevista fica em `.soar/<slug>.json` dentro dele; o arquivo final sai em
-`cases/<slug>.md`.
-
-Depois, o loop de 5 passos acima: `next` → pergunte → reescreva e confirme → `answer`
-→ repita até `DONE` → `render`.
-
-```bash
-node skills/soar-case-builder/scripts/case.mjs next    --case <slug>
-node skills/soar-case-builder/scripts/case.mjs answer  --case <slug> --id Q-ID --raw "<palavras do usuário>" --restated "<sua reescrita>"
-node skills/soar-case-builder/scripts/case.mjs status  --case <slug>
-node skills/soar-case-builder/scripts/case.mjs render  --case <slug>
-```
-
-## Os 9 campos, em ordem
-
-| Campo | O que grilla |
+| Valor | Quando |
 |---|---|
-| Título | Precisa distinguir este case dos outros — rejeita categoria genérica |
-| Squad/Papel | Squad + seu papel na época |
-| Quando | Mês/trimestre + ano — rejeita "recentemente", "há um tempo" |
-| Situation | Contexto concreto: sistema, quem era afetado, o que estava em jogo |
-| Obstacle | A restrição real (técnica/prazo/dependência) — rejeita repetir a situação ou motivo genérico ("era complicado") |
-| Action | **O que você fez, não o time** — exige verbo em 1ª pessoa; "nós decidimos" sem sua parte específica é recusado |
-| Result | Número real, ou `[sem métrica: <justificativa honesta>]` quando genuinamente não existe |
-| Evidência | Link/ticket/PR verificável, ou a frase exata `sem evidência disponível` |
-| Aprendizado | Opcional — o que faria diferente (responda "pular" pra omitir) |
+| `verificado` | todo campo fechou com o que o SOAR pede |
+| `parcialmente verificado` | algum campo ficou com ressalva `[NÃO VERIFICADO: ...]` |
+| `não verificado` | o case inteiro é memória, sem nenhuma evidência |
 
-Rubrica completa (por quê cada campo existe, exemplos bons/ruins): [Método de Grilling](references/grilling-method.md).
+Os dois marcadores honestos de ausência — `[sem métrica: <motivo>]` e
+`_[NÃO VERIFICADO: <o que falta>]_` — valem igual para o validador. Use o que descrever
+melhor o caso; o que ele não aceita é omitir a ausência em silêncio.
+
+## Etapa 3 — Validar a estrutura
+
+```bash
+node skills/soar-case-builder/scripts/validate-case.mjs cases/<slug>.md
+```
+
+Sai ≠0 listando o que corrigir. **Corrija e rode de novo até passar** — é o seu próprio
+arquivo, não um veredito sobre o usuário. Se o script reclamar de algo que você acha
+legítimo, é bug do script: diga isso em vez de deformar o case pra passar.
+
+## Etapa 4 — Revisão e nova rodada
+
+Siga [references/revisao.md](references/revisao.md). Em resumo:
+
+1. **Releia o arquivo como se não tivesse participado da entrevista.** Quem vai ler o
+   dossiê não estava lá. Se um trecho só faz sentido porque você lembra do que foi dito,
+   isso é uma fraqueza do case, não um detalhe.
+2. Aponte **pontos fortes** (o que vai sustentar uma pergunta da banca) e **pontos
+   fracos** (o que desmonta na primeira repergunta), cada fraco com a pergunta específica
+   que o resolveria.
+3. **Ofereça a nova rodada** e deixe o usuário escolher:
+   > "Achei 3 pontos fracos. Quer que eu faça mais uma rodada de perguntas em cima
+   > deles, ou prefere fechar o case assim?"
+4. Se ele topar, entreviste **só os pontos fracos**, regenere o arquivo, e rode Etapa 3 e
+   4 de novo. Se ele recusar, feche — o case é dele.
+
+Se der pra rodar a revisão num subagente com contexto limpo, prefira: quem escreveu tende
+a não enxergar o que ficou implícito.
 
 ## Design Rules
 
-- **A pergunta e a rubrica são o script, não a conversa.** O modelo não inventa
-  critério próprio de "isso já está bom" — quem decide é `validateAnswer`.
-- **Nunca invente métrica, data ou evidência que o usuário não deu.** Quando não
-  existir, o campo tem uma saída honesta (`[sem métrica: ...]`, `sem evidência
-  disponível`) — use-a, não arredonde a realidade pra passar no grilling.
-- **"O time fez" nunca vira "eu fiz" silenciosamente.** Se a resposta não distingue a
-  contribuição pessoal, pergunte de novo — é o ponto central de um case de dossiê.
-- **Nada é descartado sem mostrar o motivo.** Tanto na entrevista (`REJECTED:`) quanto
-  na extração de notas cruas (`DESCARTADO ... motivo:`).
-- **Um case por arquivo.** `render` recusa sobrescrever sem `--force` — cada case vira
-  uma entrada permanente e revisável do dossiê.
+- **Script valida forma; você julga conteúdo; a revisão julga o conjunto.** Não mova
+  julgamento semântico pra dentro do script — texto livre em português não cabe em regex,
+  e o falso positivo ensina o usuário a escrever pro validador em vez de pra verdade.
+- **"O time fez" nunca vira "eu fiz" em silêncio.** Se a resposta não separa a
+  contribuição individual, pergunte — é o ponto central de um case de dossiê.
+- **Nada é descartado sem mostrar o motivo**, nem na extração nem na revisão.
+- **O carimbo não mente.** `verificado` com ressalva no corpo é erro (o script pega).
+- **Um case por arquivo**, revisável isoladamente.
 
 ## Quando não usar
 
-- Para avaliar/pontuar um dossiê já pronto (isso é revisão, não elicitação) — leia e
-  comente diretamente, sem rodar a entrevista.
-- Para gerar um case fictício ou "de exemplo" sem uma situação real por trás — a skill
-  existe pra extrair fatos verificáveis, não pra redigir prosa de currículo.
+- Avaliar um dossiê já pronto: é revisão, não elicitação — leia e comente direto.
+- Redigir case fictício ou "de exemplo": a skill existe pra extrair fato verificável, não
+  pra escrever prosa de currículo.

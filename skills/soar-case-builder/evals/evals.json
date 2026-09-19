@@ -16,7 +16,7 @@
     {
       "id": "trigger-messy-notes",
       "kind": "trigger",
-      "prompt": "Colei aqui minhas anotações bagunçadas do Slack sobre um projeto — me ajuda a extrair um case decente disso, removendo o que for vago.",
+      "prompt": "Colei aqui minhas anotações bagunçadas do Slack sobre um projeto — me ajuda a extrair um case decente disso.",
       "should_trigger": true
     },
     {
@@ -26,34 +26,52 @@
       "should_trigger": false
     },
     {
-      "id": "negative-star-job-application",
+      "id": "negative-review-existing-dossier",
       "kind": "trigger",
-      "prompt": "Preciso de ajuda pra preencher um formulário de vaga qualquer, sem falar de um case específico.",
+      "prompt": "Meu dossiê já está pronto, só me diz o que você acha dele.",
       "should_trigger": false
     },
     {
-      "id": "behavior-rejects-vague-action",
+      "id": "behavior-one-question-per-turn",
       "kind": "behavior",
-      "prompt": "O usuário responde 'nós resolvemos o problema como time' na pergunta de Action.",
-      "expect": "case.mjs answer sai com REJECTED citando que a resposta descreve o time, não a pessoa, e pede a contribuição individual em 1ª pessoa"
+      "prompt": "O usuário pede pra montar um case do zero.",
+      "expect": "as perguntas saem uma por turno, na ordem de references/entrevista.md; a lista inteira nunca é despejada de uma vez"
     },
     {
-      "id": "behavior-rejects-vague-result",
+      "id": "behavior-restate-and-confirm",
       "kind": "behavior",
-      "prompt": "O usuário responde 'melhorou bastante' na pergunta de Result.",
-      "expect": "REJECTED por falta de número; aceita um número real ou '[sem métrica: <justificativa>]' explícito"
+      "prompt": "O usuário responde 'ajudei a resolver o problema de timeout'.",
+      "expect": "a resposta é reescrita na forma canônica, as duas versões são mostradas, e a confirmação é pedida antes de registrar — sem adicionar nenhum fato que o usuário não disse"
     },
     {
-      "id": "behavior-extract-never-drops-silently",
+      "id": "behavior-counterproposal-not-bare-rejection",
       "kind": "behavior",
-      "prompt": "Notas cruas contêm uma linha vaga como 'ajudei o time' misturada com linhas concretas.",
-      "expect": "extract.mjs classifica e grilla toda linha; a vaga aparece marcada DESCARTADO com motivo, nunca omitida da saída"
+      "prompt": "O usuário responde 'melhorou bastante' no campo Result.",
+      "expect": "a repergunta explica o que falta e oferece caminho (qual número existiria, ou a saída [sem métrica: ...]) em vez de só dizer que está vago"
     },
     {
-      "id": "behavior-two-round-rule",
+      "id": "behavior-no-invented-facts",
       "kind": "behavior",
-      "prompt": "O usuário erra a mesma pergunta duas vezes seguidas.",
-      "expect": "a terceira resposta é aceita mesmo assim, marcada [NÃO VERIFICADO], e o case renderizado mostra 'parcialmente verificado' no cabeçalho"
+      "prompt": "O usuário não lembra a métrica exata nem tem link de evidência.",
+      "expect": "o case sai com [sem métrica: <motivo>] e 'sem evidência disponível'; nenhum número ou link é inventado, e o carimbo Verificação reflete isso"
+    },
+    {
+      "id": "behavior-validate-then-fix",
+      "kind": "behavior",
+      "prompt": "O arquivo gerado ficou com uma seção vazia.",
+      "expect": "validate-case.mjs sai ≠0, a LLM corrige o próprio arquivo e roda de novo até passar — em vez de entregar o case quebrado"
+    },
+    {
+      "id": "behavior-review-standalone",
+      "kind": "behavior",
+      "prompt": "O case está estruturalmente válido e vai para a revisão.",
+      "expect": "a revisão julga o arquivo como quem não ouviu a entrevista, lista pontos fortes e fracos com a pergunta que resolve cada fraco, e oferece nova rodada em vez de decidir sozinha"
+    },
+    {
+      "id": "behavior-user-declines-round",
+      "kind": "behavior",
+      "prompt": "Depois da revisão, o usuário diz que quer fechar o case como está.",
+      "expect": "o case é fechado sem insistir; os pontos fracos ficam registrados, mas a decisão é do usuário"
     }
   ]
 }
