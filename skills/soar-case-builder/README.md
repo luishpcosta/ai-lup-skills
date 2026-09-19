@@ -61,3 +61,14 @@ Ele **não** avalia se o conteúdo é bom — isso é a etapa 4.
 ```bash
 node --test skills/soar-case-builder/test/*.test.mjs
 ```
+
+Além do validador, a suíte amarra a **prosa ao código**: se o vocabulário
+documentado no `SKILL.md` divergir do que o schema aceita, se o template ganhar
+uma seção que o validador não conhece, se um link apontar para arquivo deletado,
+ou se um campo da `entrevista.md` perder parte da rubrica, o teste falha. É o
+que impede a documentação de virar mentira silenciosa quando o código muda.
+
+O que ela **não** cobre: se a rubrica é boa. Isso só se mede rodando a skill com
+um modelo e julgando o resultado — os casos `kind: "behavior"` em `evals/evals.json`
+descrevem o que deveria ser verificado, mas a verificação é manual, feita quando
+uma rubrica muda.
