@@ -8,6 +8,7 @@ const VALID = `# Circuit breaker no worker de estorno
 **Quando:** Q1 2026
 **Método:** SOAR
 **Verificação:** verificado
+**Revisão:** sem ressalvas
 **Última atualização:** 2026-09-19
 
 ## Situation
@@ -182,4 +183,65 @@ test('arquivo vazio acumula os erros em vez de estourar', () => {
   assert.equal(ok, false);
   assert.ok(errors.length >= 6);
   assert.ok(errors.some((e) => /falta o título/.test(e)));
+});
+
+// --- campo Revisão e orçamento de escapatória ---------------------------------
+
+test('Revisão é campo obrigatório com vocabulário controlado', () => {
+  const semCampo = VALID.replace(/\*\*Revisão:\*\* .*\n/, '');
+  assert.ok(validateCase(semCampo).errors.some((e) => /falta o campo de cabeçalho \*\*Revisão/.test(e)));
+
+  const invalido = withHeader(VALID, 'Revisão', 'revisado mais ou menos');
+  assert.ok(validateCase(invalido).errors.some((e) => /\*\*Revisão:\*\* deve ser/.test(e)));
+
+  for (const valor of ['pendente', 'sem ressalvas', '3 em aberto', '0 em aberto']) {
+    const { errors } = validateCase(withHeader(VALID, 'Revisão', valor));
+    assert.deepEqual(errors, [], `deveria aceitar "${valor}"`);
+  }
+});
+
+test('Revisão pendente vira aviso — um case não revisado não se disfarça de revisado', () => {
+  const { ok, warnings } = validateCase(withHeader(VALID, 'Revisão', 'pendente'));
+  assert.equal(ok, true, 'é aviso: na primeira validação o case legitimamente ainda não foi revisado');
+  assert.ok(warnings.some((w) => /ainda não passou pela revisão/.test(w)));
+});
+
+test('Result e Evidência abrindo mão dos dois obriga o carimbo "não verificado"', () => {
+  const semNada = withSection(
+    withSection(VALID, 'Result', '[sem métrica: não medíamos isso antes da mudança]'),
+    'Evidência',
+    'sem evidência disponível'
+  );
+
+  // Carimbo otimista demais é erro: não sobrou nada verificável no case.
+  const otimista = withHeader(semNada, 'Verificação', 'parcialmente verificado');
+  assert.ok(
+    validateCase(otimista).errors.some((e) => /tem de ser "não verificado"/.test(e)),
+    'deveria cobrar o carimbo honesto'
+  );
+
+  const honesto = withHeader(semNada, 'Verificação', 'não verificado');
+  assert.equal(validateCase(honesto).ok, true, validateCase(honesto).errors.join('; '));
+});
+
+test('duas saídas honestas espalhadas viram aviso, não erro', () => {
+  const duas = withSection(
+    withSection(VALID, 'Result', 'A fila caiu para 200 itens. _[NÃO VERIFICADO: sem dashboard do antes]_'),
+    'Obstacle',
+    'O worker entrava em retry infinito. _[NÃO VERIFICADO: não achei o log da época]_'
+  );
+  const coerente = withHeader(duas, 'Verificação', 'parcialmente verificado');
+  const { ok, warnings } = validateCase(coerente);
+  assert.equal(ok, true, validateCase(coerente).errors.join('; '));
+  assert.ok(warnings.some((w) => /saídas honestas usadas/.test(w)));
+});
+
+test('uma saída honesta sozinha não gera aviso de orçamento', () => {
+  const uma = withHeader(
+    withSection(VALID, 'Result', 'A fila caiu para 200 itens. _[NÃO VERIFICADO: sem dashboard]_'),
+    'Verificação',
+    'parcialmente verificado'
+  );
+  const { warnings } = validateCase(uma);
+  assert.ok(!warnings.some((w) => /saídas honestas usadas/.test(w)), 'uma saída é uso legítimo, não padrão suspeito');
 });

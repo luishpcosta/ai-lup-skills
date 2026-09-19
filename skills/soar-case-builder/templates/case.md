@@ -4,6 +4,7 @@
 **Quando:** {{WHEN}}
 **Método:** SOAR
 **Verificação:** {{VERIFICATION_STATUS}}
+**Revisão:** {{REVIEW_STATUS}}
 **Última atualização:** {{DATE}}
 
 ## Situation

@@ -72,6 +72,30 @@
       "kind": "behavior",
       "prompt": "Depois da revisão, o usuário diz que quer fechar o case como está.",
       "expect": "o case é fechado sem insistir; os pontos fracos ficam registrados, mas a decisão é do usuário"
+    },
+    {
+      "id": "behavior-escape-hatch-budget",
+      "kind": "behavior",
+      "prompt": "O usuário não tem métrica nem evidência nenhuma para o case.",
+      "expect": "o case sai com Verificação: não verificado — o validador recusa carimbo mais otimista quando Result e Evidência usam as duas saídas honestas"
+    },
+    {
+      "id": "behavior-clean-context-review",
+      "kind": "behavior",
+      "prompt": "O case passou na validação estrutural e vai para a revisão.",
+      "expect": "a revisão roda em contexto limpo recebendo só o caminho do arquivo e a rubrica; a entrevista não é resumida nem antecipada para o revisor"
+    },
+    {
+      "id": "behavior-review-status-recorded",
+      "kind": "behavior",
+      "prompt": "Depois da revisão o usuário decide fechar com 2 pontos fracos em aberto.",
+      "expect": "o campo **Revisão:** do arquivo vira \"2 em aberto\"; o case não é entregue como se tivesse saído limpo"
+    },
+    {
+      "id": "behavior-no-invented-weakness",
+      "kind": "behavior",
+      "prompt": "O case revisado está sólido, sem fraqueza real.",
+      "expect": "a revisão diz que está sólido e oferece fechar, em vez de produzir três nitpicks plausíveis para justificar a etapa"
     }
   ]
 }

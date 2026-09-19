@@ -18,6 +18,7 @@ const FILLED = `# Circuit breaker no worker de estorno
 **Quando:** Q1 2026
 **Método:** SOAR
 **Verificação:** verificado
+**Revisão:** sem ressalvas
 **Última atualização:** 2026-09-19
 
 ## Situation
@@ -61,6 +62,21 @@ test('um case válido sai 0 e aponta o próximo passo', async () => {
     const { stdout } = await run('node', [VALIDATE, file]);
     assert.match(stdout, /estrutura OK/);
     assert.match(stdout.trim().split('\n').at(-1), /^NEXT:/);
+  });
+});
+
+test('o NEXT respeita o estado da revisão em vez de mandar refazer', async () => {
+  const pendente = FILLED.replace('**Revisão:** sem ressalvas', '**Revisão:** pendente');
+  await withTempFile(pendente, async (file) => {
+    const { stdout } = await run('node', [VALIDATE, file]);
+    assert.match(stdout, /NEXT: a estrutura passou — agora faça a revisão/);
+  });
+
+  const revisado = FILLED.replace('**Revisão:** sem ressalvas', '**Revisão:** 2 em aberto');
+  await withTempFile(revisado, async (file) => {
+    const { stdout } = await run('node', [VALIDATE, file]);
+    assert.match(stdout, /NEXT: nada a fazer/);
+    assert.match(stdout, /"2 em aberto"/);
   });
 });
 

@@ -99,6 +99,20 @@ Os dois marcadores honestos de ausência — `[sem métrica: <motivo>]` e
 `_[NÃO VERIFICADO: <o que falta>]_` — valem igual para o validador. Use o que descrever
 melhor o caso; o que ele não aceita é omitir a ausência em silêncio.
 
+**As saídas honestas têm orçamento.** Elas existem para o caso sem dado, não para chegar
+no verde depressa. Se `Result` **e** `Evidência` usarem a saída, não sobrou nada
+verificável e `**Verificação:**` tem de ser `não verificado` — o script cobra isso. Duas
+ou mais saídas no mesmo case viram aviso: reveja se alguma ainda dá pra fechar com dado
+real antes de aceitar.
+
+O campo `**Revisão:**` registra o desfecho da Etapa 4 e começa como `pendente`:
+
+| Valor | Quando |
+|---|---|
+| `pendente` | ainda não revisado (todo case nasce assim) |
+| `sem ressalvas` | revisado, nada em aberto |
+| `<N> em aberto` | revisado, e o usuário optou por fechar com N fraquezas conhecidas |
+
 ## Etapa 3 — Validar a estrutura
 
 ```bash
@@ -111,22 +125,30 @@ legítimo, é bug do script: diga isso em vez de deformar o case pra passar.
 
 ## Etapa 4 — Revisão e nova rodada
 
-Siga [references/revisao.md](references/revisao.md). Em resumo:
+**Delegue a revisão a um contexto limpo.** Você acabou de conduzir a entrevista, então
+seu cérebro completa as lacunas do arquivo com o que foi dito na conversa — exatamente o
+que o leitor do dossiê não vai poder fazer. Abra um subagente e passe **só**:
 
-1. **Releia o arquivo como se não tivesse participado da entrevista.** Quem vai ler o
-   dossiê não estava lá. Se um trecho só faz sentido porque você lembra do que foi dito,
-   isso é uma fraqueza do case, não um detalhe.
-2. Aponte **pontos fortes** (o que vai sustentar uma pergunta da banca) e **pontos
-   fracos** (o que desmonta na primeira repergunta), cada fraco com a pergunta específica
-   que o resolveria.
-3. **Ofereça a nova rodada** e deixe o usuário escolher:
+- o caminho do arquivo,
+- a rubrica ([references/revisao.md](references/revisao.md)).
+
+**Não resuma a entrevista para o revisor, não explique o contexto, não antecipe o que
+você acha fraco.** O briefing prestativo destrói a única coisa que torna essa revisão
+útil. Se o ambiente não tiver subagente, faça você mesmo seguindo a rubrica — mas saiba
+que o resultado é mais fraco.
+
+Com a devolutiva em mãos:
+
+1. Mostre ao usuário os **pontos fortes** e os **pontos fracos** (cada fraco já vem com a
+   pergunta que o resolveria).
+2. **Ofereça a nova rodada e deixe ele escolher:**
    > "Achei 3 pontos fracos. Quer que eu faça mais uma rodada de perguntas em cima
    > deles, ou prefere fechar o case assim?"
-4. Se ele topar, entreviste **só os pontos fracos**, regenere o arquivo, e rode Etapa 3 e
-   4 de novo. Se ele recusar, feche — o case é dele.
-
-Se der pra rodar a revisão num subagente com contexto limpo, prefira: quem escreveu tende
-a não enxergar o que ficou implícito.
+3. Se topar: entreviste **só os pontos fracos**, regenere, e rode Etapa 3 e 4 de novo.
+4. Se recusar: feche sem insistir e grave o placar honesto em `**Revisão:**`
+   (`sem ressalvas` ou `<N> em aberto`). O que ficou em aberto fica registrado — daqui a
+   seis meses, quem lê o dossiê (inclusive você) merece saber o que já se sabia que era
+   frágil.
 
 ## Design Rules
 

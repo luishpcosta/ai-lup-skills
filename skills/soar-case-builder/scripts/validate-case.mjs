@@ -7,7 +7,7 @@
 
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
-import { validateCase } from './lib/case-schema.mjs';
+import { parseCase, validateCase } from './lib/case-schema.mjs';
 
 const argv = process.argv.slice(2);
 const args = {
@@ -60,4 +60,10 @@ if (!ok) {
 
 console.log(`${name}: estrutura OK${warnings.length > 0 ? ` (${warnings.length} aviso(s))` : ''}.`);
 console.log('');
-console.log('NEXT: a estrutura passou — agora faça a revisão de conteúdo (references/revisao.md).');
+
+const review = parseCase(markdown).header['Revisão'];
+if (review === 'pendente') {
+  console.log('NEXT: a estrutura passou — agora faça a revisão de conteúdo (references/revisao.md).');
+} else {
+  console.log(`NEXT: nada a fazer — estrutura OK e revisão registrada como "${review}".`);
+}

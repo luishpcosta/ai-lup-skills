@@ -19,7 +19,7 @@ errou exatamente aqui:
 |---|---|---|
 | Qualidade do que o usuário respondeu | **a LLM** | texto livre em português não cabe em regex — uma lista de frases vagas tem recall perto de zero, e o falso positivo ensina a pessoa a escrever pro validador em vez de pra verdade |
 | Estrutura do arquivo gerado | **o script** | seção faltando, placeholder esquecido, carimbo contradizendo o corpo: decidível, e um falso positivo custa só a LLM corrigir o próprio output |
-| Se o case é bom | **revisão independente** | lida como quem nunca ouviu a entrevista, que é a situação de quem vai ler o dossiê |
+| Se o case é bom | **revisão em contexto limpo** | recebe só o arquivo e a rubrica — quem conduziu a entrevista completa as lacunas de cabeça, que é justamente o que o leitor do dossiê não pode fazer |
 
 Medição que motivou isso: validando texto livre com banco de palavras-chave,
 4 de 6 respostas legítimas eram rejeitadas e 7 de 8 respostas vagas passavam.
@@ -36,9 +36,15 @@ node skills/soar-case-builder/scripts/validate-case.mjs cases/<slug>.md [--json]
 ```
 
 Ele checa: título e campos de cabeçalho, as cinco seções obrigatórias preenchidas,
-nenhum placeholder/TODO esquecido, `Result` com número ou `[sem métrica: ...]`
-explícito, `Evidência` com referência ou `sem evidência disponível`, e o carimbo
-`**Verificação:**` batendo com as ressalvas do corpo. Sai ≠0 listando o que corrigir.
+nenhum placeholder/TODO esquecido, `Result` com número ou marcador explícito de
+ausência, `Evidência` com referência ou `sem evidência disponível`, o carimbo
+`**Verificação:**` batendo com as ressalvas do corpo, e o **orçamento de saídas
+honestas** — se `Result` e `Evidência` abrirem mão dos dois, não sobrou nada
+verificável e o carimbo tem de dizer `não verificado`. Sai ≠0 listando o que corrigir.
+
+O campo `**Revisão:**` (`pendente` | `sem ressalvas` | `<N> em aberto`) registra o
+desfecho da etapa 4 — inclusive "o usuário fechou com N fraquezas conhecidas". Sem
+ele, um case revisado e um nunca revisado ficam indistinguíveis no arquivo.
 
 Ele **não** avalia se o conteúdo é bom — isso é a etapa 4.
 

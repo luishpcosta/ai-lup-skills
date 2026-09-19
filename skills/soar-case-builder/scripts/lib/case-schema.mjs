@@ -12,13 +12,18 @@
 
 export const REQUIRED_SECTIONS = ['Situation', 'Obstacle', 'Action', 'Result', 'Evidência'];
 export const OPTIONAL_SECTIONS = ['Aprendizado / O que faria diferente'];
-export const REQUIRED_HEADER_FIELDS = ['Squad/Papel', 'Quando', 'Método', 'Verificação', 'Última atualização'];
+export const REQUIRED_HEADER_FIELDS = ['Squad/Papel', 'Quando', 'Método', 'Verificação', 'Revisão', 'Última atualização'];
 
 export const VERIFICATION_VOCABULARY = [
   'verificado',
   'parcialmente verificado',
   'não verificado'
 ];
+
+// O campo Revisão registra o desfecho da etapa de revisão — inclusive
+// "o usuário decidiu fechar com N fraquezas conhecidas", que é informação
+// que some se não for gravada e que o dono do dossiê quer lembrar depois.
+export const REVIEW_STATUS = /^(pendente|sem ressalvas|\d+ em aberto)$/;
 
 const PLACEHOLDER_PATTERNS = [
   { pattern: /\{\{[A-Z0-9_]+\}\}/, label: 'placeholder de template não substituído' },
@@ -40,7 +45,19 @@ const NO_METRIC_MARKER = /\[sem métrica:[^\]]+\]/i;
 const EVIDENCE_REF = /(https?:\/\/\S+)|(\b[A-Z][A-Z0-9]*-\d+\b)|(\bPR\s?#?\d+\b)|(\bissue\s?#?\d+\b)/i;
 const NO_EVIDENCE_PHRASE = /sem evidência disponível/i;
 
+const NO_METRIC_MARKER_G = /\[sem métrica:[^\]]+\]/gi;
+const NO_EVIDENCE_PHRASE_G = /sem evidência disponível/gi;
+const UNVERIFIED_MARKER_G = /\[NÃO VERIFICADO:/g;
+
 const MIN_SECTION_WORDS = 6;
+
+function countMatches(text, pattern) {
+  return (String(text ?? '').match(pattern) ?? []).length;
+}
+
+function stampIs(header, expected) {
+  return (header['Verificação'] ?? '').toLowerCase().startsWith(expected.toLowerCase());
+}
 
 /** Quebra o markdown em título, campos de cabeçalho e seções. */
 export function parseCase(markdown) {
@@ -110,6 +127,13 @@ export function validateCase(markdown) {
     }
   }
 
+  if (header['Revisão'] && !REVIEW_STATUS.test(header['Revisão'])) {
+    errors.push(`**Revisão:** deve ser "pendente", "sem ressalvas" ou "<N> em aberto" — encontrado "${header['Revisão']}"`);
+  }
+  if (header['Revisão'] === 'pendente') {
+    warnings.push('o case ainda não passou pela revisão de conteúdo (**Revisão:** pendente)');
+  }
+
   if (header['Quando'] && !TIMEFRAME.test(header['Quando'])) {
     errors.push(`**Quando:** não tem um período datável (mês/trimestre + ano) — encontrado "${header['Quando']}"`);
   }
@@ -142,14 +166,29 @@ export function validateCase(markdown) {
   // obrigar a LLM a acertar qual dos dois usar só geraria falha à toa.
   // Se a métrica *significa* alguma coisa é problema da revisão, não daqui.
   const result = sections['Result'];
-  const declaresAbsence = NO_METRIC_MARKER.test(result ?? '') || UNVERIFIED_MARKER.test(result ?? '');
-  if (result && !HAS_DIGIT.test(result) && !declaresAbsence) {
+  const resultDeclaresAbsence = NO_METRIC_MARKER.test(result ?? '') || UNVERIFIED_MARKER.test(result ?? '');
+  if (result && !HAS_DIGIT.test(result) && !resultDeclaresAbsence) {
     errors.push('"## Result" não tem número nem marcador explícito de ausência (`[sem métrica: ...]` ou `[NÃO VERIFICADO: ...]`)');
   }
 
   const evidence = sections['Evidência'];
   if (evidence && !EVIDENCE_REF.test(evidence) && !NO_EVIDENCE_PHRASE.test(evidence)) {
     errors.push('"## Evidência" não tem referência verificável (link/ticket/PR) nem a frase "sem evidência disponível"');
+  }
+
+  // Orçamento de escapatória: as saídas honestas existem para o caso sem dado,
+  // não para chegar no verde depressa. Um case onde Result e Evidência abrem mão
+  // dos dois não tem nada verificável — o carimbo tem que dizer isso.
+  const evidenceDeclaresAbsence = NO_EVIDENCE_PHRASE.test(evidence ?? '');
+  if (resultDeclaresAbsence && evidenceDeclaresAbsence && !stampIs(header, 'não verificado')) {
+    errors.push('Result e Evidência abriram mão dos dois: não sobra nada verificável no case, então **Verificação:** tem de ser "não verificado"');
+  }
+
+  const hatchCount = countMatches(raw, NO_METRIC_MARKER_G)
+    + countMatches(raw, NO_EVIDENCE_PHRASE_G)
+    + countMatches(raw, UNVERIFIED_MARKER_G);
+  if (hatchCount >= 2 && !(resultDeclaresAbsence && evidenceDeclaresAbsence)) {
+    warnings.push(`${hatchCount} saídas honestas usadas — confira se alguma delas ainda dá pra fechar com dado real`);
   }
 
   for (const { pattern, label } of PLACEHOLDER_PATTERNS) {

@@ -5,17 +5,22 @@ ser **bom**. Esta etapa é a que julga o conteúdo.
 
 ## A regra que faz a revisão valer
 
-**Leia o arquivo como quem nunca ouviu a entrevista.** Quem vai ler o dossiê — gestor,
-comitê de promoção, entrevistador — não estava na conversa. Você estava, e é exatamente
-por isso que você é um revisor ruim por padrão: seu cérebro completa as lacunas com o que
-o usuário falou e você não registrou.
+**Julgue o arquivo como quem nunca ouviu a entrevista.** Quem vai ler o dossiê — gestor,
+comitê de promoção, entrevistador — não estava na conversa.
 
-Contramedida prática: antes de revisar, esqueça a conversa e pergunte de cada frase
-*"como eu sei disso, olhando só este arquivo?"*. Se a resposta for "porque ele me contou",
-é fraqueza.
+Por isso o caminho padrão é **rodar esta revisão num contexto limpo**, recebendo só o
+caminho do arquivo e esta rubrica. Quem conduziu a entrevista é revisor ruim por
+construção: o cérebro completa as lacunas com o que foi dito e não registrado, e "tente
+esquecer o que você sabe" não é uma instrução que funciona de verdade. Contexto limpo
+transforma isso em fato em vez de força de vontade.
 
-Se você puder rodar esta etapa num subagente com contexto limpo, prefira — ele não tem a
-entrevista na memória, então o teste acontece de verdade em vez de por força de vontade.
+**Se você recebeu só o arquivo:** ótimo, é assim que tem de ser. Não peça o histórico da
+entrevista — a falta dele é o instrumento de medida, não uma lacuna a preencher.
+
+**Se você está revisando o que você mesmo escreveu** (não havia subagente disponível):
+pergunte de cada frase *"como eu sei disso, olhando só este arquivo?"*. Resposta "porque
+ele me contou na conversa" = fraqueza. Seja mais duro que o normal para compensar o viés
+que você sabe que tem.
 
 ## O que procurar
 
@@ -90,6 +95,27 @@ Se o usuário topar:
    `_[NÃO VERIFICADO: ...]_` e ajuste o carimbo `**Verificação:**` — o script checa essa
    coerência.
 
+Em qualquer desfecho, **atualize o campo `**Revisão:**` do cabeçalho**:
+
+| Situação | Valor |
+|---|---|
+| Nada ficou em aberto | `sem ressalvas` |
+| O usuário fechou com N fraquezas conhecidas | `<N> em aberto` |
+
+Esse campo é o que impede a revisão de virar teatro: sem ele, um case revisado e um case
+nunca revisado ficam indistinguíveis no arquivo.
+
 Se ele recusar, **feche o case sem insistir**. O dossiê é dele; seu papel era mostrar
 onde está frágil, não obrigar a consertar. Uma segunda recusa no mesmo ponto encerra o
 assunto de vez.
+
+## Cuidado com a fraqueza inventada
+
+Você foi convidado a achar pontos fracos, então vai achar — inclusive num case que está
+bom. Três bullets plausíveis saem sempre, e é assim que a revisão vira um moedor infinito
+que cansa o usuário.
+
+Antes de listar um ponto fraco, passe ele por este teste: **existe uma repergunta concreta
+que ele derruba?** Se você não consegue escrever a pergunta, não é fraqueza — é
+preenchimento. Diga que o case está sólido e ofereça fechar; terminar é um resultado
+legítimo.
