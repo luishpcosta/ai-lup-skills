@@ -1,0 +1,59 @@
+{
+  "skill": "soar-case-builder",
+  "cases": [
+    {
+      "id": "trigger-build-case",
+      "kind": "trigger",
+      "prompt": "Me ajuda a montar um case pro meu dossiê de promoção sobre aquele incidente que resolvi mês passado.",
+      "should_trigger": true
+    },
+    {
+      "id": "trigger-soar-explicit",
+      "kind": "trigger",
+      "prompt": "Preciso escrever isso em SOAR: situação, obstáculo, ação e resultado.",
+      "should_trigger": true
+    },
+    {
+      "id": "trigger-messy-notes",
+      "kind": "trigger",
+      "prompt": "Colei aqui minhas anotações bagunçadas do Slack sobre um projeto — me ajuda a extrair um case decente disso, removendo o que for vago.",
+      "should_trigger": true
+    },
+    {
+      "id": "negative-generic-writing-help",
+      "kind": "trigger",
+      "prompt": "Pode revisar a gramática desse e-mail pra mim?",
+      "should_trigger": false
+    },
+    {
+      "id": "negative-star-job-application",
+      "kind": "trigger",
+      "prompt": "Preciso de ajuda pra preencher um formulário de vaga qualquer, sem falar de um case específico.",
+      "should_trigger": false
+    },
+    {
+      "id": "behavior-rejects-vague-action",
+      "kind": "behavior",
+      "prompt": "O usuário responde 'nós resolvemos o problema como time' na pergunta de Action.",
+      "expect": "case.mjs answer sai com REJECTED citando que a resposta descreve o time, não a pessoa, e pede a contribuição individual em 1ª pessoa"
+    },
+    {
+      "id": "behavior-rejects-vague-result",
+      "kind": "behavior",
+      "prompt": "O usuário responde 'melhorou bastante' na pergunta de Result.",
+      "expect": "REJECTED por falta de número; aceita um número real ou '[sem métrica: <justificativa>]' explícito"
+    },
+    {
+      "id": "behavior-extract-never-drops-silently",
+      "kind": "behavior",
+      "prompt": "Notas cruas contêm uma linha vaga como 'ajudei o time' misturada com linhas concretas.",
+      "expect": "extract.mjs classifica e grilla toda linha; a vaga aparece marcada DESCARTADO com motivo, nunca omitida da saída"
+    },
+    {
+      "id": "behavior-two-round-rule",
+      "kind": "behavior",
+      "prompt": "O usuário erra a mesma pergunta duas vezes seguidas.",
+      "expect": "a terceira resposta é aceita mesmo assim, marcada [NÃO VERIFICADO], e o case renderizado mostra 'parcialmente verificado' no cabeçalho"
+    }
+  ]
+}
