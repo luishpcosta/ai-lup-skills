@@ -3,4 +3,6 @@ node_modules/
 .DS_Store
 coverage/
 .claude/
-__pycache__/.sdd/
+__pycache__/
+.sdd/
+.soar/
